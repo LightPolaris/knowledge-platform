@@ -45,23 +45,19 @@ export function QAHeader({
         <div className="flex items-center justify-between">
           {/* 左侧：标题和标签页 */}
           <div className="flex items-center space-x-8">
-            {/* 标题部分 */}
-            <div>
-              <h1 className="font-serif font-bold text-2xl text-foreground text-balance">智能问答</h1>
-              <p className="text-muted-foreground text-sm mt-1">基于AI的智能问答系统，快速获取知识解答</p>
-            </div>
+
 
             {/* 标签页 */}
-            <div className="flex space-x-0">
+            <div className="flex space-x-8 items-center">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => handleTabClick(tab.id)}
                   className={cn(
-                    "text-sm font-medium px-4 py-2 rounded-t-lg border-t border-l border-r border-gray-200 transition-all duration-200 whitespace-nowrap",
+                    "text-base font-medium py-3 border-b-2 transition-all duration-200 whitespace-nowrap flex items-center",
                     activeTab === tab.id
-                      ? "text-blue-600 bg-white relative z-10 shadow-sm"
-                      : "text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-50 -ml-px"
+                      ? "text-foreground border-primary"
+                      : "text-muted-foreground border-transparent hover:text-foreground"
                   )}
                 >
                   {tab.label}

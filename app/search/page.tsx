@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState } from "react"
 import { Sidebar } from "@/components/sidebar"
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
@@ -15,10 +15,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Search,
   MessageSquare,
-  Send,
-  ThumbsUp,
-  ThumbsDown,
-  Copy,
   Share,
   Bookmark,
   Clock,
@@ -27,7 +23,6 @@ import {
   User,
   Filter,
   History,
-  Sparkles,
   ExternalLink,
   ChevronDown,
   ChevronUp,
@@ -37,83 +32,51 @@ import {
 const mockSearchResults = [
   {
     id: 1,
-    title: "Boiler Safety Standards 2024",
+    title: "锅炉安全标准 2024",
     type: "document",
     content:
-      "Comprehensive safety standards for boiler operations including temperature monitoring, pressure control, and emergency procedures...",
-    source: "Safety Manual v2.1",
+      "锅炉操作的综合安全标准，包括温度监控、压力控制和应急程序...",
+    source: "安全手册 v2.1",
     relevance: 0.95,
     lastUpdated: "2024-01-15",
     category: "Safety Standards",
   },
   {
     id: 2,
-    title: "Temperature Control Systems",
+    title: "温度控制系统",
     type: "concept",
     content:
-      "Advanced temperature control mechanisms for industrial boilers, including PID controllers and feedback systems...",
-    source: "Technical Specifications",
+      "工业锅炉的先进温度控制机制，包括PID控制器和反馈系统...",
+    source: "技术规格",
     relevance: 0.87,
     lastUpdated: "2024-01-14",
     category: "Technical",
   },
   {
     id: 3,
-    title: "Maintenance Schedule Q1 2024",
+    title: "维护计划 2024年第一季度",
     type: "document",
     content:
-      "Quarterly maintenance schedule including routine inspections, component replacements, and system upgrades...",
-    source: "Maintenance Manual",
+      "季度维护计划，包括例行检查、组件更换和系统升级...",
+    source: "维护手册",
     relevance: 0.82,
     lastUpdated: "2024-01-13",
     category: "Maintenance",
   },
   {
     id: 4,
-    title: "Zhang Wei - Safety Expert",
+    title: "张伟 - 安全专家",
     type: "person",
     content:
-      "Senior safety engineer with 15 years of experience in boiler safety protocols and regulatory compliance...",
-    source: "Employee Directory",
+      "高级安全工程师，拥有15年锅炉安全协议和法规合规经验...",
+    source: "员工目录",
     relevance: 0.76,
     lastUpdated: "2024-01-12",
     category: "Personnel",
   },
 ]
 
-// Mock chat messages
-const mockChatHistory = [
-  {
-    id: 1,
-    type: "user",
-    content: "What are the safety requirements for boiler temperature monitoring?",
-    timestamp: "2024-01-15 14:30",
-  },
-  {
-    id: 2,
-    type: "assistant",
-    content:
-      "Based on the Boiler Safety Standards 2024, temperature monitoring requires:\n\n1. **Continuous monitoring** with sensors placed at critical points\n2. **Alarm systems** that trigger at 85% of maximum operating temperature\n3. **Automatic shutdown** procedures when temperature exceeds safe limits\n4. **Regular calibration** of temperature sensors every 6 months\n\nThese requirements are outlined in Section 3.2 of the Safety Manual v2.1.",
-    timestamp: "2024-01-15 14:31",
-    sources: ["Safety Manual v2.1", "Technical Specifications"],
-    confidence: 0.92,
-  },
-  {
-    id: 3,
-    type: "user",
-    content: "How often should pressure valves be inspected?",
-    timestamp: "2024-01-15 14:35",
-  },
-  {
-    id: 4,
-    type: "assistant",
-    content:
-      "According to the maintenance guidelines, pressure valves should be inspected:\n\n• **Daily visual inspections** for obvious damage or leaks\n• **Weekly functional tests** to ensure proper operation\n• **Monthly detailed inspections** including pressure testing\n• **Annual comprehensive overhaul** with component replacement as needed\n\nThis schedule is detailed in the Maintenance Manual Section 4.3.",
-    timestamp: "2024-01-15 14:36",
-    sources: ["Maintenance Manual", "Quality Control Procedures"],
-    confidence: 0.89,
-  },
-]
+
 
 const getResultIcon = (type: string) => {
   switch (type) {
@@ -130,9 +93,7 @@ const getResultIcon = (type: string) => {
 
 export default function SearchPage() {
   const [searchQuery, setSearchQuery] = useState("")
-  const [chatMessage, setChatMessage] = useState("")
   const [searchResults, setSearchResults] = useState(mockSearchResults)
-  const [chatHistory, setChatHistory] = useState(mockChatHistory)
   const [isLoading, setIsLoading] = useState(false)
   const [selectedFilters, setSelectedFilters] = useState({
     type: "all",
@@ -140,11 +101,6 @@ export default function SearchPage() {
     dateRange: "all",
   })
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
-  const chatEndRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [chatHistory])
 
   const handleSearch = () => {
     if (!searchQuery.trim()) return
@@ -155,37 +111,7 @@ export default function SearchPage() {
     }, 1000)
   }
 
-  const handleSendMessage = () => {
-    if (!chatMessage.trim()) return
 
-    const userMessage = {
-      id: chatHistory.length + 1,
-      type: "user" as const,
-      content: chatMessage,
-      timestamp: new Date().toLocaleString(),
-    }
-
-    setChatHistory([...chatHistory, userMessage])
-    setChatMessage("")
-    setIsLoading(true)
-
-    // Simulate AI response
-    setTimeout(() => {
-      const aiResponse = {
-        id: chatHistory.length + 2,
-        type: "assistant" as const,
-        content:
-          "I understand your question about " +
-          chatMessage +
-          ". Let me search through the knowledge base to provide you with accurate information...",
-        timestamp: new Date().toLocaleString(),
-        sources: ["Technical Manual", "Safety Guidelines"],
-        confidence: 0.85,
-      }
-      setChatHistory((prev) => [...prev, aiResponse])
-      setIsLoading(false)
-    }, 2000)
-  }
 
   const filteredResults = searchResults.filter((result) => {
     const matchesType = selectedFilters.type === "all" || result.type === selectedFilters.type
@@ -198,15 +124,14 @@ export default function SearchPage() {
       <Sidebar />
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header title="Search & Q&A" subtitle="Find information and get AI-powered answers from your knowledge base" />
+        <Header title="知识搜索与问答" subtitle="从您的知识库中查找信息并获得AI驱动的答案" />
 
         <main className="flex-1 overflow-hidden">
           <Tabs defaultValue="search" className="h-full">
             <div className="border-b border-border px-6">
               <TabsList>
-                <TabsTrigger value="search">Advanced Search</TabsTrigger>
-                <TabsTrigger value="assistant">AI Assistant</TabsTrigger>
-                <TabsTrigger value="history">Search History</TabsTrigger>
+                <TabsTrigger value="search">高级搜索</TabsTrigger>
+                <TabsTrigger value="history">搜索历史</TabsTrigger>
               </TabsList>
             </div>
 
@@ -220,7 +145,7 @@ export default function SearchPage() {
                       <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
-                          placeholder="Search documents, concepts, people..."
+                          placeholder="搜索文档、概念、人员..."
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
                           onKeyPress={(e) => e.key === "Enter" && handleSearch()}
@@ -228,7 +153,7 @@ export default function SearchPage() {
                         />
                       </div>
                       <Button onClick={handleSearch} disabled={isLoading}>
-                        {isLoading ? "Searching..." : "Search"}
+                        {isLoading ? "搜索中..." : "搜索"}
                       </Button>
                     </div>
 
@@ -242,10 +167,10 @@ export default function SearchPage() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="all">All Types</SelectItem>
-                          <SelectItem value="document">Documents</SelectItem>
-                          <SelectItem value="concept">Concepts</SelectItem>
-                          <SelectItem value="person">People</SelectItem>
+                          <SelectItem value="all">所有类型</SelectItem>
+                          <SelectItem value="document">文档</SelectItem>
+                          <SelectItem value="concept">概念</SelectItem>
+                          <SelectItem value="person">人员</SelectItem>
                         </SelectContent>
                       </Select>
 
@@ -257,17 +182,17 @@ export default function SearchPage() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="all">All Categories</SelectItem>
-                          <SelectItem value="Safety Standards">Safety</SelectItem>
-                          <SelectItem value="Technical">Technical</SelectItem>
-                          <SelectItem value="Maintenance">Maintenance</SelectItem>
-                          <SelectItem value="Personnel">Personnel</SelectItem>
+                          <SelectItem value="all">所有分类</SelectItem>
+                          <SelectItem value="Safety Standards">安全</SelectItem>
+                          <SelectItem value="Technical">技术</SelectItem>
+                          <SelectItem value="Maintenance">维护</SelectItem>
+                          <SelectItem value="Personnel">人员</SelectItem>
                         </SelectContent>
                       </Select>
 
                       <Button variant="outline" onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}>
                         <Filter className="mr-2 h-4 w-4" />
-                        Advanced Filters
+                        高级过滤器
                         {showAdvancedFilters ? (
                           <ChevronUp className="ml-2 h-4 w-4" />
                         ) : (
@@ -281,7 +206,7 @@ export default function SearchPage() {
                       <div className="mt-4 p-4 bg-muted/50 rounded-lg">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <div>
-                            <label className="text-sm font-medium mb-2 block">Date Range</label>
+                            <label className="text-sm font-medium mb-2 block">日期范围</label>
                             <Select
                               value={selectedFilters.dateRange}
                               onValueChange={(value) => setSelectedFilters({ ...selectedFilters, dateRange: value })}
@@ -290,15 +215,15 @@ export default function SearchPage() {
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="all">All Time</SelectItem>
-                                <SelectItem value="week">Past Week</SelectItem>
-                                <SelectItem value="month">Past Month</SelectItem>
-                                <SelectItem value="year">Past Year</SelectItem>
+                                <SelectItem value="all">全部时间</SelectItem>
+                                <SelectItem value="week">过去一周</SelectItem>
+                                <SelectItem value="month">过去一月</SelectItem>
+                                <SelectItem value="year">过去一年</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
                           <div>
-                            <label className="text-sm font-medium mb-2 block">File Type</label>
+                            <label className="text-sm font-medium mb-2 block">文件类型</label>
                             <div className="space-y-2">
                               <div className="flex items-center space-x-2">
                                 <Checkbox id="pdf" />
@@ -315,18 +240,18 @@ export default function SearchPage() {
                             </div>
                           </div>
                           <div>
-                            <label className="text-sm font-medium mb-2 block">Source</label>
+                            <label className="text-sm font-medium mb-2 block">来源</label>
                             <div className="space-y-2">
                               <div className="flex items-center space-x-2">
                                 <Checkbox id="manual" />
                                 <label htmlFor="manual" className="text-sm">
-                                  Manuals
+                                  手册
                                 </label>
                               </div>
                               <div className="flex items-center space-x-2">
                                 <Checkbox id="specs" />
                                 <label htmlFor="specs" className="text-sm">
-                                  Specifications
+                                  规格说明
                                 </label>
                               </div>
                             </div>
@@ -341,16 +266,16 @@ export default function SearchPage() {
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <p className="text-sm text-muted-foreground">
-                          Found {filteredResults.length} results {searchQuery && `for "${searchQuery}"`}
+                          找到 {filteredResults.length} 个结果 {searchQuery && `关于 "${searchQuery}"`}
                         </p>
                         <Select defaultValue="relevance">
                           <SelectTrigger className="w-32">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="relevance">Relevance</SelectItem>
-                            <SelectItem value="date">Date</SelectItem>
-                            <SelectItem value="title">Title</SelectItem>
+                            <SelectItem value="relevance">相关性</SelectItem>
+                            <SelectItem value="date">日期</SelectItem>
+                            <SelectItem value="title">标题</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -363,7 +288,7 @@ export default function SearchPage() {
                                 {getResultIcon(result.type)}
                                 <CardTitle className="text-lg font-serif">{result.title}</CardTitle>
                                 <Badge variant="outline" className="text-xs">
-                                  {Math.round(result.relevance * 100)}% match
+                                  {Math.round(result.relevance * 100)}% 匹配
                                 </Badge>
                               </div>
                               <div className="flex items-center space-x-2">
@@ -383,14 +308,14 @@ export default function SearchPage() {
                             <p className="text-sm text-muted-foreground mb-3">{result.content}</p>
                             <div className="flex items-center justify-between text-xs text-muted-foreground">
                               <div className="flex items-center space-x-4">
-                                <span>Source: {result.source}</span>
+                                <span>来源: {result.source}</span>
                                 <Badge variant="secondary" className="text-xs">
                                   {result.category}
                                 </Badge>
                               </div>
                               <div className="flex items-center space-x-1">
                                 <Clock className="h-3 w-3" />
-                                <span>Updated {result.lastUpdated}</span>
+                                <span>更新于 {result.lastUpdated}</span>
                               </div>
                             </div>
                           </CardContent>
@@ -402,191 +327,27 @@ export default function SearchPage() {
               </div>
             </TabsContent>
 
-            <TabsContent value="assistant" className="flex-1 overflow-hidden">
-              <div className="flex h-full">
-                {/* Chat Area */}
-                <div className="flex-1 flex flex-col">
-                  {/* Chat Header */}
-                  <div className="p-6 border-b border-border">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-                        <Sparkles className="h-5 w-5 text-primary-foreground" />
-                      </div>
-                      <div>
-                        <h3 className="font-serif font-bold">AI Knowledge Assistant</h3>
-                        <p className="text-sm text-muted-foreground">
-                          Ask questions about your technical documentation
-                        </p>
-                      </div>
-                    </div>
-                  </div>
 
-                  {/* Chat Messages */}
-                  <ScrollArea className="flex-1 p-6">
-                    <div className="space-y-6">
-                      {chatHistory.map((message) => (
-                        <div
-                          key={message.id}
-                          className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}
-                        >
-                          <div className={`max-w-3xl ${message.type === "user" ? "order-2" : "order-1"}`}>
-                            <div
-                              className={`p-4 rounded-lg ${
-                                message.type === "user" ? "bg-primary text-primary-foreground ml-12" : "bg-muted mr-12"
-                              }`}
-                            >
-                              <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                              {message.type === "assistant" && message.sources && (
-                                <div className="mt-3 pt-3 border-t border-border/20">
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center space-x-2">
-                                      <span className="text-xs text-muted-foreground">Sources:</span>
-                                      {message.sources.map((source, index) => (
-                                        <Badge key={index} variant="outline" className="text-xs">
-                                          {source}
-                                        </Badge>
-                                      ))}
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                      <span className="text-xs text-muted-foreground">
-                                        Confidence: {Math.round((message.confidence || 0) * 100)}%
-                                      </span>
-                                      <Button variant="ghost" size="sm">
-                                        <ThumbsUp className="h-3 w-3" />
-                                      </Button>
-                                      <Button variant="ghost" size="sm">
-                                        <ThumbsDown className="h-3 w-3" />
-                                      </Button>
-                                      <Button variant="ghost" size="sm">
-                                        <Copy className="h-3 w-3" />
-                                      </Button>
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                            <p className="text-xs text-muted-foreground mt-1 px-4">{message.timestamp}</p>
-                          </div>
-                        </div>
-                      ))}
-                      {isLoading && (
-                        <div className="flex justify-start">
-                          <div className="max-w-3xl mr-12">
-                            <div className="bg-muted p-4 rounded-lg">
-                              <div className="flex items-center space-x-2">
-                                <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"></div>
-                                <div
-                                  className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"
-                                  style={{ animationDelay: "0.1s" }}
-                                ></div>
-                                <div
-                                  className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"
-                                  style={{ animationDelay: "0.2s" }}
-                                ></div>
-                                <span className="text-sm text-muted-foreground ml-2">AI is thinking...</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                      <div ref={chatEndRef} />
-                    </div>
-                  </ScrollArea>
-
-                  {/* Chat Input */}
-                  <div className="p-6 border-t border-border">
-                    <div className="flex items-center space-x-4">
-                      <div className="relative flex-1">
-                        <Input
-                          placeholder="Ask a question about your knowledge base..."
-                          value={chatMessage}
-                          onChange={(e) => setChatMessage(e.target.value)}
-                          onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-                          className="pr-12"
-                        />
-                        <Button
-                          size="sm"
-                          className="absolute right-1 top-1/2 transform -translate-y-1/2"
-                          onClick={handleSendMessage}
-                          disabled={!chatMessage.trim() || isLoading}
-                        >
-                          <Send className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Ask questions about safety procedures, technical specifications, maintenance schedules, and more.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Chat Sidebar */}
-                <div className="w-80 border-l border-border bg-background p-6">
-                  <div className="space-y-6">
-                    <div>
-                      <h4 className="font-medium text-sm mb-3">Suggested Questions</h4>
-                      <div className="space-y-2">
-                        {[
-                          "What are the safety requirements for boiler operation?",
-                          "How often should maintenance be performed?",
-                          "What is the maximum operating temperature?",
-                          "Who is responsible for safety inspections?",
-                        ].map((question, index) => (
-                          <Button
-                            key={index}
-                            variant="outline"
-                            size="sm"
-                            className="w-full text-left justify-start h-auto p-3 text-xs bg-transparent"
-                            onClick={() => setChatMessage(question)}
-                          >
-                            {question}
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <Separator />
-
-                    <div>
-                      <h4 className="font-medium text-sm mb-3">Recent Topics</h4>
-                      <div className="space-y-2">
-                        {["Safety Standards", "Temperature Control", "Pressure Valves", "Maintenance Schedule"].map(
-                          (topic, index) => (
-                            <div
-                              key={index}
-                              className="flex items-center space-x-2 p-2 rounded hover:bg-muted cursor-pointer"
-                            >
-                              <MessageSquare className="h-3 w-3 text-muted-foreground" />
-                              <span className="text-xs">{topic}</span>
-                            </div>
-                          ),
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
 
             <TabsContent value="history" className="flex-1 overflow-hidden p-6">
               <div className="space-y-6">
                 <div>
-                  <h3 className="font-serif font-bold text-lg mb-2">Search History</h3>
-                  <p className="text-muted-foreground text-sm">Your recent searches and AI conversations</p>
+                  <h3 className="font-serif font-bold text-lg mb-2">搜索历史</h3>
+                  <p className="text-muted-foreground text-sm">您最近的搜索和AI对话</p>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-base font-serif">Recent Searches</CardTitle>
+                      <CardTitle className="text-base font-serif">最近搜索</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-3">
                         {[
-                          { query: "boiler safety standards", time: "2 hours ago", results: 23 },
-                          { query: "temperature monitoring", time: "1 day ago", results: 15 },
-                          { query: "maintenance schedule", time: "2 days ago", results: 8 },
-                          { query: "pressure valve inspection", time: "3 days ago", results: 12 },
+                          { query: "锅炉安全标准", time: "2小时前", results: 23 },
+                          { query: "温度监控", time: "1天前", results: 15 },
+                          { query: "维护计划", time: "2天前", results: 8 },
+                          { query: "压力阀检查", time: "3天前", results: 12 },
                         ].map((search, index) => (
                           <div
                             key={index}
@@ -597,7 +358,7 @@ export default function SearchPage() {
                               <div>
                                 <p className="text-sm font-medium">{search.query}</p>
                                 <p className="text-xs text-muted-foreground">
-                                  {search.results} results • {search.time}
+                                  {search.results} 个结果 • {search.time}
                                 </p>
                               </div>
                             </div>
@@ -612,15 +373,15 @@ export default function SearchPage() {
 
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-base font-serif">AI Conversations</CardTitle>
+                      <CardTitle className="text-base font-serif">AI对话</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-3">
                         {[
-                          { topic: "Safety Requirements Discussion", time: "1 hour ago", messages: 6 },
-                          { topic: "Maintenance Procedures Q&A", time: "1 day ago", messages: 4 },
-                          { topic: "Technical Specifications Help", time: "2 days ago", messages: 8 },
-                          { topic: "Emergency Protocols Inquiry", time: "4 days ago", messages: 3 },
+                          { topic: "安全要求讨论", time: "1小时前", messages: 6 },
+                          { topic: "维护程序问答", time: "1天前", messages: 4 },
+                          { topic: "技术规格帮助", time: "2天前", messages: 8 },
+                          { topic: "应急协议咨询", time: "4天前", messages: 3 },
                         ].map((conversation, index) => (
                           <div
                             key={index}
@@ -631,7 +392,7 @@ export default function SearchPage() {
                               <div>
                                 <p className="text-sm font-medium">{conversation.topic}</p>
                                 <p className="text-xs text-muted-foreground">
-                                  {conversation.messages} messages • {conversation.time}
+                                  {conversation.messages} 条消息 • {conversation.time}
                                 </p>
                               </div>
                             </div>
