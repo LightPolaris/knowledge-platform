@@ -15,7 +15,6 @@ interface QAHeaderProps {
 
 const tabs = [
   { id: "intelligent-dialogue", label: "智能对话" },
-  { id: "expert-optimization", label: "专家优化" },
   { id: "dialogue-history", label: "对话历史" }
 ]
 
