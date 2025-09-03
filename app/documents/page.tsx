@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { Sidebar } from "@/components/sidebar"
 import { Header } from "@/components/header"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,6 +11,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Progress } from "@/components/ui/progress"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
 import {
   FileText,
   Upload,
@@ -29,6 +31,9 @@ import {
   User,
   FileType,
   ArrowUpDown,
+  X,
+  Plus,
+  Folder,
 } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
@@ -36,81 +41,96 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 const mockDocuments = [
   {
     id: 1,
-    name: "Boiler Safety Standards 2024.pdf",
+    name: "锅炉安全标准 2024.pdf",
     type: "PDF",
     size: "2.4 MB",
-    status: "approved",
+    status: "已导入",
     uploadDate: "2024-01-15",
     lastModified: "2024-01-15",
-    uploadedBy: "Zhang Wei",
-    category: "Safety Standards",
+    uploadedBy: "张伟",
+    category: "安全标准",
     version: "v2.1",
-    description: "Updated safety standards for boiler operations",
+    description: "锅炉操作安全标准更新",
   },
   {
     id: 2,
-    name: "Technical Specifications.docx",
+    name: "技术规格说明书.docx",
     type: "Word",
     size: "1.8 MB",
-    status: "pending",
+    status: "已解析未审核",
     uploadDate: "2024-01-14",
     lastModified: "2024-01-14",
-    uploadedBy: "Li Ming",
-    category: "Technical Docs",
+    uploadedBy: "李明",
+    category: "技术文档",
     version: "v1.0",
-    description: "Detailed technical specifications for new boiler models",
+    description: "新型锅炉型号详细技术规格",
   },
   {
     id: 3,
-    name: "Maintenance Schedule.xlsx",
+    name: "维护保养计划.xlsx",
     type: "Excel",
     size: "856 KB",
-    status: "processing",
+    status: "已解析",
     uploadDate: "2024-01-13",
     lastModified: "2024-01-13",
-    uploadedBy: "Wang Fang",
-    category: "Maintenance",
+    uploadedBy: "王芳",
+    category: "维护保养",
     version: "v3.2",
-    description: "Annual maintenance schedule and procedures",
+    description: "年度维护保养计划和程序",
   },
   {
     id: 4,
-    name: "Quality Control Manual.pdf",
+    name: "质量控制手册.pdf",
     type: "PDF",
     size: "3.1 MB",
-    status: "rejected",
+    status: "未解析",
     uploadDate: "2024-01-12",
     lastModified: "2024-01-12",
-    uploadedBy: "Chen Lu",
-    category: "Quality Control",
+    uploadedBy: "陈路",
+    category: "质量控制",
     version: "v1.5",
-    description: "Comprehensive quality control procedures",
+    description: "全面质量控制程序",
   },
   {
     id: 5,
-    name: "Installation Guide.pdf",
+    name: "安装指南.pdf",
     type: "PDF",
     size: "4.2 MB",
-    status: "approved",
+    status: "已导入未审核",
     uploadDate: "2024-01-11",
     lastModified: "2024-01-11",
-    uploadedBy: "Liu Gang",
-    category: "Installation",
+    uploadedBy: "刘刚",
+    category: "安装指南",
     version: "v2.0",
-    description: "Step-by-step installation procedures",
+    description: "分步安装程序指南",
   },
+]
+
+// Document groups for upload
+const documentGroups = [
+  "待分组",
+  "安全标准",
+  "技术文档", 
+  "维护保养",
+  "质量控制",
+  "安装指南",
+  "检验规程",
+  "设计规范",
+  "工艺标准"
 ]
 
 const getStatusIcon = (status: string) => {
   switch (status) {
-    case "approved":
+    case "未解析":
+      return <Clock className="h-4 w-4 text-gray-600" />
+    case "已解析未审核":
+      return <AlertCircle className="h-4 w-4 text-yellow-600" />
+    case "已解析":
+      return <CheckCircle className="h-4 w-4 text-blue-600" />
+    case "已导入未审核":
+      return <AlertCircle className="h-4 w-4 text-orange-600" />
+    case "已导入":
       return <CheckCircle className="h-4 w-4 text-green-600" />
-    case "pending":
-      return <Clock className="h-4 w-4 text-yellow-600" />
-    case "processing":
-      return <AlertCircle className="h-4 w-4 text-blue-600" />
-    case "rejected":
-      return <XCircle className="h-4 w-4 text-red-600" />
     default:
       return <Clock className="h-4 w-4 text-gray-600" />
   }
@@ -118,15 +138,16 @@ const getStatusIcon = (status: string) => {
 
 const getStatusBadge = (status: string) => {
   const variants = {
-    approved: "default",
-    pending: "secondary",
-    processing: "outline",
-    rejected: "destructive",
+    "未解析": "secondary",
+    "已解析未审核": "outline",
+    "已解析": "default",
+    "已导入未审核": "outline",
+    "已导入": "default",
   } as const
 
   return (
     <Badge variant={variants[status as keyof typeof variants] || "secondary"}>
-      {status.charAt(0).toUpperCase() + status.slice(1)}
+      {status}
     </Badge>
   )
 }
@@ -136,6 +157,13 @@ export default function DocumentsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [categoryFilter, setCategoryFilter] = useState("all")
+  
+  // Upload related states
+  const [uploadFiles, setUploadFiles] = useState<File[]>([])
+  const [selectedGroup, setSelectedGroup] = useState("待分组")
+  const [showUploadDialog, setShowUploadDialog] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState<{[key: string]: number}>({})
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const filteredDocuments = mockDocuments.filter((doc) => {
     const matchesSearch =
@@ -161,6 +189,47 @@ export default function DocumentsPage() {
     } else {
       setSelectedDocuments(selectedDocuments.filter((id) => id !== docId))
     }
+  }
+
+  // Upload functions
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || [])
+    setUploadFiles(prev => [...prev, ...files])
+    setShowUploadDialog(true)
+  }
+
+  const handleRemoveFile = (index: number) => {
+    setUploadFiles(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const handleUpload = () => {
+    // Simulate upload progress
+    uploadFiles.forEach((file, index) => {
+      const fileName = file.name
+      setUploadProgress(prev => ({ ...prev, [fileName]: 0 }))
+      
+      const interval = setInterval(() => {
+        setUploadProgress(prev => {
+          const current = prev[fileName] || 0
+          if (current >= 100) {
+            clearInterval(interval)
+            return prev
+          }
+          return { ...prev, [fileName]: current + 10 }
+        })
+      }, 200)
+    })
+    
+    // Clear files after upload
+    setTimeout(() => {
+      setUploadFiles([])
+      setShowUploadDialog(false)
+      setUploadProgress({})
+    }, 3000)
+  }
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click()
   }
 
   return (
@@ -215,25 +284,26 @@ export default function DocumentsPage() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">所有状态</SelectItem>
-                        <SelectItem value="approved">已批准</SelectItem>
-                        <SelectItem value="pending">待审核</SelectItem>
-                        <SelectItem value="processing">处理中</SelectItem>
-                        <SelectItem value="rejected">已拒绝</SelectItem>
+                        <SelectItem value="未解析">未解析</SelectItem>
+                        <SelectItem value="已解析未审核">已解析未审核</SelectItem>
+                        <SelectItem value="已解析">已解析</SelectItem>
+                        <SelectItem value="已导入未审核">已导入未审核</SelectItem>
+                        <SelectItem value="已导入">已导入</SelectItem>
                       </SelectContent>
                     </Select>
 
                     {/* Category Filter */}
                     <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                       <SelectTrigger className="w-40">
-                        <SelectValue placeholder="分类" />
+                        <SelectValue placeholder="分组" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">所有分类</SelectItem>
-                        <SelectItem value="Safety Standards">安全标准</SelectItem>
-                        <SelectItem value="Technical Docs">技术文档</SelectItem>
-                        <SelectItem value="Maintenance">维护保养</SelectItem>
-                        <SelectItem value="Quality Control">质量控制</SelectItem>
-                        <SelectItem value="Installation">安装指南</SelectItem>
+                        <SelectItem value="all">所有分组</SelectItem>
+                        <SelectItem value="安全标准">安全标准</SelectItem>
+                        <SelectItem value="技术文档">技术文档</SelectItem>
+                        <SelectItem value="维护保养">维护保养</SelectItem>
+                        <SelectItem value="质量控制">质量控制</SelectItem>
+                        <SelectItem value="安装指南">安装指南</SelectItem>
                       </SelectContent>
                     </Select>
 
@@ -275,10 +345,11 @@ export default function DocumentsPage() {
                           onCheckedChange={handleSelectAll}
                         />
                       </div>
-                      <div className="col-span-4 flex items-center">
+                      <div className="col-span-3 flex items-center">
                         文档名称
                         <ArrowUpDown className="ml-2 h-4 w-4" />
                       </div>
+                      <div className="col-span-1">分组</div>
                       <div className="col-span-1">类型</div>
                       <div className="col-span-1">大小</div>
                       <div className="col-span-2">状态</div>
@@ -297,7 +368,7 @@ export default function DocumentsPage() {
                             onCheckedChange={(checked) => handleSelectDocument(doc.id, checked as boolean)}
                           />
                         </div>
-                        <div className="col-span-4">
+                        <div className="col-span-3">
                           <div className="flex items-center space-x-3">
                             <FileText className="h-5 w-5 text-muted-foreground" />
                             <div>
@@ -305,6 +376,11 @@ export default function DocumentsPage() {
                               <p className="text-xs text-muted-foreground">{doc.description}</p>
                             </div>
                           </div>
+                        </div>
+                        <div className="col-span-1">
+                          <Badge variant="secondary" className="text-xs px-2 py-1">
+                            {doc.category}
+                          </Badge>
                         </div>
                         <div className="col-span-1">
                           <Badge variant="outline" className="text-xs">
@@ -374,45 +450,53 @@ export default function DocumentsPage() {
               <Card>
                 <CardHeader>
                   <CardTitle className="font-serif">上传文档</CardTitle>
-                  <CardDescription>向知识平台上传新文档</CardDescription>
+                  <CardDescription>向知识平台上传新文档，支持批量上传和分组选择</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {/* Upload Area */}
-                  <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-12 text-center hover:border-muted-foreground/50 transition-colors">
+                  <div 
+                    className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-12 text-center hover:border-muted-foreground/50 transition-colors cursor-pointer"
+                    onClick={triggerFileInput}
+                  >
                     <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
-                    <h3 className="mt-4 text-lg font-medium">上传文档</h3>
+                    <h3 className="mt-4 text-lg font-medium">批量上传文档</h3>
                     <p className="mt-2 text-muted-foreground">拖拽文件到此处，或点击浏览</p>
                     <p className="mt-1 text-sm text-muted-foreground">支持PDF、Word、Excel、PowerPoint和文本文件</p>
-                    <Button className="mt-4">选择文件</Button>
+                    <Button className="mt-4">
+                      <Plus className="mr-2 h-4 w-4" />
+                      选择文件
+                    </Button>
                   </div>
+
+                  {/* Hidden file input */}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
 
                   {/* Upload Progress */}
                   <div className="mt-6 space-y-4">
                     <h4 className="font-medium">上传进度</h4>
                     <div className="space-y-3">
-                      <div className="flex items-center space-x-4 p-3 border rounded-lg">
-                        <FileText className="h-5 w-5 text-muted-foreground" />
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">安全手册_v2.pdf</p>
-                          <div className="flex items-center space-x-2 mt-1">
-                            <Progress value={75} className="flex-1 h-2" />
-                            <span className="text-xs text-muted-foreground">75%</span>
+                      {Object.entries(uploadProgress).map(([fileName, progress]) => (
+                        <div key={fileName} className="flex items-center space-x-4 p-3 border rounded-lg">
+                          <FileText className="h-5 w-5 text-muted-foreground" />
+                          <div className="flex-1">
+                            <p className="text-sm font-medium">{fileName}</p>
+                            <div className="flex items-center space-x-2 mt-1">
+                              <Progress value={progress} className="flex-1 h-2" />
+                              <span className="text-xs text-muted-foreground">{progress}%</span>
+                            </div>
                           </div>
+                          <Badge variant={progress === 100 ? "default" : "outline"}>
+                            {progress === 100 ? "已完成" : "上传中"}
+                          </Badge>
                         </div>
-                        <Badge variant="outline">处理中</Badge>
-                      </div>
-
-                      <div className="flex items-center space-x-4 p-3 border rounded-lg">
-                        <FileText className="h-5 w-5 text-muted-foreground" />
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">技术规格.docx</p>
-                          <div className="flex items-center space-x-2 mt-1">
-                            <Progress value={100} className="flex-1 h-2" />
-                            <span className="text-xs text-muted-foreground">完成</span>
-                          </div>
-                        </div>
-                        <Badge>已上传</Badge>
-                      </div>
+                      ))}
                     </div>
                   </div>
                 </CardContent>
@@ -477,6 +561,82 @@ export default function DocumentsPage() {
           </Tabs>
         </main>
       </div>
+
+      {/* Upload Dialog */}
+      <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Folder className="h-5 w-5" />
+              批量上传文档
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            {/* Group Selection */}
+            <div>
+              <Label htmlFor="groupSelect" className="text-sm font-medium mb-2 block">
+                选择文档分组
+              </Label>
+              <Select value={selectedGroup} onValueChange={setSelectedGroup}>
+                <SelectTrigger>
+                  <SelectValue placeholder="选择文档分组" />
+                </SelectTrigger>
+                <SelectContent>
+                  {documentGroups.map((group) => (
+                    <SelectItem key={group} value={group}>
+                      {group}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Selected Files */}
+            <div>
+              <Label className="text-sm font-medium mb-2 block">
+                已选择的文件 ({uploadFiles.length} 个)
+              </Label>
+              <div className="max-h-60 overflow-y-auto space-y-2">
+                {uploadFiles.map((file, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <FileText className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">{file.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {(file.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRemoveFile(index)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setShowUploadDialog(false)}>
+                取消
+              </Button>
+              <Button 
+                onClick={handleUpload}
+                disabled={uploadFiles.length === 0}
+              >
+                <Upload className="mr-2 h-4 w-4" />
+                开始上传
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

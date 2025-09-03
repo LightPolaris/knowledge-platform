@@ -15,16 +15,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator"
 import {
   Settings,
-  Users,
   Shield,
   Activity,
   Save,
   RefreshCw,
   Download,
   Upload,
-  Trash2,
-  Edit,
-  Plus,
   Eye,
   EyeOff,
   AlertTriangle,
@@ -32,49 +28,7 @@ import {
   User,
 } from "lucide-react"
 
-// Mock data for users
-const mockUsers = [
-  {
-    id: 1,
-    name: "Zhang Wei",
-    email: "zhang.wei@dongfang.com",
-    role: "Administrator",
-    department: "Safety Engineering",
-    status: "active",
-    lastLogin: "2024-01-15 09:30",
-    permissions: ["read", "write", "admin", "delete"],
-  },
-  {
-    id: 2,
-    name: "Li Ming",
-    email: "li.ming@dongfang.com",
-    role: "Technical Lead",
-    department: "Technical Documentation",
-    status: "active",
-    lastLogin: "2024-01-15 08:45",
-    permissions: ["read", "write"],
-  },
-  {
-    id: 3,
-    name: "Wang Fang",
-    email: "wang.fang@dongfang.com",
-    role: "Reviewer",
-    department: "Quality Control",
-    status: "active",
-    lastLogin: "2024-01-14 16:20",
-    permissions: ["read", "review"],
-  },
-  {
-    id: 4,
-    name: "Chen Lu",
-    email: "chen.lu@dongfang.com",
-    role: "Viewer",
-    department: "Maintenance",
-    status: "inactive",
-    lastLogin: "2024-01-10 14:15",
-    permissions: ["read"],
-  },
-]
+
 
 // Mock audit logs
 const mockAuditLogs = [
@@ -116,33 +70,7 @@ const mockAuditLogs = [
   },
 ]
 
-const getRoleColor = (role: string) => {
-  switch (role) {
-    case "Administrator":
-      return "bg-red-100 text-red-800"
-    case "Technical Lead":
-      return "bg-blue-100 text-blue-800"
-    case "Reviewer":
-      return "bg-yellow-100 text-yellow-800"
-    case "Viewer":
-      return "bg-gray-100 text-gray-800"
-    default:
-      return "bg-gray-100 text-gray-800"
-  }
-}
 
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case "active":
-      return "bg-green-100 text-green-800"
-    case "inactive":
-      return "bg-gray-100 text-gray-800"
-    case "suspended":
-      return "bg-red-100 text-red-800"
-    default:
-      return "bg-gray-100 text-gray-800"
-  }
-}
 
 const getActionIcon = (action: string) => {
   switch (action) {
@@ -160,7 +88,6 @@ const getActionIcon = (action: string) => {
 }
 
 export default function SettingsPage() {
-  const [selectedUser, setSelectedUser] = useState<any>(null)
   const [showPassword, setShowPassword] = useState(false)
   const [settings, setSettings] = useState({
     siteName: "Knowledge Platform",
@@ -192,187 +119,33 @@ export default function SettingsPage() {
       <Sidebar />
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header title="System Settings" subtitle="Manage users, security, and system configuration" />
+        <Header title="系统设置" subtitle="管理安全和系统配置" />
 
         <main className="flex-1 overflow-auto p-6">
-          <Tabs defaultValue="users" className="space-y-6">
+          <Tabs defaultValue="system" className="space-y-6">
             <TabsList>
-              <TabsTrigger value="users">User Management</TabsTrigger>
-              <TabsTrigger value="system">System Settings</TabsTrigger>
-              <TabsTrigger value="security">Security</TabsTrigger>
-              <TabsTrigger value="integrations">Integrations</TabsTrigger>
-              <TabsTrigger value="audit">Audit Logs</TabsTrigger>
+              <TabsTrigger value="system">系统设置</TabsTrigger>
+              <TabsTrigger value="security">安全设置</TabsTrigger>
+              <TabsTrigger value="integrations">集成服务</TabsTrigger>
+              <TabsTrigger value="audit">审计日志</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="users" className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-serif font-bold text-xl">User Management</h3>
-                  <p className="text-muted-foreground">Manage user accounts, roles, and permissions</p>
-                </div>
-                <Button>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add User
-                </Button>
-              </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* User List */}
-                <div className="lg:col-span-2">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="font-serif">Users</CardTitle>
-                      <CardDescription>Manage user accounts and permissions</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        {mockUsers.map((user) => (
-                          <div
-                            key={user.id}
-                            className={`p-4 border rounded-lg cursor-pointer transition-colors hover:bg-muted/50 ${
-                              selectedUser?.id === user.id ? "border-primary bg-primary/5" : ""
-                            }`}
-                            onClick={() => setSelectedUser(user)}
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center space-x-3">
-                                <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-                                  <User className="h-5 w-5 text-primary-foreground" />
-                                </div>
-                                <div>
-                                  <p className="font-medium">{user.name}</p>
-                                  <p className="text-sm text-muted-foreground">{user.email}</p>
-                                </div>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <Badge className={getRoleColor(user.role)}>{user.role}</Badge>
-                                <Badge className={getStatusColor(user.status)}>{user.status}</Badge>
-                              </div>
-                            </div>
-                            <div className="mt-3 flex items-center justify-between text-sm text-muted-foreground">
-                              <span>{user.department}</span>
-                              <span>Last login: {user.lastLogin}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* User Details */}
-                <div>
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="font-serif">User Details</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {selectedUser ? (
-                        <div className="space-y-4">
-                          <div className="text-center">
-                            <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-3">
-                              <User className="h-8 w-8 text-primary-foreground" />
-                            </div>
-                            <h4 className="font-medium">{selectedUser.name}</h4>
-                            <p className="text-sm text-muted-foreground">{selectedUser.email}</p>
-                          </div>
-
-                          <Separator />
-
-                          <div className="space-y-3">
-                            <div>
-                              <Label className="text-sm font-medium">Role</Label>
-                              <Select defaultValue={selectedUser.role}>
-                                <SelectTrigger className="mt-1">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="Administrator">Administrator</SelectItem>
-                                  <SelectItem value="Technical Lead">Technical Lead</SelectItem>
-                                  <SelectItem value="Reviewer">Reviewer</SelectItem>
-                                  <SelectItem value="Viewer">Viewer</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            <div>
-                              <Label className="text-sm font-medium">Department</Label>
-                              <Input value={selectedUser.department} className="mt-1" />
-                            </div>
-
-                            <div>
-                              <Label className="text-sm font-medium">Status</Label>
-                              <Select defaultValue={selectedUser.status}>
-                                <SelectTrigger className="mt-1">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="active">Active</SelectItem>
-                                  <SelectItem value="inactive">Inactive</SelectItem>
-                                  <SelectItem value="suspended">Suspended</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            <div>
-                              <Label className="text-sm font-medium mb-2 block">Permissions</Label>
-                              <div className="space-y-2">
-                                {["read", "write", "review", "admin", "delete"].map((permission) => (
-                                  <div key={permission} className="flex items-center space-x-2">
-                                    <Switch checked={selectedUser.permissions.includes(permission)} id={permission} />
-                                    <Label htmlFor={permission} className="text-sm capitalize">
-                                      {permission}
-                                    </Label>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-
-                          <Separator />
-
-                          <div className="flex space-x-2">
-                            <Button size="sm" className="flex-1">
-                              <Save className="mr-2 h-4 w-4" />
-                              Save
-                            </Button>
-                            <Button variant="outline" size="sm">
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button variant="destructive" size="sm">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="text-center py-8">
-                          <Users className="mx-auto h-12 w-12 text-muted-foreground" />
-                          <h4 className="mt-4 font-medium">Select a User</h4>
-                          <p className="mt-2 text-sm text-muted-foreground">
-                            Choose a user from the list to view and edit their details
-                          </p>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
-            </TabsContent>
 
             <TabsContent value="system" className="space-y-6">
               <div>
-                <h3 className="font-serif font-bold text-xl">System Settings</h3>
-                <p className="text-muted-foreground">Configure general system settings and preferences</p>
+                <h3 className="font-serif font-bold text-xl">系统设置</h3>
+                <p className="text-muted-foreground">配置通用系统设置和首选项</p>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="font-serif">General Settings</CardTitle>
+                    <CardTitle className="font-serif">常规设置</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
-                      <Label htmlFor="siteName">Site Name</Label>
+                      <Label htmlFor="siteName">站点名称</Label>
                       <Input
                         id="siteName"
                         value={settings.siteName}
@@ -380,7 +153,7 @@ export default function SettingsPage() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="siteDescription">Site Description</Label>
+                      <Label htmlFor="siteDescription">站点描述</Label>
                       <Textarea
                         id="siteDescription"
                         value={settings.siteDescription}
@@ -388,7 +161,7 @@ export default function SettingsPage() {
                       />
                     </div>
                     <div className="flex items-center justify-between">
-                      <Label htmlFor="allowRegistration">Allow User Registration</Label>
+                      <Label htmlFor="allowRegistration">允许用户注册</Label>
                       <Switch
                         id="allowRegistration"
                         checked={settings.allowRegistration}
@@ -396,7 +169,7 @@ export default function SettingsPage() {
                       />
                     </div>
                     <div className="flex items-center justify-between">
-                      <Label htmlFor="systemMaintenance">Maintenance Mode</Label>
+                      <Label htmlFor="systemMaintenance">维护模式</Label>
                       <Switch
                         id="systemMaintenance"
                         checked={settings.systemMaintenance}
@@ -408,11 +181,11 @@ export default function SettingsPage() {
 
                 <Card>
                   <CardHeader>
-                    <CardTitle className="font-serif">File Upload Settings</CardTitle>
+                    <CardTitle className="font-serif">文件上传设置</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
-                      <Label htmlFor="maxFileSize">Maximum File Size (MB)</Label>
+                      <Label htmlFor="maxFileSize">最大文件大小 (MB)</Label>
                       <Input
                         id="maxFileSize"
                         type="number"
@@ -421,7 +194,7 @@ export default function SettingsPage() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="allowedFileTypes">Allowed File Types</Label>
+                      <Label htmlFor="allowedFileTypes">允许的文件类型</Label>
                       <Input
                         id="allowedFileTypes"
                         value={settings.allowedFileTypes}
@@ -434,11 +207,11 @@ export default function SettingsPage() {
 
                 <Card>
                   <CardHeader>
-                    <CardTitle className="font-serif">Session Settings</CardTitle>
+                    <CardTitle className="font-serif">会话设置</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
-                      <Label htmlFor="sessionTimeout">Session Timeout (hours)</Label>
+                      <Label htmlFor="sessionTimeout">会话超时 (小时)</Label>
                       <Select
                         value={settings.sessionTimeout}
                         onValueChange={(value) => handleSettingChange("sessionTimeout", value)}
@@ -447,10 +220,10 @@ export default function SettingsPage() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="1">1 hour</SelectItem>
-                          <SelectItem value="4">4 hours</SelectItem>
-                          <SelectItem value="8">8 hours</SelectItem>
-                          <SelectItem value="24">24 hours</SelectItem>
+                          <SelectItem value="1">1 小时</SelectItem>
+                          <SelectItem value="4">4 小时</SelectItem>
+                          <SelectItem value="8">8 小时</SelectItem>
+                          <SelectItem value="24">24 小时</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -459,11 +232,11 @@ export default function SettingsPage() {
 
                 <Card>
                   <CardHeader>
-                    <CardTitle className="font-serif">Notification Settings</CardTitle>
+                    <CardTitle className="font-serif">通知设置</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <Label htmlFor="enableNotifications">Enable Notifications</Label>
+                      <Label htmlFor="enableNotifications">启用通知</Label>
                       <Switch
                         id="enableNotifications"
                         checked={settings.enableNotifications}
@@ -471,7 +244,7 @@ export default function SettingsPage() {
                       />
                     </div>
                     <div className="flex items-center justify-between">
-                      <Label htmlFor="emailNotifications">Email Notifications</Label>
+                      <Label htmlFor="emailNotifications">邮件通知</Label>
                       <Switch
                         id="emailNotifications"
                         checked={settings.emailNotifications}
@@ -483,28 +256,28 @@ export default function SettingsPage() {
               </div>
 
               <div className="flex justify-end space-x-2">
-                <Button variant="outline">Reset to Defaults</Button>
+                <Button variant="outline">重置为默认</Button>
                 <Button onClick={handleSaveSettings}>
                   <Save className="mr-2 h-4 w-4" />
-                  Save Settings
+                  保存设置
                 </Button>
               </div>
             </TabsContent>
 
             <TabsContent value="security" className="space-y-6">
               <div>
-                <h3 className="font-serif font-bold text-xl">Security Settings</h3>
-                <p className="text-muted-foreground">Configure security policies and authentication settings</p>
+                <h3 className="font-serif font-bold text-xl">安全设置</h3>
+                <p className="text-muted-foreground">配置安全策略和身份验证设置</p>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="font-serif">Authentication</CardTitle>
+                    <CardTitle className="font-serif">身份验证</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <Label htmlFor="requireEmailVerification">Require Email Verification</Label>
+                      <Label htmlFor="requireEmailVerification">需要邮件验证</Label>
                       <Switch
                         id="requireEmailVerification"
                         checked={settings.requireEmailVerification}
@@ -512,7 +285,7 @@ export default function SettingsPage() {
                       />
                     </div>
                     <div className="flex items-center justify-between">
-                      <Label htmlFor="enableTwoFactor">Enable Two-Factor Authentication</Label>
+                      <Label htmlFor="enableTwoFactor">启用双因素身份验证</Label>
                       <Switch
                         id="enableTwoFactor"
                         checked={settings.enableTwoFactor}
@@ -524,35 +297,35 @@ export default function SettingsPage() {
 
                 <Card>
                   <CardHeader>
-                    <CardTitle className="font-serif">Password Policy</CardTitle>
+                    <CardTitle className="font-serif">密码策略</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
-                      <Label htmlFor="minPasswordLength">Minimum Password Length</Label>
+                      <Label htmlFor="minPasswordLength">最小密码长度</Label>
                       <Select defaultValue="8">
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="6">6 characters</SelectItem>
-                          <SelectItem value="8">8 characters</SelectItem>
-                          <SelectItem value="12">12 characters</SelectItem>
-                          <SelectItem value="16">16 characters</SelectItem>
+                          <SelectItem value="6">6 个字符</SelectItem>
+                          <SelectItem value="8">8 个字符</SelectItem>
+                          <SelectItem value="12">12 个字符</SelectItem>
+                          <SelectItem value="16">16 个字符</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
                       <div className="flex items-center space-x-2">
                         <Switch id="requireUppercase" defaultChecked />
-                        <Label htmlFor="requireUppercase">Require uppercase letters</Label>
+                        <Label htmlFor="requireUppercase">需要大写字母</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Switch id="requireNumbers" defaultChecked />
-                        <Label htmlFor="requireNumbers">Require numbers</Label>
+                        <Label htmlFor="requireNumbers">需要数字</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Switch id="requireSpecialChars" defaultChecked />
-                        <Label htmlFor="requireSpecialChars">Require special characters</Label>
+                        <Label htmlFor="requireSpecialChars">需要特殊字符</Label>
                       </div>
                     </div>
                   </CardContent>
@@ -560,11 +333,11 @@ export default function SettingsPage() {
 
                 <Card>
                   <CardHeader>
-                    <CardTitle className="font-serif">Audit & Logging</CardTitle>
+                    <CardTitle className="font-serif">审计和日志</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <Label htmlFor="enableAuditLog">Enable Audit Logging</Label>
+                      <Label htmlFor="enableAuditLog">启用审计日志</Label>
                       <Switch
                         id="enableAuditLog"
                         checked={settings.enableAuditLog}
@@ -572,7 +345,7 @@ export default function SettingsPage() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="logRetentionDays">Log Retention (days)</Label>
+                      <Label htmlFor="logRetentionDays">日志保留 (天)</Label>
                       <Select
                         value={settings.logRetentionDays}
                         onValueChange={(value) => handleSettingChange("logRetentionDays", value)}
@@ -581,10 +354,10 @@ export default function SettingsPage() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="30">30 days</SelectItem>
-                          <SelectItem value="90">90 days</SelectItem>
-                          <SelectItem value="180">180 days</SelectItem>
-                          <SelectItem value="365">1 year</SelectItem>
+                          <SelectItem value="30">30 天</SelectItem>
+                          <SelectItem value="90">90 天</SelectItem>
+                          <SelectItem value="180">180 天</SelectItem>
+                          <SelectItem value="365">1 年</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -593,11 +366,11 @@ export default function SettingsPage() {
 
                 <Card>
                   <CardHeader>
-                    <CardTitle className="font-serif">API Security</CardTitle>
+                    <CardTitle className="font-serif">API 安全</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
-                      <Label htmlFor="apiKey">API Key</Label>
+                      <Label htmlFor="apiKey">API 密钥</Label>
                       <div className="flex space-x-2">
                         <Input
                           id="apiKey"
@@ -620,18 +393,18 @@ export default function SettingsPage() {
 
             <TabsContent value="integrations" className="space-y-6">
               <div>
-                <h3 className="font-serif font-bold text-xl">Integrations</h3>
-                <p className="text-muted-foreground">Manage external service integrations and API connections</p>
+                <h3 className="font-serif font-bold text-xl">集成服务</h3>
+                <p className="text-muted-foreground">管理外部服务集成和 API 连接</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {[
-                  { name: "Email Service", status: "connected", description: "SMTP email delivery service" },
-                  { name: "Cloud Storage", status: "connected", description: "Document storage and backup" },
-                  { name: "Single Sign-On", status: "disconnected", description: "LDAP/Active Directory integration" },
-                  { name: "Analytics", status: "connected", description: "Usage analytics and reporting" },
-                  { name: "Backup Service", status: "connected", description: "Automated data backup" },
-                  { name: "Monitoring", status: "disconnected", description: "System health monitoring" },
+                  { name: "邮件服务", status: "connected", description: "SMTP 邮件投递服务" },
+                  { name: "云存储", status: "connected", description: "文档存储和备份" },
+                  { name: "单点登录", status: "disconnected", description: "LDAP/Active Directory 集成" },
+                  { name: "分析服务", status: "connected", description: "使用分析和报告" },
+                  { name: "备份服务", status: "connected", description: "自动数据备份" },
+                  { name: "监控服务", status: "disconnected", description: "系统健康监控" },
                 ].map((integration, index) => (
                   <Card key={index}>
                     <CardHeader>
@@ -650,7 +423,7 @@ export default function SettingsPage() {
                           size="sm"
                           className="flex-1"
                         >
-                          {integration.status === "connected" ? "Disconnect" : "Connect"}
+                          {integration.status === "connected" ? "断开连接" : "连接"}
                         </Button>
                         <Button variant="outline" size="sm">
                           <Settings className="h-4 w-4" />
@@ -665,17 +438,17 @@ export default function SettingsPage() {
             <TabsContent value="audit" className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="font-serif font-bold text-xl">Audit Logs</h3>
-                  <p className="text-muted-foreground">View system activity and user actions</p>
+                  <h3 className="font-serif font-bold text-xl">审计日志</h3>
+                  <p className="text-muted-foreground">查看系统活动和用户操作</p>
                 </div>
                 <div className="flex space-x-2">
                   <Button variant="outline">
                     <Download className="mr-2 h-4 w-4" />
-                    Export Logs
+                    导出日志
                   </Button>
                   <Button variant="outline">
                     <RefreshCw className="mr-2 h-4 w-4" />
-                    Refresh
+                    刷新
                   </Button>
                 </div>
               </div>
@@ -686,12 +459,12 @@ export default function SettingsPage() {
                     <table className="w-full">
                       <thead className="border-b bg-muted/50">
                         <tr>
-                          <th className="text-left p-4 font-medium">Timestamp</th>
-                          <th className="text-left p-4 font-medium">User</th>
-                          <th className="text-left p-4 font-medium">Action</th>
-                          <th className="text-left p-4 font-medium">Resource</th>
-                          <th className="text-left p-4 font-medium">Status</th>
-                          <th className="text-left p-4 font-medium">IP Address</th>
+                          <th className="text-left p-4 font-medium">时间戳</th>
+                          <th className="text-left p-4 font-medium">用户</th>
+                          <th className="text-left p-4 font-medium">操作</th>
+                          <th className="text-left p-4 font-medium">资源</th>
+                          <th className="text-left p-4 font-medium">状态</th>
+                          <th className="text-left p-4 font-medium">IP 地址</th>
                         </tr>
                       </thead>
                       <tbody>

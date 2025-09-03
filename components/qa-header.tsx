@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils"
 interface QAHeaderProps {
   activeTab?: string
   onTabChange?: (tab: string) => void
+  onFeedbackClick?: () => void
 }
 
 const tabs = [
@@ -20,7 +21,8 @@ const tabs = [
 
 export function QAHeader({
   activeTab = "intelligent-dialogue",
-  onTabChange
+  onTabChange,
+  onFeedbackClick
 }: QAHeaderProps) {
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = React.useState(false)
@@ -85,7 +87,7 @@ export function QAHeader({
             </Button>
 
             {/* 帮助 */}
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" onClick={onFeedbackClick}>
               <HelpCircle className="h-4 w-4" />
             </Button>
 

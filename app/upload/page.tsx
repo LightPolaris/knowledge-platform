@@ -22,8 +22,8 @@ export default function UploadPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-serif font-bold text-3xl text-foreground">个人知识库（云文档）</h1>
-          <p className="text-muted-foreground">为您提供个人专属的知识存储空间，基于云技术</p>
+          <h1 className="font-serif font-bold text-3xl text-foreground">文档管理 - 上传文档</h1>
+          <p className="text-muted-foreground">上传和管理企业文档，支持多种格式和权限控制</p>
         </div>
         <Button variant="outline">
           <Clock className="mr-2 h-4 w-4" />

@@ -7,8 +7,11 @@ import { QAHeader } from "@/components/qa-header"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -37,6 +40,7 @@ import {
   Filter,
   Trash2,
   TrendingUp,
+  MessageCircle,
 } from "lucide-react"
 
 export default function QAPage() {
@@ -116,6 +120,21 @@ export default function QAPage() {
     "废水排放处理标准?"
   ]
 
+  // 知识领域数据
+  const knowledgeDomains = [
+    "通用",
+    "技术导则",
+    "相关标准",
+    "安全规范",
+    "维护手册",
+    "操作指南",
+    "故障诊断",
+    "质量控制",
+    "环保要求",
+    "能源管理",
+    "设备选型"
+  ]
+
   const [isLoading, setIsLoading] = useState(false)
   const [webSearchEnabled, setWebSearchEnabled] = useState(false)
   const [deepThinkingEnabled, setDeepThinkingEnabled] = useState(false)
@@ -125,13 +144,23 @@ export default function QAPage() {
   const [selectedRole, setSelectedRole] = useState("标准查询助手")
   const [customRoles, setCustomRoles] = useState<string[]>([])
   const [showNewRoleDialog, setShowNewRoleDialog] = useState(false)
+  const [selectedDomain, setSelectedDomain] = useState("通用")
+  const [domainOpen, setDomainOpen] = useState(false)
+  const [showFeedbackDialog, setShowFeedbackDialog] = useState(false)
+  const [feedbackMessageId, setFeedbackMessageId] = useState<number | null>(null)
+  const [showQuickFeedbackDialog, setShowQuickFeedbackDialog] = useState(false)
 
   const handleFeedback = (messageId: number, type: string) => {
-    setMessages(prev => prev.map(msg =>
-      msg.id === messageId
-        ? { ...msg, feedback: type }
-        : msg
-    ))
+    if (type === 'thumbsDown') {
+      setFeedbackMessageId(messageId)
+      setShowFeedbackDialog(true)
+    } else {
+      setMessages(prev => prev.map(msg =>
+        msg.id === messageId
+          ? { ...msg, feedback: type }
+          : msg
+      ))
+    }
   }
 
   const handleUploadImage = () => {
@@ -218,6 +247,24 @@ export default function QAPage() {
   // 检查是否有用户消息
   const hasUserMessages = messages.some(msg => msg.type === 'user')
 
+  const handleFeedbackSubmit = (feedbackData: { type: string, content: string }) => {
+    if (feedbackMessageId) {
+      setMessages(prev => prev.map(msg =>
+        msg.id === feedbackMessageId
+          ? { ...msg, feedback: 'thumbsDown', feedbackContent: feedbackData.content }
+          : msg
+      ))
+    }
+    setShowFeedbackDialog(false)
+    setFeedbackMessageId(null)
+  }
+
+  const handleQuickFeedbackSubmit = (feedbackData: { type: string, content: string }) => {
+    // 处理系统问题反馈
+    console.log('系统问题反馈:', feedbackData)
+    setShowQuickFeedbackDialog(false)
+  }
+
   return (
       <div className="flex h-screen bg-background">
         <Sidebar />
@@ -225,7 +272,8 @@ export default function QAPage() {
         <div className="flex-1 flex flex-col overflow-hidden">
           <QAHeader 
             activeTab={activeTab} 
-            onTabChange={setActiveTab} 
+            onTabChange={setActiveTab}
+            onFeedbackClick={() => setShowQuickFeedbackDialog(true)}
           />
 
         <main className="flex-1 overflow-hidden">
@@ -298,12 +346,17 @@ export default function QAPage() {
                                     <Button variant="ghost" size="sm" className="h-8 px-3 rounded-full text-gray-500 hover:text-gray-700">
                                       <Copy className="w-4 h-4" />
                                     </Button>
-                                    <Button variant="ghost" size="sm" className="h-8 px-3 rounded-full text-gray-500 hover:text-gray-700">
-                                      <Share className="w-4 h-4" />
-                                          </Button>
-                                    <Button variant="ghost" size="sm" className="h-8 px-3 rounded-full text-gray-500 hover:text-gray-700">
-                                      <MessageSquare className="w-4 h-4" />
-                                          </Button>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm" 
+                                      className="h-8 px-3 rounded-full text-gray-500 hover:text-gray-700"
+                                      onClick={() => {
+                                        setFeedbackMessageId(message.id)
+                                        setShowFeedbackDialog(true)
+                                      }}
+                                    >
+                                      <MessageCircle className="w-4 h-4" />
+                                    </Button>
                                         </div>
                                       </div>
                                     )}
@@ -348,12 +401,18 @@ export default function QAPage() {
                       {/* Main Input Row */}
                       <div className="flex items-center space-x-4">
                         <div className="flex-1 relative">
-                          <Input
+                          <Textarea
                             placeholder="请输入您的问题，或从上方选择热门问题..."
                             value={question}
                             onChange={(e) => setQuestion(e.target.value)}
-                            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                            className="h-12 text-base border-2 border-blue-200 rounded-xl focus:border-blue-400 focus:ring-0"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault()
+                                handleSendMessage()
+                              }
+                            }}
+                            className="min-h-12 max-h-32 text-base border-2 border-blue-200 rounded-xl focus:border-blue-400 focus:ring-0 resize-none"
+                            rows={1}
                           />
                         </div>
                         <Button 
@@ -368,6 +427,45 @@ export default function QAPage() {
                       {/* Bottom Controls Row */}
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-6">
+                          {/* Knowledge Domain Selection */}
+                          <div className="flex items-center space-x-1">
+                            <Popover open={domainOpen} onOpenChange={setDomainOpen}>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  role="combobox"
+                                  aria-expanded={domainOpen}
+                                  className="w-32 h-8 justify-between text-sm font-medium"
+                                >
+                                  {selectedDomain}
+                                  <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-32 p-0">
+                                <Command>
+                                  <CommandInput placeholder="搜索领域..." />
+                                  <CommandList>
+                                    <CommandEmpty>未找到相关领域</CommandEmpty>
+                                    <CommandGroup>
+                                      {knowledgeDomains.map((domain) => (
+                                        <CommandItem
+                                          key={domain}
+                                          value={domain}
+                                          onSelect={(currentValue) => {
+                                            setSelectedDomain(currentValue === selectedDomain ? "" : currentValue)
+                                            setDomainOpen(false)
+                                          }}
+                                        >
+                                          {domain}
+                                        </CommandItem>
+                                      ))}
+                                    </CommandGroup>
+                                  </CommandList>
+                                </Command>
+                              </PopoverContent>
+                            </Popover>
+                          </div>
+
                           {/* Model Selection */}
                           <div className="flex items-center space-x-1">
                             <Select value={selectedModel} onValueChange={setSelectedModel}>
@@ -608,17 +706,7 @@ export default function QAPage() {
                             </div>
                           </div>
                           
-                          <div className="flex items-center space-x-2 ml-4">
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                              <Share className="w-4 h-4" />
-                            </Button>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                              <Copy className="w-4 h-4" />
-                            </Button>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-600 hover:text-red-700">
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
+
                         </div>
                       </div>
                     ))}
@@ -660,6 +748,26 @@ export default function QAPage() {
           <NewRoleForm onCreateRole={handleCreateRole} onCancel={() => setShowNewRoleDialog(false)} />
         </DialogContent>
       </Dialog>
+
+      {/* 反馈提交表单对话框 */}
+      <Dialog open={showFeedbackDialog} onOpenChange={setShowFeedbackDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>提交反馈</DialogTitle>
+          </DialogHeader>
+          <FeedbackForm onSubmit={handleFeedbackSubmit} onCancel={() => setShowFeedbackDialog(false)} />
+        </DialogContent>
+      </Dialog>
+
+      {/* 快速反馈表单对话框 */}
+      <Dialog open={showQuickFeedbackDialog} onOpenChange={setShowQuickFeedbackDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>系统问题反馈</DialogTitle>
+          </DialogHeader>
+          <QuickFeedbackForm onSubmit={handleQuickFeedbackSubmit} onCancel={() => setShowQuickFeedbackDialog(false)} />
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
@@ -696,6 +804,124 @@ function NewRoleForm({ onCreateRole, onCancel }: { onCreateRole: (name: string) 
         </Button>
         <Button type="submit" disabled={!roleName.trim()}>
           创建
+        </Button>
+      </div>
+    </form>
+  )
+}
+
+// 反馈表单组件
+function FeedbackForm({ onSubmit, onCancel }: { onSubmit: (data: { type: string, content: string }) => void, onCancel: () => void }) {
+  const [feedbackType, setFeedbackType] = useState("")
+  const [feedbackContent, setFeedbackContent] = useState("")
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (feedbackType && feedbackContent.trim()) {
+      onSubmit({ type: feedbackType, content: feedbackContent.trim() })
+      setFeedbackType("")
+      setFeedbackContent("")
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label htmlFor="feedbackType" className="text-sm font-medium mb-2 block">
+          反馈类型
+        </label>
+        <Select value={feedbackType} onValueChange={setFeedbackType}>
+          <SelectTrigger>
+            <SelectValue placeholder="请选择反馈类型" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="inaccurate">回答不准确</SelectItem>
+            <SelectItem value="incomplete">回答不完整</SelectItem>
+            <SelectItem value="irrelevant">回答不相关</SelectItem>
+            <SelectItem value="technical">技术问题</SelectItem>
+            <SelectItem value="other">其他问题</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      
+      <div>
+        <label htmlFor="feedbackContent" className="text-sm font-medium mb-2 block">
+          详细说明
+        </label>
+        <Textarea
+          id="feedbackContent"
+          placeholder="请详细描述您遇到的问题或建议..."
+          value={feedbackContent}
+          onChange={(e) => setFeedbackContent(e.target.value)}
+          className="min-h-24"
+        />
+      </div>
+
+      <div className="flex justify-end space-x-2">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          取消
+        </Button>
+        <Button type="submit" disabled={!feedbackType || !feedbackContent.trim()}>
+          提交反馈
+        </Button>
+      </div>
+    </form>
+  )
+}
+
+// 快速反馈表单组件
+function QuickFeedbackForm({ onSubmit, onCancel }: { onSubmit: (data: { type: string, content: string }) => void, onCancel: () => void }) {
+  const [feedbackType, setFeedbackType] = useState("")
+  const [feedbackContent, setFeedbackContent] = useState("")
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (feedbackType && feedbackContent.trim()) {
+      onSubmit({ type: feedbackType, content: feedbackContent.trim() })
+      setFeedbackType("")
+      setFeedbackContent("")
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label htmlFor="quickFeedbackType" className="text-sm font-medium mb-2 block">
+          问题类型
+        </label>
+        <Select value={feedbackType} onValueChange={setFeedbackType}>
+          <SelectTrigger>
+            <SelectValue placeholder="请选择问题类型" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="bug">系统错误</SelectItem>
+            <SelectItem value="performance">性能问题</SelectItem>
+            <SelectItem value="ui">界面问题</SelectItem>
+            <SelectItem value="feature">功能建议</SelectItem>
+            <SelectItem value="other">其他问题</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      
+      <div>
+        <label htmlFor="quickFeedbackContent" className="text-sm font-medium mb-2 block">
+          问题描述
+        </label>
+        <Textarea
+          id="quickFeedbackContent"
+          placeholder="请详细描述您遇到的问题..."
+          value={feedbackContent}
+          onChange={(e) => setFeedbackContent(e.target.value)}
+          className="min-h-24"
+        />
+      </div>
+
+      <div className="flex justify-end space-x-2">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          取消
+        </Button>
+        <Button type="submit" disabled={!feedbackType || !feedbackContent.trim()}>
+          提交反馈
         </Button>
       </div>
     </form>
