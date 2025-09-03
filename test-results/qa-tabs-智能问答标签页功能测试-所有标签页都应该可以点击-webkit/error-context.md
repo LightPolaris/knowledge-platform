@@ -1,0 +1,138 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - img [ref=e7]
+        - generic [ref=e12]:
+          - heading "知识平台" [level=1] [ref=e13]
+          - paragraph [ref=e14]: 东方电气
+      - button [ref=e15]:
+        - img
+    - navigation [ref=e19]:
+      - link "智能问答" [ref=e20]:
+        - /url: /
+        - button "智能问答" [ref=e21]:
+          - img
+          - generic [ref=e22]: 智能问答
+      - link "知识搜索" [ref=e23]:
+        - /url: /search
+        - button "知识搜索" [ref=e24]:
+          - img
+          - generic [ref=e25]: 知识搜索
+      - link "知识图谱" [ref=e26]:
+        - /url: /knowledge-graph
+        - button "知识图谱" [ref=e27]:
+          - img
+          - generic [ref=e28]: 知识图谱
+      - link "文件对比" [ref=e29]:
+        - /url: /compare
+        - button "文件对比" [ref=e30]:
+          - img
+          - generic [ref=e31]: 文件对比
+      - link "文档管理" [ref=e32]:
+        - /url: /documents
+        - button "文档管理" [ref=e33]:
+          - img
+          - generic [ref=e34]: 文档管理
+      - link "个人知识库（云文档）" [ref=e35]:
+        - /url: /upload
+        - button "个人知识库（云文档）" [ref=e36]:
+          - img
+          - generic [ref=e37]: 个人知识库（云文档）
+      - link "个人中心" [ref=e38]:
+        - /url: /profile
+        - button "个人中心" [ref=e39]:
+          - img
+          - generic [ref=e40]: 个人中心
+      - link "流程处理" [ref=e41]:
+        - /url: /workflow
+        - button "流程处理" [ref=e42]:
+          - img
+          - generic [ref=e43]: 流程处理
+      - link "权限管理" [ref=e44]:
+        - /url: /permissions
+        - button "权限管理" [ref=e45]:
+          - img
+          - generic [ref=e46]: 权限管理
+      - link "系统设置" [ref=e47]:
+        - /url: /settings
+        - button "系统设置" [ref=e48]:
+          - img
+          - generic [ref=e49]: 系统设置
+    - button "管理员 admin@dongfang.com" [ref=e51]:
+      - generic [ref=e52]:
+        - img
+      - generic [ref=e53]:
+        - paragraph [ref=e54]: 管理员
+        - paragraph [ref=e55]: admin@dongfang.com
+  - generic [ref=e56]:
+    - banner [ref=e58]:
+      - generic [ref=e59]:
+        - generic [ref=e60]:
+          - generic [ref=e61]:
+            - heading "智能问答" [level=1] [ref=e62]
+            - paragraph [ref=e63]: 基于AI的智能问答系统，快速获取知识解答
+          - generic [ref=e64]:
+            - button "智能对话" [ref=e65]
+            - button "错题库" [ref=e66]
+            - button "精选问题" [ref=e67]
+            - button "专家优化" [ref=e68]
+            - button "对话历史" [ref=e69]
+            - button "统计分析" [ref=e70]
+        - generic [ref=e71]:
+          - generic [ref=e72]:
+            - img [ref=e73]
+            - textbox "搜索文档、知识..." [ref=e76]
+          - button "3" [ref=e77]:
+            - img
+            - generic [ref=e78]: "3"
+          - button [ref=e79]:
+            - img
+          - button [ref=e80]
+    - main [ref=e81]:
+      - generic [ref=e83]:
+        - generic [ref=e87]:
+          - img [ref=e90]
+          - generic [ref=e93]:
+            - generic [ref=e94]:
+              - paragraph [ref=e95]: 您好！我是东方电气集团的智能助手。我可以帮您解答关于锅炉技术、安全规范、维护流程等方面的问题。请问有什么可以帮助您的吗？
+              - generic [ref=e96]:
+                - generic [ref=e97]:
+                  - button [ref=e98]:
+                    - img
+                  - button [ref=e99]:
+                    - img
+                - generic [ref=e100]:
+                  - button [ref=e101]:
+                    - img
+                  - button [ref=e102]:
+                    - img
+                  - button [ref=e103]:
+                    - img
+            - generic [ref=e104]:
+              - img [ref=e105]
+              - text: 11:04:30
+        - generic [ref=e110]:
+          - generic [ref=e111]:
+            - textbox "请输入您的问题，或从上方选择热门问题..." [ref=e113]
+            - button [disabled]:
+              - img
+          - generic [ref=e114]:
+            - generic [ref=e115]:
+              - generic [ref=e116]:
+                - combobox [ref=e117]:
+                  - img
+                - combobox [ref=e118]
+              - button "深度思考" [ref=e119]:
+                - img
+                - text: 深度思考
+              - button "新开对话" [ref=e120]:
+                - img
+                - text: 新开对话
+              - button [ref=e121]:
+                - img
+            - generic [ref=e122]: 内容由AI生成，仅供参考
+```

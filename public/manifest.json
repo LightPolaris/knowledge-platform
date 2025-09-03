@@ -1,0 +1,16 @@
+{
+  "name": "知识平台 - 东方电气集团",
+  "short_name": "知识平台",
+  "description": "锅炉事业部智能知识管理平台",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
