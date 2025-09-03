@@ -624,16 +624,7 @@ export default function QAPage() {
                             </DropdownMenuContent>
                           </DropdownMenu>
 
-                          {/* New Chat Button */}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setMessages([messages[0]])}
-                            className="h-8 px-3 rounded-full text-sm text-gray-600 hover:bg-gray-100"
-                          >
-                            <RotateCcw className="w-4 h-4 mr-1" />
-                            新开对话
-                          </Button>
+
                         </div>
 
                         <div className="text-xs text-gray-500">

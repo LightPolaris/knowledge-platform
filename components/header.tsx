@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Search, Bell, HelpCircle, Sun, Moon } from "lucide-react"
 import { useTheme } from "next-themes"
+import { useRouter } from "next/navigation"
 
 interface HeaderProps {
   title?: string
@@ -14,6 +15,7 @@ interface HeaderProps {
 
 export function Header({ title = "仪表板", subtitle }: HeaderProps) {
   const { theme, setTheme } = useTheme()
+  const router = useRouter()
   const [mounted, setMounted] = React.useState(false)
 
   React.useEffect(() => {
@@ -22,6 +24,10 @@ export function Header({ title = "仪表板", subtitle }: HeaderProps) {
 
   const handleThemeToggle = () => {
     setTheme(theme === "dark" ? "light" : "dark")
+  }
+
+  const handleNotificationClick = () => {
+    router.push("/notifications")
   }
 
   return (
@@ -42,7 +48,7 @@ export function Header({ title = "仪表板", subtitle }: HeaderProps) {
           </div>
 
           {/* Notifications */}
-          <Button variant="ghost" size="sm" className="relative">
+          <Button variant="ghost" size="sm" className="relative" onClick={handleNotificationClick}>
             <Bell className="h-4 w-4" />
             <Badge
               variant="destructive"
