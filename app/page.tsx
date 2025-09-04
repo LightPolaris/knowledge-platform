@@ -41,6 +41,7 @@ import {
   TrendingUp,
   MessageCircle,
   Star,
+  FolderOpen,
 } from "lucide-react"
 
 export default function QAPage() {
@@ -149,6 +150,36 @@ export default function QAPage() {
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false)
   const [feedbackMessageId, setFeedbackMessageId] = useState<number | null>(null)
   const [showQuickFeedbackDialog, setShowQuickFeedbackDialog] = useState(false)
+  const [showDocumentSelectDialog, setShowDocumentSelectDialog] = useState(false)
+  const [selectedDocuments, setSelectedDocuments] = useState<string[]>([])
+  const [documentSearchQuery, setDocumentSearchQuery] = useState("")
+  const [selectedCategory, setSelectedCategory] = useState("all")
+
+  // 模拟系统中的文档数据
+  const systemDocuments = [
+    { id: '1', name: '锅炉安全标准 2024.pdf', type: 'PDF', size: '2.4 MB', category: '安全规范', docNumber: 'DF-2024-001' },
+    { id: '2', name: '汽轮机维护手册.pdf', type: 'PDF', size: '3.2 MB', category: '维护指南', docNumber: 'DF-2024-002' },
+    { id: '3', name: '发电机技术规范.docx', type: 'DOCX', size: '1.8 MB', category: '技术规范', docNumber: 'DF-2024-003' },
+    { id: '4', name: '电气安全操作规程.pdf', type: 'PDF', size: '2.1 MB', category: '操作规程', docNumber: 'DF-2024-004' },
+    { id: '5', name: '设备故障诊断指南.pdf', type: 'PDF', size: '4.5 MB', category: '故障诊断', docNumber: 'DF-2024-005' },
+    { id: '6', name: '环保排放标准.pdf', type: 'PDF', size: '1.2 MB', category: '环保标准', docNumber: 'DF-2024-006' },
+    { id: '7', name: '质量管理体系.doc', type: 'DOC', size: '2.8 MB', category: '质量管理', docNumber: 'DF-2024-007' },
+    { id: '8', name: '员工培训手册.pdf', type: 'PDF', size: '3.7 MB', category: '培训资料', docNumber: 'DF-2024-008' },
+    { id: '9', name: '锅炉运行参数表.xlsx', type: 'XLSX', size: '0.8 MB', category: '技术规范', docNumber: 'DF-2024-009' },
+    { id: '10', name: '安全防护用品清单.pdf', type: 'PDF', size: '1.5 MB', category: '安全规范', docNumber: 'DF-2024-010' },
+  ]
+
+  // 获取所有分类
+  const categories = ['all', ...Array.from(new Set(systemDocuments.map(doc => doc.category)))]
+
+  // 筛选文档
+  const filteredDocuments = systemDocuments.filter(doc => {
+    const matchesSearch = documentSearchQuery === "" || 
+      doc.name.toLowerCase().includes(documentSearchQuery.toLowerCase()) ||
+      doc.docNumber.toLowerCase().includes(documentSearchQuery.toLowerCase())
+    const matchesCategory = selectedCategory === "all" || doc.category === selectedCategory
+    return matchesSearch && matchesCategory
+  })
 
   const handleFeedback = (messageId: number, type: string) => {
     if (type === 'thumbsDown') {
@@ -190,6 +221,36 @@ export default function QAPage() {
       }
     }
     input.click()
+  }
+
+  const handleSelectExistingDocument = () => {
+    // 打开文档选择对话框
+    setShowDocumentSelectDialog(true)
+  }
+
+  const handleDocumentToggle = (documentId: string) => {
+    setSelectedDocuments(prev => 
+      prev.includes(documentId) 
+        ? prev.filter(id => id !== documentId)
+        : [...prev, documentId]
+    )
+  }
+
+  const handleConfirmDocumentSelection = () => {
+    const selectedDocs = systemDocuments.filter(doc => selectedDocuments.includes(doc.id))
+    console.log('选择的文档:', selectedDocs)
+    setShowDocumentSelectDialog(false)
+    // 不清空selectedDocuments，保留用于显示预览
+    setDocumentSearchQuery("")
+    setSelectedCategory("all")
+    // 这里可以将选中的文档添加到问题中
+  }
+
+  const handleCancelDocumentSelection = () => {
+    setShowDocumentSelectDialog(false)
+    setSelectedDocuments([])
+    setDocumentSearchQuery("")
+    setSelectedCategory("all")
   }
 
   const handleEditRole = (role: string) => {
@@ -247,7 +308,7 @@ export default function QAPage() {
   // 检查是否有用户消息
   const hasUserMessages = messages.some(msg => msg.type === 'user')
 
-  const handleFeedbackSubmit = (feedbackData: { type: string, content: string }) => {
+  const handleFeedbackSubmit = (feedbackData: { type: string, content: string, major: string }) => {
     if (feedbackMessageId) {
       setMessages(prev => prev.map(msg =>
         msg.id === feedbackMessageId
@@ -385,6 +446,63 @@ export default function QAPage() {
                           </div>
                   </div>
                 </div>
+
+                {/* 选中文档预览区域 */}
+                {selectedDocuments.length > 0 && (
+                  <div className="border-t border-gray-200 bg-gray-50 p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-sm font-medium text-gray-900">已选择的文档</h4>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedDocuments([])}
+                        className="text-gray-500 hover:text-gray-700"
+                      >
+                        清除选择
+                      </Button>
+                    </div>
+                    <div className="space-y-2">
+                      {selectedDocuments.map(docId => {
+                        const doc = systemDocuments.find(d => d.id === docId)
+                        if (!doc) return null
+                        return (
+                          <div key={docId} className="bg-white rounded-lg p-3 border border-gray-200">
+                            <div className="flex items-start space-x-3">
+                              <div className="w-8 h-8 bg-green-100 rounded flex items-center justify-center flex-shrink-0">
+                                <FileText className="w-4 h-4 text-green-600" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-gray-900 truncate">{doc.name}</p>
+                                <p className="text-xs text-gray-500">{doc.type} · {doc.size}</p>
+                              </div>
+                            </div>
+                            {/* 智能建议按钮 */}
+                            <div className="mt-3 flex space-x-2">
+                              <button 
+                                className="px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors flex items-center"
+                                onClick={() => {
+                                  const question = `请介绍一下${doc.name}这个文档的主要内容`
+                                  setQuestion(question)
+                                }}
+                              >
+                                介绍下这个文档 →
+                              </button>
+                              <button 
+                                className="px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors flex items-center"
+                                onClick={() => {
+                                  const question = `${doc.name}的主要用途是什么？`
+                                  setQuestion(question)
+                                }}
+                              >
+                                这个文档的主要用途是什么 →
+                              </button>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
 
                 {/* Bottom Input Area */}
                 <div className="border-t border-gray-200 bg-white p-6 flex-shrink-0 min-h-[149px]">
@@ -617,6 +735,10 @@ export default function QAPage() {
                                 <FileText className="w-4 h-4 mr-2" />
                                 本地文件
                               </DropdownMenuItem>
+                              <DropdownMenuItem onClick={handleSelectExistingDocument} className="cursor-pointer">
+                                <FolderOpen className="w-4 h-4 mr-2" />
+                                选择已有文档
+                              </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
 
@@ -635,7 +757,7 @@ export default function QAPage() {
 
 
             {activeTab === "dialogue-history" && (
-              <div className="flex-1 p-6">
+                              <div className="flex-1 p-6 overflow-y-auto">
                 <div className="max-w-6xl mx-auto">
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="font-serif font-bold text-lg">对话历史</h3>
@@ -656,16 +778,21 @@ export default function QAPage() {
                       <div key={conversation.id} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
-                            <div className="flex items-center space-x-3 mb-2">
-                              <div className="flex items-center space-x-2">
-                                <div className="w-2 h-2 bg-primary rounded-full"></div>
-                                <span className="text-sm font-medium text-gray-900">
-                                  {conversation.title}
-                                </span>
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center space-x-3">
+                                <div className="flex items-center space-x-2">
+                                  <div className="w-2 h-2 bg-primary rounded-full"></div>
+                                  <span className="text-sm font-medium text-gray-900">
+                                    {conversation.title}
+                                  </span>
+                                </div>
+                                <Badge variant="secondary" className="text-xs">
+                                  {conversation.messageCount} 条消息
+                                </Badge>
                               </div>
-                              <Badge variant="secondary" className="text-xs">
-                                {conversation.messageCount} 条消息
-                              </Badge>
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-500 hover:text-gray-700">
+                                <Star className="w-4 h-4" />
+                              </Button>
                             </div>
                             
                             <div className="text-sm text-gray-600 mb-3">
@@ -750,6 +877,105 @@ export default function QAPage() {
           <QuickFeedbackForm onSubmit={handleQuickFeedbackSubmit} onCancel={() => setShowQuickFeedbackDialog(false)} />
         </DialogContent>
       </Dialog>
+
+      {/* 文档选择对话框 */}
+      <Dialog open={showDocumentSelectDialog} onOpenChange={setShowDocumentSelectDialog}>
+        <DialogContent className="sm:max-w-[700px] max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>选择已有文档</DialogTitle>
+            <p className="text-sm text-muted-foreground">选择您想要引用的文档进行提问</p>
+          </DialogHeader>
+          <div className="space-y-4">
+            {/* 搜索和筛选区域 */}
+            <div className="space-y-3">
+              <div className="flex space-x-3">
+                <div className="flex-1">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+                    <Input
+                      placeholder="搜索文档名称或编号..."
+                      value={documentSearchQuery}
+                      onChange={(e) => setDocumentSearchQuery(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="选择分类" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">全部分类</SelectItem>
+                    {categories.slice(1).map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="text-xs text-gray-500">
+                找到 {filteredDocuments.length} 个文档
+              </div>
+            </div>
+
+
+            {/* 文档列表 */}
+            <div className="max-h-96 overflow-y-auto space-y-2">
+              {filteredDocuments.map((doc) => (
+                <div
+                  key={doc.id}
+                  className={`flex items-center space-x-3 p-3 border rounded-lg cursor-pointer transition-colors ${
+                    selectedDocuments.includes(doc.id)
+                      ? 'border-primary bg-primary/5'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                  onClick={() => handleDocumentToggle(doc.id)}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedDocuments.includes(doc.id)}
+                    onChange={() => handleDocumentToggle(doc.id)}
+                    className="h-4 w-4 text-primary"
+                  />
+                  <FileText className="h-5 w-5 text-gray-500" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">{doc.name}</p>
+                    <div className="flex items-center space-x-2 text-xs text-gray-500">
+                      <span className="font-mono bg-gray-100 px-1 rounded">{doc.docNumber}</span>
+                      <span>•</span>
+                      <span>{doc.type}</span>
+                      <span>•</span>
+                      <span>{doc.size}</span>
+                      <span>•</span>
+                      <span>{doc.category}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="flex justify-between items-center pt-4 border-t">
+              <span className="text-sm text-gray-500">
+                已选择 {selectedDocuments.length} 个文档
+              </span>
+              <div className="flex space-x-2">
+                <Button
+                  variant="outline"
+                  onClick={handleCancelDocumentSelection}
+                >
+                  取消
+                </Button>
+                <Button
+                  onClick={handleConfirmDocumentSelection}
+                  disabled={selectedDocuments.length === 0}
+                >
+                  确认选择
+                </Button>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
@@ -793,37 +1019,63 @@ function NewRoleForm({ onCreateRole, onCancel }: { onCreateRole: (name: string) 
 }
 
 // 反馈表单组件
-function FeedbackForm({ onSubmit, onCancel }: { onSubmit: (data: { type: string, content: string }) => void, onCancel: () => void }) {
+function FeedbackForm({ onSubmit, onCancel }: { onSubmit: (data: { type: string, content: string, major: string }) => void, onCancel: () => void }) {
   const [feedbackType, setFeedbackType] = useState("")
   const [feedbackContent, setFeedbackContent] = useState("")
+  const [selectedMajor, setSelectedMajor] = useState("auto")
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (feedbackType && feedbackContent.trim()) {
-      onSubmit({ type: feedbackType, content: feedbackContent.trim() })
+      onSubmit({ type: feedbackType, content: feedbackContent.trim(), major: selectedMajor })
       setFeedbackType("")
       setFeedbackContent("")
+      setSelectedMajor("auto")
     }
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label htmlFor="feedbackType" className="text-sm font-medium mb-2 block">
-          反馈类型
-        </label>
-        <Select value={feedbackType} onValueChange={setFeedbackType}>
-          <SelectTrigger>
-            <SelectValue placeholder="请选择反馈类型" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="inaccurate">回答不准确</SelectItem>
-            <SelectItem value="incomplete">回答不完整</SelectItem>
-            <SelectItem value="irrelevant">回答不相关</SelectItem>
-            <SelectItem value="technical">技术问题</SelectItem>
-            <SelectItem value="other">其他问题</SelectItem>
-          </SelectContent>
-        </Select>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label htmlFor="selectedMajor" className="text-sm font-medium mb-2 block">
+            专业领域
+          </label>
+          <Select value={selectedMajor} onValueChange={setSelectedMajor}>
+            <SelectTrigger>
+              <SelectValue placeholder="请选择专业领域" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="auto">自动分配</SelectItem>
+              <SelectItem value="boiler">锅炉技术</SelectItem>
+              <SelectItem value="turbine">汽轮机技术</SelectItem>
+              <SelectItem value="generator">发电机技术</SelectItem>
+              <SelectItem value="electrical">电气工程</SelectItem>
+              <SelectItem value="mechanical">机械工程</SelectItem>
+              <SelectItem value="safety">安全工程</SelectItem>
+              <SelectItem value="maintenance">设备维护</SelectItem>
+              <SelectItem value="quality">质量管理</SelectItem>
+              <SelectItem value="environmental">环保技术</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <label htmlFor="feedbackType" className="text-sm font-medium mb-2 block">
+            反馈类型
+          </label>
+          <Select value={feedbackType} onValueChange={setFeedbackType}>
+            <SelectTrigger>
+              <SelectValue placeholder="请选择反馈类型" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="inaccurate">回答不准确</SelectItem>
+              <SelectItem value="incomplete">回答不完整</SelectItem>
+              <SelectItem value="irrelevant">回答不相关</SelectItem>
+              <SelectItem value="technical">技术问题</SelectItem>
+              <SelectItem value="other">其他问题</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
       
       <div>
