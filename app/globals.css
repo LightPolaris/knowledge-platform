@@ -1,114 +1,223 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "../styles/config-files.css";
 
 @custom-variant dark (&:is([data-theme="dark"] *));
 
 :root {
-  --background: oklch(1 0 0); /* #ffffff - Main background */
-  --foreground: oklch(0.278 0 0); /* #374151 - Main text color */
-  --card: oklch(0.984 0.024 142.5); /* #f0fdf4 - Card background */
-  --card-foreground: oklch(0.278 0 0); /* #374151 - Card text color */
-  --popover: oklch(1 0 0); /* #ffffff - Popover background */
-  --popover-foreground: oklch(0.278 0 0); /* #374151 - Popover text color */
-  --primary: oklch(0.506 0.177 142.38); /* #15803d - Primary green for CTAs */
-  --primary-foreground: oklch(1 0 0); /* #ffffff - Text on primary */
-  --secondary: oklch(0.784 0.221 110.72); /* #84cc16 - Secondary bright green */
-  --secondary-foreground: oklch(0.278 0 0); /* #374151 - Text on secondary */
-  --muted: oklch(0.984 0.024 142.5); /* #f0fdf4 - Muted background */
-  --muted-foreground: oklch(0.447 0 0); /* #6b7280 - Muted text */
-  --accent: oklch(0.784 0.221 110.72); /* #84cc16 - Accent elements */
-  --accent-foreground: oklch(1 0 0); /* #ffffff - Text on accent */
-  --destructive: oklch(0.577 0.245 27.325); /* #dc2626 - Error/destructive */
-  --destructive-foreground: oklch(1 0 0); /* #ffffff - Text on destructive */
-  --border: oklch(0.922 0 0); /* #e5e7eb - Border color */
-  --input: oklch(0.984 0.024 142.5); /* #f0fdf4 - Input background */
-  --ring: oklch(0.506 0.177 142.38 / 0.5); /* Focus ring with transparency */
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --radius: 0.5rem; /* Updated to match design brief */
-  --sidebar: oklch(0.984 0.024 142.5); /* #f0fdf4 - Sidebar background */
-  --sidebar-foreground: oklch(0.278 0 0); /* #374151 - Sidebar text */
-  --sidebar-primary: oklch(0.506 0.177 142.38); /* #15803d - Primary in sidebar */
-  --sidebar-primary-foreground: oklch(1 0 0); /* #ffffff - Text on sidebar primary */
-  --sidebar-accent: oklch(0.784 0.221 110.72); /* #84cc16 - Accent in sidebar */
-  --sidebar-accent-foreground: oklch(0.278 0 0); /* #374151 - Text on sidebar accent */
-  --sidebar-border: oklch(0.922 0 0); /* #e5e7eb - Sidebar border */
-  --sidebar-ring: oklch(0.506 0.177 142.38 / 0.5); /* Focus ring in sidebar */
+  /* 背景色 - 使用设计规范中的背景色 */
+  --background: oklch(0.99 0.005 220); /* #F5F5F5 - 背景色 */
+  --foreground: oklch(0.2 0 0); /* #333333 - 大标题色/正文 */
+  
+  /* 卡片和弹出层 */
+  --card: oklch(1 0 0); /* #ffffff - 卡片背景 */
+  --card-foreground: oklch(0.2 0 0); /* #333333 - 卡片文字 */
+  --popover: oklch(1 0 0); /* #ffffff - 弹出层背景 */
+  --popover-foreground: oklch(0.2 0 0); /* #333333 - 弹出层文字 */
+  
+  /* 主色调 - 科技蓝系列 */
+  --primary: oklch(0.45 0.15 250); /* #0060DF - 主色(正常) */
+  --primary-foreground: oklch(1 0 0); /* #ffffff - 主色文字 */
+  --primary-hover: oklch(0.4 0.15 250); /* #0A58BF - 鼠标点击 */
+  --primary-active: oklch(0.55 0.15 250); /* #247FF8 - 鼠标悬停 */
+  --primary-loading: oklch(0.65 0.15 250); /* #5997EA - 加载中 */
+  --primary-disabled: oklch(0.8 0.1 250); /* #B2CFF5 - 禁用 */
+  --primary-bg-hover: oklch(0.95 0.05 250); /* #E5EFFB - 背景鼠标移入 */
+  
+  /* 次要色 */
+  --secondary: oklch(0.95 0.01 220); /* #EEF0F2 - 表格表头背景色 */
+  --secondary-foreground: oklch(0.2 0 0); /* #333333 - 次要色文字 */
+  
+  /* 静音色 */
+  --muted: oklch(0.95 0.01 220); /* #EEF0F2 - 静音背景 */
+  --muted-foreground: oklch(0.4 0 0); /* #666666 - 次要文本/辅助/备注 */
+  
+  /* 强调色 */
+  --accent: oklch(0.95 0.01 220); /* #EEF0F2 - 强调背景 */
+  --accent-foreground: oklch(0.2 0 0); /* #333333 - 强调文字 */
+  
+  /* 功能色 */
+  --destructive: oklch(0.55 0.2 15); /* #F4333C - 删除/失败/不通过/错误/逾期 */
+  --destructive-foreground: oklch(1 0 0); /* #ffffff - 错误文字 */
+  --warning: oklch(0.7 0.15 60); /* #F2AC06 - 预警/警告/驳回/异常 */
+  --warning-foreground: oklch(0.2 0 0); /* #333333 - 警告文字 */
+  --success: oklch(0.6 0.15 150); /* #02CF80 - 成功/通过 */
+  --success-foreground: oklch(1 0 0); /* #ffffff - 成功文字 */
+  --info: oklch(0.6 0.15 250); /* #0091FF - 处理中/正常 */
+  --info-foreground: oklch(1 0 0); /* #ffffff - 信息文字 */
+  --link: oklch(0.45 0.15 250); /* #204BE3 - 链接色 */
+  --inactive: oklch(0.6 0.05 220); /* #8EA3B8 - 未审/未发生/已结束 */
+  
+  /* 边框和输入框 */
+  --border: oklch(0.85 0.01 220); /* #E8BE83 - 分割线颜色 */
+  --input: oklch(1 0 0); /* #ffffff - 输入框背景 */
+  --input-disabled: oklch(0.95 0.01 220); /* #F5F5F5 - 不可输入框 */
+  --ring: oklch(0.45 0.15 250 / 0.5); /* 主色焦点环 */
+  
+  /* 图表色 */
+  --chart-1: oklch(0.45 0.15 250); /* 主色 */
+  --chart-2: oklch(0.6 0.15 150); /* 成功色 */
+  --chart-3: oklch(0.7 0.15 60); /* 警告色 */
+  --chart-4: oklch(0.55 0.2 15); /* 错误色 */
+  --chart-5: oklch(0.6 0.05 220); /* 静音色 */
+  
+  /* 圆角 */
+  --radius: 0.5rem;
+  
+  /* 侧边栏 */
+  --sidebar: oklch(1 0 0); /* #ffffff - 侧边栏背景 */
+  --sidebar-foreground: oklch(0.2 0 0); /* #333333 - 侧边栏文字 */
+  --sidebar-primary: oklch(0.45 0.15 250); /* #0060DF - 侧边栏主色 */
+  --sidebar-primary-foreground: oklch(1 0 0); /* #ffffff - 侧边栏主色文字 */
+  --sidebar-accent: oklch(0.95 0.01 220); /* #EEF0F2 - 侧边栏强调色 */
+  --sidebar-accent-foreground: oklch(0.2 0 0); /* #333333 - 侧边栏强调色文字 */
+  --sidebar-border: oklch(0.85 0.01 220); /* #E8BE83 - 侧边栏边框 */
+  --sidebar-ring: oklch(0.45 0.15 250 / 0.5); /* 侧边栏焦点环 */
+  
+  /* 遮罩层 */
+  --overlay: oklch(0 0 0 / 0.36); /* 模态窗遮罩层 */
+  --shadow: oklch(0 0 0 / 0.1); /* 投影 */
+  
+  /* 字体 */
   --font-source-sans: "Source Sans Pro", sans-serif;
   --font-playfair-display: "Playfair Display", serif;
   --font-geist-mono: "Geist Mono", monospace;
 }
 
 [data-theme="dark"] {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.145 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.145 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.506 0.177 142.38); /* Keep primary green consistent */
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.784 0.221 110.72); /* Keep accent green consistent */
-  --accent-foreground: oklch(0.145 0 0);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.439 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.506 0.177 142.38);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
+  /* 暗色主题背景 */
+  --background: oklch(0.1 0 0); /* 深色背景 */
+  --foreground: oklch(0.9 0 0); /* 浅色文字 */
+  
+  /* 卡片和弹出层 */
+  --card: oklch(0.15 0 0); /* 深色卡片背景 */
+  --card-foreground: oklch(0.9 0 0); /* 深色卡片文字 */
+  --popover: oklch(0.15 0 0); /* 深色弹出层背景 */
+  --popover-foreground: oklch(0.9 0 0); /* 深色弹出层文字 */
+  
+  /* 主色调 - 在暗色主题中保持科技蓝 */
+  --primary: oklch(0.55 0.15 250); /* 暗色主题下的主色 */
+  --primary-foreground: oklch(1 0 0); /* 主色文字 */
+  --primary-hover: oklch(0.5 0.15 250); /* 暗色主题悬停 */
+  --primary-active: oklch(0.6 0.15 250); /* 暗色主题激活 */
+  --primary-loading: oklch(0.65 0.15 250); /* 暗色主题加载 */
+  --primary-disabled: oklch(0.3 0.05 250); /* 暗色主题禁用 */
+  --primary-bg-hover: oklch(0.2 0.02 250); /* 暗色主题背景悬停 */
+  
+  /* 次要色 */
+  --secondary: oklch(0.2 0 0); /* 暗色次要背景 */
+  --secondary-foreground: oklch(0.9 0 0); /* 暗色次要文字 */
+  
+  /* 静音色 */
+  --muted: oklch(0.2 0 0); /* 暗色静音背景 */
+  --muted-foreground: oklch(0.6 0 0); /* 暗色静音文字 */
+  
+  /* 强调色 */
+  --accent: oklch(0.2 0 0); /* 暗色强调背景 */
+  --accent-foreground: oklch(0.9 0 0); /* 暗色强调文字 */
+  
+  /* 功能色 - 在暗色主题中调整亮度 */
+  --destructive: oklch(0.6 0.2 15); /* 暗色主题错误色 */
+  --destructive-foreground: oklch(1 0 0); /* 错误文字 */
+  --warning: oklch(0.75 0.15 60); /* 暗色主题警告色 */
+  --warning-foreground: oklch(0.1 0 0); /* 警告文字 */
+  --success: oklch(0.65 0.15 150); /* 暗色主题成功色 */
+  --success-foreground: oklch(1 0 0); /* 成功文字 */
+  --info: oklch(0.65 0.15 250); /* 暗色主题信息色 */
+  --info-foreground: oklch(1 0 0); /* 信息文字 */
+  --link: oklch(0.55 0.15 250); /* 暗色主题链接色 */
+  --inactive: oklch(0.4 0.05 220); /* 暗色主题非活跃色 */
+  
+  /* 边框和输入框 */
+  --border: oklch(0.3 0 0); /* 暗色边框 */
+  --input: oklch(0.15 0 0); /* 暗色输入框背景 */
+  --input-disabled: oklch(0.2 0 0); /* 暗色禁用输入框 */
+  --ring: oklch(0.55 0.15 250 / 0.5); /* 暗色焦点环 */
+  
+  /* 图表色 */
+  --chart-1: oklch(0.55 0.15 250); /* 暗色主色 */
+  --chart-2: oklch(0.65 0.15 150); /* 暗色成功色 */
+  --chart-3: oklch(0.75 0.15 60); /* 暗色警告色 */
+  --chart-4: oklch(0.6 0.2 15); /* 暗色错误色 */
+  --chart-5: oklch(0.4 0.05 220); /* 暗色静音色 */
+  
+  /* 侧边栏 */
+  --sidebar: oklch(0.12 0 0); /* 暗色侧边栏背景 */
+  --sidebar-foreground: oklch(0.9 0 0); /* 暗色侧边栏文字 */
+  --sidebar-primary: oklch(0.55 0.15 250); /* 暗色侧边栏主色 */
+  --sidebar-primary-foreground: oklch(1 0 0); /* 暗色侧边栏主色文字 */
+  --sidebar-accent: oklch(0.2 0 0); /* 暗色侧边栏强调色 */
+  --sidebar-accent-foreground: oklch(0.9 0 0); /* 暗色侧边栏强调色文字 */
+  --sidebar-border: oklch(0.3 0 0); /* 暗色侧边栏边框 */
+  --sidebar-ring: oklch(0.55 0.15 250 / 0.5); /* 暗色侧边栏焦点环 */
+  
+  /* 遮罩层 */
+  --overlay: oklch(0 0 0 / 0.6); /* 暗色主题遮罩层 */
+  --shadow: oklch(0 0 0 / 0.3); /* 暗色主题投影 */
 }
 
 @theme inline {
   --font-sans: var(--font-source-sans);
   --font-serif: var(--font-playfair-display);
   --font-mono: var(--font-geist-mono);
+  
+  /* 基础颜色 */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
+  
+  /* 主色调 */
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-active: var(--primary-active);
+  --color-primary-loading: var(--primary-loading);
+  --color-primary-disabled: var(--primary-disabled);
+  --color-primary-bg-hover: var(--primary-bg-hover);
+  
+  /* 次要色和强调色 */
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  
+  /* 功能色 */
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-link: var(--link);
+  --color-inactive: var(--inactive);
+  
+  /* 边框和输入框 */
   --color-border: var(--border);
   --color-input: var(--input);
+  --color-input-disabled: var(--input-disabled);
   --color-ring: var(--ring);
+  
+  /* 图表色 */
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  
+  /* 圆角 */
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  
+  /* 侧边栏 */
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -117,6 +226,10 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  
+  /* 遮罩层和投影 */
+  --color-overlay: var(--overlay);
+  --color-shadow: var(--shadow);
 }
 
 @layer base {

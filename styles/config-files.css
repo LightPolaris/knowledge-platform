@@ -1,0 +1,86 @@
+/* 配置文件样式美化 */
+.config-file-container {
+  background: linear-gradient(135deg, #0060DF 0%, #0047B3 100%);
+  border-radius: 12px;
+  padding: 20px;
+  margin: 16px 0;
+  box-shadow: 0 4px 12px rgba(0, 96, 223, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.config-file-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.config-file-icon {
+  width: 24px;
+  height: 24px;
+  margin-right: 12px;
+  color: white;
+}
+
+.config-file-title {
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.config-file-subtitle {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  margin: 4px 0 0 0;
+}
+
+.config-content {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+  padding: 16px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #333;
+  border: 1px solid rgba(0, 96, 223, 0.1);
+}
+
+/* JSON语法高亮 */
+.config-content .json-key {
+  color: #0060DF;
+  font-weight: 600;
+}
+
+.config-content .json-string {
+  color: #28a745;
+}
+
+.config-content .json-number {
+  color: #fd7e14;
+}
+
+.config-content .json-boolean {
+  color: #6f42c1;
+}
+
+/* 悬停效果 */
+.config-file-container:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 96, 223, 0.25);
+  transition: all 0.3s ease;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .config-file-container {
+    margin: 12px 0;
+    padding: 16px;
+  }
+  
+  .config-content {
+    padding: 12px;
+    font-size: 13px;
+  }
+}

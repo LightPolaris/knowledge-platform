@@ -53,19 +53,19 @@ export function Sidebar({ className }: SidebarProps) {
       data-testid="sidebar"
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
+      <div className="flex items-center justify-between p-4 border-b border-sidebar-border h-[69px] bg-[#0060DF]">
         {!collapsed && (
           <div className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-sidebar-primary rounded-lg flex items-center justify-center">
               <Network className="w-5 h-5 text-sidebar-primary-foreground" />
             </div>
             <div>
-              <h1 className="font-serif font-bold text-sidebar-foreground text-sm">知识平台</h1>
-              <p className="text-xs text-muted-foreground">东方电气</p>
+              <h1 className="font-serif font-bold text-white text-sm">知识平台</h1>
+              <p className="text-xs text-white/80">东方电气</p>
             </div>
           </div>
         )}
-        <Button variant="ghost" size="sm" onClick={() => setCollapsed(!collapsed)} className="h-8 w-8 p-0" data-testid="sidebar-collapse">
+        <Button variant="ghost" size="sm" onClick={() => setCollapsed(!collapsed)} className="h-8 w-8 p-0 text-white hover:bg-white/20" data-testid="sidebar-collapse">
           {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
         </Button>
       </div>
@@ -80,7 +80,7 @@ export function Sidebar({ className }: SidebarProps) {
                 className={cn(
                   "w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                   collapsed ? "px-2" : "px-3",
-                  pathname === item.href && "bg-sidebar-accent text-sidebar-accent-foreground",
+                  pathname === item.href && "bg-[#0060DF] text-white",
                 )}
               >
                 <item.icon className={cn("h-4 w-4", collapsed ? "" : "mr-3")} />

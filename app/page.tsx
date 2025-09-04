@@ -37,10 +37,10 @@ import {
   Check,
   Edit3,
   Search,
-  Filter,
   Trash2,
   TrendingUp,
   MessageCircle,
+  Star,
 } from "lucide-react"
 
 export default function QAPage() {
@@ -307,8 +307,8 @@ export default function QAPage() {
                       {messages.map((message) => (
                               <div key={message.id} className={`flex items-start space-x-3 ${message.type === 'user' ? 'justify-end' : ''}`}>
                                 {message.type === 'assistant' && (
-                            <Avatar className="w-10 h-10 bg-green-100">
-                              <AvatarFallback className="bg-green-600 text-white">
+                            <Avatar className="w-10 h-10 bg-primary/10">
+                              <AvatarFallback className="bg-primary text-white">
                                 <Bot className="w-5 h-5" />
                                     </AvatarFallback>
                                   </Avatar>
@@ -316,8 +316,8 @@ export default function QAPage() {
                                                       <div className={`flex-1 max-w-[85%] ${message.type === 'user' ? 'flex flex-col items-end' : ''}`}>
                             <div className={`rounded-2xl p-4 ${
                                     message.type === 'user'
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-white border border-gray-200 shadow-sm'
+                                ? 'bg-primary text-white'
+                                : 'bg-white border border-primary/20 shadow-sm'
                             }`}>
                               <p className="text-sm leading-relaxed">{message.content}</p>
 
@@ -328,7 +328,7 @@ export default function QAPage() {
                                           <Button
                                             variant="ghost"
                                             size="sm"
-                                      className={`h-8 px-3 rounded-full ${message.feedback === 'thumbsUp' ? 'text-green-600 bg-green-50' : 'text-gray-500 hover:text-green-600 hover:bg-green-50'}`}
+                                      className={`h-8 px-3 rounded-full ${message.feedback === 'thumbsUp' ? 'text-primary bg-primary/10' : 'text-gray-500 hover:text-primary hover:bg-primary/10'}`}
                                             onClick={() => handleFeedback(message.id, 'thumbsUp')}
                                           >
                                       <ThumbsUp className="w-4 h-4" />
@@ -344,20 +344,12 @@ export default function QAPage() {
                                         </div>
                                   <div className="flex items-center space-x-2">
                                     <Button variant="ghost" size="sm" className="h-8 px-3 rounded-full text-gray-500 hover:text-gray-700">
+                                      <Star className="w-4 h-4" />
+                                    </Button>
+                                    <Button variant="ghost" size="sm" className="h-8 px-3 rounded-full text-gray-500 hover:text-gray-700">
                                       <Copy className="w-4 h-4" />
                                     </Button>
-                                    <Button 
-                                      variant="ghost" 
-                                      size="sm" 
-                                      className="h-8 px-3 rounded-full text-gray-500 hover:text-gray-700"
-                                      onClick={() => {
-                                        setFeedbackMessageId(message.id)
-                                        setShowFeedbackDialog(true)
-                                      }}
-                                    >
-                                      <MessageCircle className="w-4 h-4" />
-                                    </Button>
-                                        </div>
+                                  </div>
                                       </div>
                                     )}
                                   </div>
@@ -377,14 +369,14 @@ export default function QAPage() {
                             ))}
                             {isLoading && (
                               <div className="flex items-start space-x-3">
-                          <Avatar className="w-10 h-10 bg-green-100">
-                            <AvatarFallback className="bg-green-600 text-white">
+                          <Avatar className="w-10 h-10 bg-primary/10">
+                            <AvatarFallback className="bg-primary text-white">
                               <Bot className="w-5 h-5" />
                                   </AvatarFallback>
                                 </Avatar>
                           <div className="bg-white border border-gray-200 shadow-sm rounded-2xl p-4">
                                   <div className="flex items-center space-x-2">
-                              <Sparkles className="w-4 h-4 animate-spin text-green-600" />
+                              <Sparkles className="w-4 h-4 animate-spin text-primary" />
                                     <span className="text-sm">正在思考...</span>
                                   </div>
                                 </div>
@@ -399,7 +391,7 @@ export default function QAPage() {
                   <div className="w-full">
                     <div className="space-y-4">
                       {/* Main Input Row */}
-                      <div className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-3">
                         <div className="flex-1 relative">
                           <Textarea
                             placeholder="请输入您的问题，或从上方选择热门问题..."
@@ -411,31 +403,31 @@ export default function QAPage() {
                                 handleSendMessage()
                               }
                             }}
-                            className="min-h-12 max-h-32 text-base border-2 border-blue-200 rounded-xl focus:border-blue-400 focus:ring-0 resize-none"
+                            className="min-h-12 max-h-32 text-base border-2 border-primary/20 rounded-xl focus:border-primary focus:ring-1 focus:ring-primary/20 resize-none bg-background"
                             rows={1}
                           />
                         </div>
                         <Button 
                           onClick={handleSendMessage} 
                           disabled={!question.trim() || isLoading}
-                          className="h-12 w-12 rounded-xl bg-green-600 hover:bg-green-700 shadow-md"
+                          className="h-12 w-12 rounded-xl bg-primary hover:bg-primary-hover shadow-sm transition-all duration-200"
                         >
-                          <Send className="w-5 h-5" />
+                          <Send className="w-5 h-5 text-white" />
                         </Button>
                       </div>
 
                       {/* Bottom Controls Row */}
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-6">
+                        <div className="flex items-center space-x-4">
                           {/* Knowledge Domain Selection */}
-                          <div className="flex items-center space-x-1">
+                          <div className="flex items-center">
                             <Popover open={domainOpen} onOpenChange={setDomainOpen}>
                               <PopoverTrigger asChild>
                                 <Button
                                   variant="ghost"
                                   role="combobox"
                                   aria-expanded={domainOpen}
-                                  className="w-32 h-8 justify-between text-sm font-medium"
+                                  className="h-8 px-3 justify-between text-sm font-medium text-foreground hover:bg-accent rounded-md"
                                 >
                                   {selectedDomain}
                                   <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -467,9 +459,9 @@ export default function QAPage() {
                           </div>
 
                           {/* Model Selection */}
-                          <div className="flex items-center space-x-1">
+                          <div className="flex items-center">
                             <Select value={selectedModel} onValueChange={setSelectedModel}>
-                              <SelectTrigger className="w-36 h-8 border-0 bg-transparent text-sm font-medium">
+                              <SelectTrigger className="h-8 px-3 border-0 bg-transparent text-sm font-medium text-foreground hover:bg-accent rounded-md">
                                 <SelectValue placeholder="DeepSeek" />
                               </SelectTrigger>
                               <SelectContent>
@@ -486,7 +478,11 @@ export default function QAPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => setDeepThinkingEnabled(!deepThinkingEnabled)}
-                            className={`h-8 px-3 rounded-full text-sm ${deepThinkingEnabled ? 'bg-purple-100 text-purple-700' : 'text-gray-600 hover:bg-gray-100'}`}
+                            className={`h-8 px-3 rounded-md text-sm transition-all duration-200 ${
+                              deepThinkingEnabled 
+                                ? 'bg-primary/10 text-primary border border-primary/20' 
+                                : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                            }`}
                           >
                             <Brain className="w-4 h-4 mr-1" />
                             深度思考
@@ -498,7 +494,7 @@ export default function QAPage() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="h-8 px-3 rounded-full text-sm text-gray-600 hover:bg-gray-100"
+                                className="h-8 px-3 rounded-md text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
                               >
                                 @ 预设角色
                                 <ChevronDown className="w-3 h-3 ml-1" />
@@ -607,7 +603,7 @@ export default function QAPage() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="h-8 w-8 rounded-full text-gray-600 hover:bg-gray-100"
+                                className="h-8 w-8 rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
                               >
                                 <Plus className="w-4 h-4" />
                               </Button>
@@ -624,10 +620,9 @@ export default function QAPage() {
                             </DropdownMenuContent>
                           </DropdownMenu>
 
-
                         </div>
 
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs text-muted-foreground flex items-center">
                           内容由AI生成，仅供参考
                         </div>
                       </div>
@@ -652,10 +647,6 @@ export default function QAPage() {
                           className="pl-10 w-64 bg-input"
                         />
                       </div>
-                      <Button variant="outline" size="sm">
-                        <Filter className="w-4 h-4 mr-2" />
-                        筛选
-                      </Button>
                     </div>
                   </div>
 
@@ -667,7 +658,7 @@ export default function QAPage() {
                           <div className="flex-1">
                             <div className="flex items-center space-x-3 mb-2">
                               <div className="flex items-center space-x-2">
-                                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                <div className="w-2 h-2 bg-primary rounded-full"></div>
                                 <span className="text-sm font-medium text-gray-900">
                                   {conversation.title}
                                 </span>
