@@ -163,8 +163,6 @@ export default function SearchPage() {
   const [selectedFilters, setSelectedFilters] = useState({
     category: "all",
     subCategory: "all",
-    dateRange: "all",
-    source: "all",
   })
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
   const [showSearchHistory, setShowSearchHistory] = useState(false)
@@ -205,7 +203,7 @@ export default function SearchPage() {
         <Header title="知识搜索" subtitle="智能搜索技术文档、标准和规范" />
 
         <main className="flex-1 overflow-hidden">
-          <div className="flex h-full">
+          <div className="flex h-full overflow-y-auto">
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col">
               {/* Search Bar */}
@@ -262,7 +260,7 @@ export default function SearchPage() {
                 {/* Advanced Filters */}
                 {showAdvancedFilters && (
                   <div className="mt-4 p-4 bg-muted/50 rounded-lg">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <Label className="text-sm font-medium mb-2 block">技术范围</Label>
                         <Select
@@ -296,41 +294,6 @@ export default function SearchPage() {
                             <SelectItem value="辅机容器">辅机容器</SelectItem>
                             <SelectItem value="试验检测">试验检测</SelectItem>
                             <SelectItem value="焊接工艺">焊接工艺</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label className="text-sm font-medium mb-2 block">时间范围</Label>
-                        <Select
-                          value={selectedFilters.dateRange}
-                          onValueChange={(value) => setSelectedFilters({ ...selectedFilters, dateRange: value })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">全部时间</SelectItem>
-                            <SelectItem value="week">过去一周</SelectItem>
-                            <SelectItem value="month">过去一月</SelectItem>
-                            <SelectItem value="year">过去一年</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label className="text-sm font-medium mb-2 block">文档来源</Label>
-                        <Select
-                          value={selectedFilters.source}
-                          onValueChange={(value) => setSelectedFilters({ ...selectedFilters, source: value })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">所有来源</SelectItem>
-                            <SelectItem value="国家标准">国家标准</SelectItem>
-                            <SelectItem value="国际标准">国际标准</SelectItem>
-                            <SelectItem value="企业标准">企业标准</SelectItem>
-                            <SelectItem value="技术手册">技术手册</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -496,7 +459,7 @@ export default function SearchPage() {
             </div>
 
             {/* Right Sidebar - Recommendations */}
-            <div className="w-80 border-l border-border bg-muted/20 p-4 overflow-y-auto">
+            <div className="w-80 border-l border-border bg-muted/20 p-4">
               {/* Hot Searches */}
               <Card className="mb-4">
                 <CardHeader className="pb-3">
