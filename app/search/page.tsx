@@ -206,85 +206,6 @@ export default function SearchPage() {
 
         <main className="flex-1 overflow-hidden">
           <div className="flex h-full">
-            {/* Left Sidebar - Recommendations */}
-            <div className="w-80 border-r border-border bg-muted/20 p-4 overflow-y-auto">
-              {/* Hot Searches */}
-              <Card className="mb-4">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium flex items-center">
-                    <TrendingUp className="h-4 w-4 mr-2" />
-                    热门搜索
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  {mockHotSearches.slice(0, 10).map((item, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-2 rounded hover:bg-muted cursor-pointer"
-                      onClick={() => handleHotSearch(item.keyword)}
-                    >
-                      <span className="text-sm font-medium">{item.keyword}</span>
-                      <div className="flex items-center space-x-1 text-xs text-muted-foreground">
-                        <Eye className="h-3 w-3" />
-                        <span>{item.clicks}</span>
-                      </div>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-
-              {/* Hot Documents */}
-              <Card className="mb-4">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium flex items-center">
-                    <Star className="h-4 w-4 mr-2" />
-                    热门文档
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  {mockHotDocuments.map((doc, index) => (
-                    <div key={index} className="p-2 rounded hover:bg-muted cursor-pointer">
-                      <p className="text-sm font-medium">{doc.title}</p>
-                      <div className="flex items-center justify-between mt-1">
-                        <Badge variant="secondary" className="text-xs">
-                          {doc.category}
-                        </Badge>
-                        <div className="flex items-center space-x-2 text-xs text-muted-foreground">
-                          <span>{doc.views} 次查看</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-
-              {/* Featured Questions */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium flex items-center">
-                    <ThumbsUp className="h-4 w-4 mr-2" />
-                    精选问题
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  {mockFeaturedQuestions.map((q, index) => (
-                    <div key={index} className="p-2 rounded hover:bg-muted cursor-pointer">
-                      <p className="text-sm font-medium">{q.question}</p>
-                      <div className="flex items-center justify-between mt-1">
-                        <Badge variant="outline" className="text-xs">
-                          {q.category}
-                        </Badge>
-                        <div className="flex items-center space-x-2 text-xs text-muted-foreground">
-                          <ThumbsUp className="h-3 w-3" />
-                          <span>{q.likes}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            </div>
-
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col">
               {/* Search Bar */}
@@ -572,6 +493,85 @@ export default function SearchPage() {
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* Right Sidebar - Recommendations */}
+            <div className="w-80 border-l border-border bg-muted/20 p-4 overflow-y-auto">
+              {/* Hot Searches */}
+              <Card className="mb-4">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium flex items-center">
+                    <TrendingUp className="h-4 w-4 mr-2" />
+                    热门搜索
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {mockHotSearches.slice(0, 10).map((item, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-2 rounded hover:bg-muted cursor-pointer"
+                      onClick={() => handleHotSearch(item.keyword)}
+                    >
+                      <span className="text-sm font-medium">{item.keyword}</span>
+                      <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+                        <Eye className="h-3 w-3" />
+                        <span>{item.clicks}</span>
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+
+              {/* Hot Documents */}
+              <Card className="mb-4">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium flex items-center">
+                    <Star className="h-4 w-4 mr-2" />
+                    热门文档
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {mockHotDocuments.map((doc, index) => (
+                    <div key={index} className="p-2 rounded hover:bg-muted cursor-pointer">
+                      <p className="text-sm font-medium">{doc.title}</p>
+                      <div className="flex items-center justify-between mt-1">
+                        <Badge variant="secondary" className="text-xs">
+                          {doc.category}
+                        </Badge>
+                        <div className="flex items-center space-x-2 text-xs text-muted-foreground">
+                          <span>{doc.views} 次查看</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+
+              {/* Featured Questions */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium flex items-center">
+                    <ThumbsUp className="h-4 w-4 mr-2" />
+                    精选问题
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {mockFeaturedQuestions.map((q, index) => (
+                    <div key={index} className="p-2 rounded hover:bg-muted cursor-pointer">
+                      <p className="text-sm font-medium">{q.question}</p>
+                      <div className="flex items-center justify-between mt-1">
+                        <Badge variant="outline" className="text-xs">
+                          {q.category}
+                        </Badge>
+                        <div className="flex items-center space-x-2 text-xs text-muted-foreground">
+                          <ThumbsUp className="h-3 w-3" />
+                          <span>{q.likes}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
             </div>
           </div>
         </main>

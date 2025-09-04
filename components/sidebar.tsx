@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -56,8 +57,14 @@ export function Sidebar({ className }: SidebarProps) {
       <div className="flex items-center justify-between p-4 border-b border-sidebar-border h-[69px] bg-[#0060DF]">
         {!collapsed && (
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-sidebar-primary rounded-lg flex items-center justify-center">
-              <Network className="w-5 h-5 text-sidebar-primary-foreground" />
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden">
+              <Image 
+                src="/logo.png" 
+                alt="知识平台" 
+                width={32} 
+                height={32}
+                className="w-full h-full object-contain"
+              />
             </div>
             <div>
               <h1 className="font-serif font-bold text-white text-sm">知识平台</h1>

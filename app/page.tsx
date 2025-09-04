@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Sidebar } from "@/components/sidebar"
 import { QAHeader } from "@/components/qa-header"
@@ -42,10 +42,13 @@ import {
   MessageCircle,
   Star,
   FolderOpen,
+  HelpCircle,
+  Upload,
 } from "lucide-react"
 
 export default function QAPage() {
   const router = useRouter()
+  const messagesEndRef = useRef<HTMLDivElement>(null)
   const [question, setQuestion] = useState("")
   const [activeTab, setActiveTab] = useState("intelligent-dialogue")
   const [messages, setMessages] = useState<Array<{
@@ -308,6 +311,15 @@ export default function QAPage() {
   // 检查是否有用户消息
   const hasUserMessages = messages.some(msg => msg.type === 'user')
 
+  // 自动滚动到最新消息
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages])
+
   const handleFeedbackSubmit = (feedbackData: { type: string, content: string, major: string }) => {
     if (feedbackMessageId) {
       setMessages(prev => prev.map(msg =>
@@ -349,18 +361,30 @@ export default function QAPage() {
                     <div className="h-full space-y-6 overflow-y-auto pb-6">
                       {/* 推荐问题 - 只在没有用户消息时显示 */}
                       {!hasUserMessages && (
-                        <div className="absolute bottom-4 left-6 p-4 max-w-sm">
-                          <div className="space-y-2">
-                            {recommendedQuestions.map((question, index) => (
-                              <button
-                                key={index}
-                                onClick={() => handleRecommendedQuestion(question)}
-                                className="flex items-center w-full text-left p-2 hover:bg-gray-100 transition-colors"
-                              >
-                                <TrendingUp className="w-4 h-4 mr-2 text-gray-500" />
-                                <span className="text-sm text-gray-700">{question}</span>
-                              </button>
-                            ))}
+                        <div className="flex flex-col items-center justify-center h-full">
+                          <div className="text-center mb-8">
+                            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                              <Bot className="w-8 h-8 text-primary" />
+                            </div>
+                            <h2 className="text-xl font-semibold text-gray-900 mb-2">您好！我是东方电气集团的智能助手</h2>
+                            <p className="text-gray-600 mb-6">我可以帮您解答关于锅炉技术、安全规范、维护流程等方面的问题</p>
+                          </div>
+                          
+                          <div className="w-full max-w-2xl">
+                            <p className="text-sm text-gray-500 mb-4 text-center">推荐问题：</p>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              {recommendedQuestions.map((question, index) => (
+                                <button
+                                  key={index}
+                                  onClick={() => !isLoading && handleRecommendedQuestion(question)}
+                                  disabled={isLoading}
+                                  className="flex items-center text-left p-3 bg-white border border-gray-200 rounded-lg hover:border-primary hover:bg-primary/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-200 disabled:hover:bg-white"
+                                >
+                                  <TrendingUp className="w-4 h-4 mr-3 text-gray-500 flex-shrink-0" />
+                                  <span className="text-sm text-gray-700">{question}</span>
+                                </button>
+                              ))}
+                            </div>
                           </div>
                         </div>
                       )}
@@ -443,85 +467,63 @@ export default function QAPage() {
                                 </div>
                               </div>
                             )}
+                            
+                            {/* 自动滚动锚点 */}
+                            <div ref={messagesEndRef} />
                           </div>
                   </div>
                 </div>
 
                 {/* 选中文档预览区域 */}
                 {selectedDocuments.length > 0 && (
-                  <div className="border-t border-gray-200 bg-gray-50 p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="text-sm font-medium text-gray-900">已选择的文档</h4>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setSelectedDocuments([])}
-                        className="text-gray-500 hover:text-gray-700"
-                      >
-                        清除选择
-                      </Button>
-                    </div>
-                    <div className="space-y-2">
-                      {selectedDocuments.map(docId => {
-                        const doc = systemDocuments.find(d => d.id === docId)
-                        if (!doc) return null
-                        return (
-                          <div key={docId} className="bg-white rounded-lg p-3 border border-gray-200">
-                            <div className="flex items-start space-x-3">
-                              <div className="w-8 h-8 bg-green-100 rounded flex items-center justify-center flex-shrink-0">
-                                <FileText className="w-4 h-4 text-green-600" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-gray-900 truncate">{doc.name}</p>
-                                <p className="text-xs text-gray-500">{doc.type} · {doc.size}</p>
-                              </div>
+                  <div className="border-t border-gray-200 bg-gray-50 px-3 py-1.5">
+                    <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-1.5 flex-1 overflow-x-auto">
+                        {selectedDocuments.map(docId => {
+                          const doc = systemDocuments.find(d => d.id === docId)
+                          if (!doc) return null
+                          return (
+                            <div key={docId} className="bg-white rounded px-2 py-1 border border-gray-200 flex items-center space-x-1.5 text-xs h-6 flex-shrink-0">
+                              <FileText className="w-3 h-3 text-green-600 flex-shrink-0" />
+                              <span className="text-gray-900 truncate max-w-32">{doc.name}</span>
                             </div>
-                            {/* 智能建议按钮 */}
-                            <div className="mt-3 flex space-x-2">
-                              <button 
-                                className="px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors flex items-center"
-                                onClick={() => {
-                                  const question = `请介绍一下${doc.name}这个文档的主要内容`
-                                  setQuestion(question)
-                                }}
-                              >
-                                介绍下这个文档 →
-                              </button>
-                              <button 
-                                className="px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors flex items-center"
-                                onClick={() => {
-                                  const question = `${doc.name}的主要用途是什么？`
-                                  setQuestion(question)
-                                }}
-                              >
-                                这个文档的主要用途是什么 →
-                              </button>
-                            </div>
-                          </div>
-                        )
-                      })}
+                          )
+                        })}
+                      </div>
+                      <div className="flex items-center space-x-2 text-xs text-gray-500 flex-shrink-0">
+                        <span>{selectedDocuments.length}个文档</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setSelectedDocuments([])}
+                          className="text-xs text-gray-500 hover:text-gray-700 h-5 px-1.5"
+                        >
+                          清除
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 )}
 
                 {/* Bottom Input Area */}
-                <div className="border-t border-gray-200 bg-white p-6 flex-shrink-0 min-h-[149px]">
+                <div className="bg-gray-50 p-4 flex-shrink-0 min-h-[100px]">
                   <div className="w-full">
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       {/* Main Input Row */}
                       <div className="flex items-center space-x-3">
                         <div className="flex-1 relative">
                           <Textarea
-                            placeholder="请输入您的问题，或从上方选择热门问题..."
+                            placeholder={isLoading ? "AI正在回复中，请稍候..." : "请输入您的问题，或从上方选择热门问题..."}
                             value={question}
                             onChange={(e) => setQuestion(e.target.value)}
                             onKeyDown={(e) => {
-                              if (e.key === 'Enter' && !e.shiftKey) {
+                              if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing && !isLoading) {
                                 e.preventDefault()
                                 handleSendMessage()
                               }
                             }}
-                            className="min-h-12 max-h-32 text-base border-2 border-primary/20 rounded-xl focus:border-primary focus:ring-1 focus:ring-primary/20 resize-none bg-background"
+                            disabled={isLoading}
+                            className="min-h-12 max-h-32 text-base border-2 border-primary/20 rounded-xl focus:border-primary focus:ring-1 focus:ring-primary/20 resize-none bg-background disabled:opacity-50 disabled:cursor-not-allowed"
                             rows={1}
                           />
                         </div>
@@ -723,7 +725,7 @@ export default function QAPage() {
                                 size="sm"
                                 className="h-8 w-8 rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
                               >
-                                <Plus className="w-4 h-4" />
+                                <Upload className="w-4 h-4" />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-48">
@@ -741,6 +743,21 @@ export default function QAPage() {
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
+
+                          {/* New Chat Button */}
+                          <Button
+                            onClick={() => {
+                              setQuestion("")
+                              setMessages([])
+                              // 保留选中的文档，不清除
+                            }}
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 px-3 text-muted-foreground hover:bg-accent hover:text-foreground text-sm"
+                          >
+                            <Plus className="w-4 h-4 mr-1" />
+                            新开对话
+                          </Button>
 
                         </div>
 
@@ -790,9 +807,22 @@ export default function QAPage() {
                                   {conversation.messageCount} 条消息
                                 </Badge>
                               </div>
-                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-500 hover:text-gray-700">
-                                <Star className="w-4 h-4" />
-                              </Button>
+                              <div className="flex items-center space-x-1">
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-500 hover:text-gray-700">
+                                  <Star className="w-4 h-4" />
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="h-8 w-8 p-0 text-gray-500 hover:text-red-600"
+                                  onClick={() => {
+                                    // 这里可以添加删除对话的逻辑
+                                    console.log('删除对话:', conversation.id)
+                                  }}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
                             </div>
                             
                             <div className="text-sm text-gray-600 mb-3">
