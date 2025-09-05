@@ -57,15 +57,7 @@ export default function QAPage() {
     content: string;
     timestamp: string;
     feedback: string | null;
-  }>>([
-    {
-      id: 1,
-      type: "assistant",
-      content: "您好！我是东方电气集团的智能助手。我可以帮您解答关于锅炉技术、安全规范、维护流程等方面的问题。请问有什么可以帮助您的吗？",
-      timestamp: "11:04:30",
-      feedback: null,
-    },
-  ])
+  }>>([])
 
   // 模拟对话历史数据
   const mockChatHistory = [
