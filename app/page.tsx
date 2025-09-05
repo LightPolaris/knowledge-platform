@@ -116,6 +116,30 @@ export default function QAPage() {
     "废水排放处理标准?"
   ]
 
+  // 精选问题数据
+  const featuredQuestions = [
+    {
+      question: "质保体系审核流程是什么?",
+      category: "质保部",
+      likes: 45
+    },
+    {
+      question: "不合格品处理标准有哪些?",
+      category: "质保部", 
+      likes: 38
+    },
+    {
+      question: "锅炉水压试验压力如何确定?",
+      category: "技术部",
+      likes: 32
+    },
+    {
+      question: "压力容器定期检验周期?",
+      category: "检验部",
+      likes: 28
+    }
+  ]
+
   // 知识领域数据
   const knowledgeDomains = [
     "通用",
@@ -145,9 +169,6 @@ export default function QAPage() {
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false)
   const [feedbackMessageId, setFeedbackMessageId] = useState<number | null>(null)
   const [showQuickFeedbackDialog, setShowQuickFeedbackDialog] = useState(false)
-  const [showDocumentSelectDialog, setShowDocumentSelectDialog] = useState(false)
-  const [selectedDocuments, setSelectedDocuments] = useState<string[]>([])
-  const [documentSearchQuery, setDocumentSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
 
   // 模拟系统中的文档数据
@@ -167,14 +188,6 @@ export default function QAPage() {
   // 获取所有分类
   const categories = ['all', ...Array.from(new Set(systemDocuments.map(doc => doc.category)))]
 
-  // 筛选文档
-  const filteredDocuments = systemDocuments.filter(doc => {
-    const matchesSearch = documentSearchQuery === "" || 
-      doc.name.toLowerCase().includes(documentSearchQuery.toLowerCase()) ||
-      doc.docNumber.toLowerCase().includes(documentSearchQuery.toLowerCase())
-    const matchesCategory = selectedCategory === "all" || doc.category === selectedCategory
-    return matchesSearch && matchesCategory
-  })
 
   const handleFeedback = (messageId: number, type: string) => {
     if (type === 'thumbsDown') {
@@ -218,35 +231,6 @@ export default function QAPage() {
     input.click()
   }
 
-  const handleSelectExistingDocument = () => {
-    // 打开文档选择对话框
-    setShowDocumentSelectDialog(true)
-  }
-
-  const handleDocumentToggle = (documentId: string) => {
-    setSelectedDocuments(prev => 
-      prev.includes(documentId) 
-        ? prev.filter(id => id !== documentId)
-        : [...prev, documentId]
-    )
-  }
-
-  const handleConfirmDocumentSelection = () => {
-    const selectedDocs = systemDocuments.filter(doc => selectedDocuments.includes(doc.id))
-    console.log('选择的文档:', selectedDocs)
-    setShowDocumentSelectDialog(false)
-    // 不清空selectedDocuments，保留用于显示预览
-    setDocumentSearchQuery("")
-    setSelectedCategory("all")
-    // 这里可以将选中的文档添加到问题中
-  }
-
-  const handleCancelDocumentSelection = () => {
-    setShowDocumentSelectDialog(false)
-    setSelectedDocuments([])
-    setDocumentSearchQuery("")
-    setSelectedCategory("all")
-  }
 
   const handleEditRole = (role: string) => {
     console.log('编辑角色:', role)
@@ -377,6 +361,34 @@ export default function QAPage() {
                                 </button>
                               ))}
                             </div>
+                            
+                            {/* 精选问题部分 */}
+                            <div className="mt-8">
+                              <p className="text-sm text-gray-500 mb-4 text-center">精选问题：</p>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {featuredQuestions.map((item, index) => (
+                                  <button
+                                    key={index}
+                                    onClick={() => !isLoading && handleRecommendedQuestion(item.question)}
+                                    disabled={isLoading}
+                                    className="flex items-center justify-between text-left p-3 bg-white border border-gray-200 rounded-lg hover:border-primary hover:bg-primary/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-200 disabled:hover:bg-white"
+                                  >
+                                    <div className="flex-1">
+                                      <div className="text-sm text-gray-700 mb-2">{item.question}</div>
+                                      <div className="flex items-center gap-2">
+                                        <Badge variant="secondary" className="text-xs">
+                                          {item.category}
+                                        </Badge>
+                                        <div className="flex items-center gap-1 text-xs text-gray-500">
+                                          <ThumbsUp className="w-3 h-3" />
+                                          <span>{item.likes}</span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
                           </div>
                         </div>
                       )}
@@ -466,36 +478,6 @@ export default function QAPage() {
                   </div>
                 </div>
 
-                {/* 选中文档预览区域 */}
-                {selectedDocuments.length > 0 && (
-                  <div className="border-t border-gray-200 bg-gray-50 px-3 py-1.5">
-                    <div className="flex items-center space-x-2">
-                      <div className="flex items-center space-x-1.5 flex-1 overflow-x-auto">
-                        {selectedDocuments.map(docId => {
-                          const doc = systemDocuments.find(d => d.id === docId)
-                          if (!doc) return null
-                          return (
-                            <div key={docId} className="bg-white rounded px-2 py-1 border border-gray-200 flex items-center space-x-1.5 text-xs h-6 flex-shrink-0">
-                              <FileText className="w-3 h-3 text-green-600 flex-shrink-0" />
-                              <span className="text-gray-900 truncate max-w-32">{doc.name}</span>
-                            </div>
-                          )
-                        })}
-                      </div>
-                      <div className="flex items-center space-x-2 text-xs text-gray-500 flex-shrink-0">
-                        <span>{selectedDocuments.length}个文档</span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setSelectedDocuments([])}
-                          className="text-xs text-gray-500 hover:text-gray-700 h-5 px-1.5"
-                        >
-                          清除
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                )}
 
                 {/* Bottom Input Area */}
                 <div className="bg-gray-50 p-4 flex-shrink-0 min-h-[100px]">
@@ -715,9 +697,12 @@ export default function QAPage() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="h-8 w-8 rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
+                                className="h-8 px-3 rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
+                                title="上传文件"
+                                aria-label="上传文件"
                               >
-                                <Upload className="w-4 h-4" />
+                                <Upload className="w-4 h-4 mr-2" />
+                                上传文件
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-48">
@@ -728,10 +713,6 @@ export default function QAPage() {
                               <DropdownMenuItem onClick={handleUploadFile} className="cursor-pointer">
                                 <FileText className="w-4 h-4 mr-2" />
                                 本地文件
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={handleSelectExistingDocument} className="cursor-pointer">
-                                <FolderOpen className="w-4 h-4 mr-2" />
-                                选择已有文档
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -900,104 +881,6 @@ export default function QAPage() {
         </DialogContent>
       </Dialog>
 
-      {/* 文档选择对话框 */}
-      <Dialog open={showDocumentSelectDialog} onOpenChange={setShowDocumentSelectDialog}>
-        <DialogContent className="sm:max-w-[700px] max-h-[80vh]">
-          <DialogHeader>
-            <DialogTitle>选择已有文档</DialogTitle>
-            <p className="text-sm text-muted-foreground">选择您想要引用的文档进行提问</p>
-          </DialogHeader>
-          <div className="space-y-4">
-            {/* 搜索和筛选区域 */}
-            <div className="space-y-3">
-              <div className="flex space-x-3">
-                <div className="flex-1">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
-                    <Input
-                      placeholder="搜索文档名称或编号..."
-                      value={documentSearchQuery}
-                      onChange={(e) => setDocumentSearchQuery(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
-                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger className="w-40">
-                    <SelectValue placeholder="选择分类" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">全部分类</SelectItem>
-                    {categories.slice(1).map((category) => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="text-xs text-gray-500">
-                找到 {filteredDocuments.length} 个文档
-              </div>
-            </div>
-
-
-            {/* 文档列表 */}
-            <div className="max-h-96 overflow-y-auto space-y-2">
-              {filteredDocuments.map((doc) => (
-                <div
-                  key={doc.id}
-                  className={`flex items-center space-x-3 p-3 border rounded-lg cursor-pointer transition-colors ${
-                    selectedDocuments.includes(doc.id)
-                      ? 'border-primary bg-primary/5'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                  onClick={() => handleDocumentToggle(doc.id)}
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedDocuments.includes(doc.id)}
-                    onChange={() => handleDocumentToggle(doc.id)}
-                    className="h-4 w-4 text-primary"
-                  />
-                  <FileText className="h-5 w-5 text-gray-500" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">{doc.name}</p>
-                    <div className="flex items-center space-x-2 text-xs text-gray-500">
-                      <span className="font-mono bg-gray-100 px-1 rounded">{doc.docNumber}</span>
-                      <span>•</span>
-                      <span>{doc.type}</span>
-                      <span>•</span>
-                      <span>{doc.size}</span>
-                      <span>•</span>
-                      <span>{doc.category}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="flex justify-between items-center pt-4 border-t">
-              <span className="text-sm text-gray-500">
-                已选择 {selectedDocuments.length} 个文档
-              </span>
-              <div className="flex space-x-2">
-                <Button
-                  variant="outline"
-                  onClick={handleCancelDocumentSelection}
-                >
-                  取消
-                </Button>
-                <Button
-                  onClick={handleConfirmDocumentSelection}
-                  disabled={selectedDocuments.length === 0}
-                >
-                  确认选择
-                </Button>
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }

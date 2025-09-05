@@ -477,31 +477,6 @@ export default function SearchPage() {
                 </CardContent>
               </Card>
 
-              {/* Featured Questions */}
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium flex items-center">
-                    <ThumbsUp className="h-4 w-4 mr-2" />
-                    精选问题
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-1.5">
-                  {mockFeaturedQuestions.map((q, index) => (
-                    <div key={index} className="p-1.5 rounded hover:bg-muted cursor-pointer">
-                      <p className="text-sm font-medium">{q.question}</p>
-                      <div className="flex items-center justify-between mt-1">
-                        <Badge variant="outline" className="text-xs">
-                          {q.category}
-                        </Badge>
-                        <div className="flex items-center space-x-2 text-xs text-muted-foreground">
-                          <ThumbsUp className="h-3 w-3" />
-                          <span>{q.likes}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
             </div>
           </div>
         </main>

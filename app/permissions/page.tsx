@@ -59,36 +59,109 @@ export default function PermissionsPage() {
   const [rolePermissions, setRolePermissions] = useState({
     department: "",
     documentGroups: [] as string[],
+    // 文档管理权限 - 按文档类型分配
     documentManagement: {
-      fileUpload: false,
-      fileDelete: false,
-      fileView: false,
-      fileGroup: false,
-      fileParse: false,
-      parseFileEdit: false,
-      fileImport: false,
+      managementStandards: {
+        canView: false,
+        canEdit: false,
+        canParse: false,
+        canReview: false,
+        canAdd: false,
+        canDelete: false,
+        canCreateFolder: false,
+        allowedDepartments: [] as string[]
+      },
+      qualityStandards: {
+        canView: false,
+        canEdit: false,
+        canParse: false,
+        canReview: false,
+        canAdd: false,
+        canDelete: false,
+        canCreateFolder: false,
+        allowedDepartments: [] as string[]
+      },
+      steelStructure: {
+        canView: false,
+        canEdit: false,
+        canParse: false,
+        canReview: false,
+        canAdd: false,
+        canDelete: false,
+        canCreateFolder: false,
+        allowedDepartments: [] as string[]
+      },
+      safetyStandards: {
+        canView: false,
+        canEdit: false,
+        canParse: false,
+        canReview: false,
+        canAdd: false,
+        canDelete: false,
+        canCreateFolder: false,
+        allowedDepartments: [] as string[]
+      },
+      technicalSpecs: {
+        canView: false,
+        canEdit: false,
+        canParse: false,
+        canReview: false,
+        canAdd: false,
+        canDelete: false,
+        canCreateFolder: false,
+        allowedDepartments: [] as string[]
+      }
     },
-    intelligentQA: {
-      roleSettings: false,
-      parameterAdjustment: false,
+    // 专家权限
+    expertPermissions: {
+      knowledgeGraphReview: {
+        enabled: false,
+        allowedDepartments: [] as string[]
+      },
+      intelligentQAReview: {
+        enabled: false,
+        allowedDepartments: [] as string[]
+      }
     },
-    knowledgeGraph: {
-      view: false,
-      adjust: false,
-      customBuild: false,
-      buildRuleAdjustment: false,
+    // 系统管理权限
+    systemManagement: {
+      permissionManagement: false,
+      userAccountManagement: {
+        canCreate: false,
+        canDelete: false,
+        canEdit: false
+      }
     },
-    fileComparison: false,
-    knowledgeSearch: false,
-    workflowProcessing: false,
-    permissionManagement: false,
-    systemSettings: false,
+    // 其他权限
+    otherPermissions: {
+      fileComparison: false,
+      knowledgeSearch: false,
+      workflowProcessing: false,
+      systemSettings: false,
+    }
   })
 
   // 部门选项
   const departments = [
     "IT部门", "锅炉事业部", "汽轮机事业部", "发电机事业部", 
-    "技术部门", "质量部门", "安全部门", "人力资源部"
+    "技术部门", "质量部门", "安全部门", "人力资源部",
+    "环保研发部", "工艺研发部", "容器研发室", "钢结构研发室",
+    "材料研发室", "电气研发室", "机械研发室"
+  ]
+
+  // 文档类型选项
+  const documentTypes = [
+    { key: "managementStandards", name: "管理标准", departments: ["技术部门", "质量部门", "安全部门"] },
+    { key: "qualityStandards", name: "质量标准", departments: ["质量部门", "技术部门", "工艺研发部"] },
+    { key: "steelStructure", name: "钢结构", departments: ["钢结构研发室", "机械研发室", "技术部门"] },
+    { key: "safetyStandards", name: "安全规范", departments: ["安全部门", "环保研发部", "技术部门"] },
+    { key: "technicalSpecs", name: "技术规格", departments: ["技术部门", "各研发室", "质量部门"] }
+  ]
+
+  // 专家权限相关部门
+  const expertDepartments = [
+    "环保研发部", "工艺研发部", "容器研发室", "钢结构研发室",
+    "材料研发室", "电气研发室", "机械研发室"
   ]
 
   // 文档分组选项
@@ -545,120 +618,330 @@ export default function PermissionsPage() {
               </CardContent>
             </Card>
 
-            {/* 文档管理权限 */}
+            {/* 文档管理权限 - 按文档类型分配 */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Folder className="h-5 w-5" />
                   文档管理权限
                 </CardTitle>
-                <CardDescription>配置角色对文档管理的各项权限</CardDescription>
+                <CardDescription>按文档类型配置权限，不同文档类型对应不同部门查看权限</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex items-center justify-between">
-                    <Label>文件上传</Label>
-                    <Switch 
-                      checked={rolePermissions.documentManagement.fileUpload}
-                      onCheckedChange={(checked) => setRolePermissions(prev => ({
-                        ...prev,
-                        documentManagement: { ...prev.documentManagement, fileUpload: checked }
-                      }))}
-                    />
+              <CardContent className="space-y-6">
+                {documentTypes.map((docType) => (
+                  <div key={docType.key} className="border rounded-lg p-4 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-medium text-base">{docType.name}</h4>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            className="w-64 justify-between"
+                          >
+                            {rolePermissions.documentManagement[docType.key as keyof typeof rolePermissions.documentManagement].allowedDepartments.length > 0 
+                              ? `${rolePermissions.documentManagement[docType.key as keyof typeof rolePermissions.documentManagement].allowedDepartments.length} 个部门已选择`
+                              : "选择相关部门"
+                            }
+                            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-64 p-0" align="end">
+                          <div className="max-h-60 overflow-y-auto">
+                            <div className="p-2">
+                              <div className="flex items-center space-x-2 p-2 hover:bg-muted rounded">
+                                <Checkbox
+                                  id={`select-all-${docType.key}`}
+                                  checked={rolePermissions.documentManagement[docType.key as keyof typeof rolePermissions.documentManagement].allowedDepartments.length === docType.departments.length}
+                                  onCheckedChange={(checked) => {
+                                    if (checked) {
+                                      setRolePermissions(prev => ({
+                                        ...prev,
+                                        documentManagement: {
+                                          ...prev.documentManagement,
+                                          [docType.key]: {
+                                            ...prev.documentManagement[docType.key as keyof typeof prev.documentManagement],
+                                            allowedDepartments: [...docType.departments]
+                                          }
+                                        }
+                                      }))
+                                    } else {
+                                      setRolePermissions(prev => ({
+                                        ...prev,
+                                        documentManagement: {
+                                          ...prev.documentManagement,
+                                          [docType.key]: {
+                                            ...prev.documentManagement[docType.key as keyof typeof prev.documentManagement],
+                                            allowedDepartments: []
+                                          }
+                                        }
+                                      }))
+                                    }
+                                  }}
+                                />
+                                <Label htmlFor={`select-all-${docType.key}`} className="text-sm font-medium">
+                                  全选
+                                </Label>
+                              </div>
+                              <div className="border-t my-1" />
+                              {docType.departments.map((dept) => (
+                                <div key={dept} className="flex items-center space-x-2 p-2 hover:bg-muted rounded">
+                                  <Checkbox
+                                    id={`${docType.key}-${dept}`}
+                                    checked={rolePermissions.documentManagement[docType.key as keyof typeof rolePermissions.documentManagement].allowedDepartments.includes(dept)}
+                                    onCheckedChange={(checked) => {
+                                      if (checked) {
+                                        setRolePermissions(prev => ({
+                                          ...prev,
+                                          documentManagement: {
+                                            ...prev.documentManagement,
+                                            [docType.key]: {
+                                              ...prev.documentManagement[docType.key as keyof typeof prev.documentManagement],
+                                              allowedDepartments: [...prev.documentManagement[docType.key as keyof typeof prev.documentManagement].allowedDepartments, dept]
+                                            }
+                                          }
+                                        }))
+                                      } else {
+                                        setRolePermissions(prev => ({
+                                          ...prev,
+                                          documentManagement: {
+                                            ...prev.documentManagement,
+                                            [docType.key]: {
+                                              ...prev.documentManagement[docType.key as keyof typeof prev.documentManagement],
+                                              allowedDepartments: prev.documentManagement[docType.key as keyof typeof prev.documentManagement].allowedDepartments.filter(d => d !== dept)
+                                            }
+                                          }
+                                        }))
+                                      }
+                                    }}
+                                  />
+                                  <Label htmlFor={`${docType.key}-${dept}`} className="text-sm flex-1">{dept}</Label>
+                                  {rolePermissions.documentManagement[docType.key as keyof typeof rolePermissions.documentManagement].allowedDepartments.includes(dept) && (
+                                    <Check className="h-4 w-4 text-primary" />
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="flex items-center justify-between">
+                        <Label>查看</Label>
+                        <Switch 
+                          checked={rolePermissions.documentManagement[docType.key as keyof typeof rolePermissions.documentManagement].canView}
+                          onCheckedChange={(checked) => setRolePermissions(prev => ({
+                            ...prev,
+                            documentManagement: {
+                              ...prev.documentManagement,
+                              [docType.key]: {
+                                ...prev.documentManagement[docType.key as keyof typeof prev.documentManagement],
+                                canView: checked
+                              }
+                            }
+                          }))}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Label>编辑</Label>
+                        <Switch 
+                          checked={rolePermissions.documentManagement[docType.key as keyof typeof rolePermissions.documentManagement].canEdit}
+                          onCheckedChange={(checked) => setRolePermissions(prev => ({
+                            ...prev,
+                            documentManagement: {
+                              ...prev.documentManagement,
+                              [docType.key]: {
+                                ...prev.documentManagement[docType.key as keyof typeof prev.documentManagement],
+                                canEdit: checked
+                              }
+                            }
+                          }))}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Label>解析</Label>
+                        <Switch 
+                          checked={rolePermissions.documentManagement[docType.key as keyof typeof rolePermissions.documentManagement].canParse}
+                          onCheckedChange={(checked) => setRolePermissions(prev => ({
+                            ...prev,
+                            documentManagement: {
+                              ...prev.documentManagement,
+                              [docType.key]: {
+                                ...prev.documentManagement[docType.key as keyof typeof prev.documentManagement],
+                                canParse: checked
+                              }
+                            }
+                          }))}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Label>解析审核</Label>
+                        <Switch 
+                          checked={rolePermissions.documentManagement[docType.key as keyof typeof rolePermissions.documentManagement].canReview}
+                          onCheckedChange={(checked) => setRolePermissions(prev => ({
+                            ...prev,
+                            documentManagement: {
+                              ...prev.documentManagement,
+                              [docType.key]: {
+                                ...prev.documentManagement[docType.key as keyof typeof prev.documentManagement],
+                                canReview: checked
+                              }
+                            }
+                          }))}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Label>增加</Label>
+                        <Switch 
+                          checked={rolePermissions.documentManagement[docType.key as keyof typeof rolePermissions.documentManagement].canAdd}
+                          onCheckedChange={(checked) => setRolePermissions(prev => ({
+                            ...prev,
+                            documentManagement: {
+                              ...prev.documentManagement,
+                              [docType.key]: {
+                                ...prev.documentManagement[docType.key as keyof typeof prev.documentManagement],
+                                canAdd: checked
+                              }
+                            }
+                          }))}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Label>删除</Label>
+                        <Switch 
+                          checked={rolePermissions.documentManagement[docType.key as keyof typeof rolePermissions.documentManagement].canDelete}
+                          onCheckedChange={(checked) => setRolePermissions(prev => ({
+                            ...prev,
+                            documentManagement: {
+                              ...prev.documentManagement,
+                              [docType.key]: {
+                                ...prev.documentManagement[docType.key as keyof typeof prev.documentManagement],
+                                canDelete: checked
+                              }
+                            }
+                          }))}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Label>新建文件夹</Label>
+                        <Switch 
+                          checked={rolePermissions.documentManagement[docType.key as keyof typeof rolePermissions.documentManagement].canCreateFolder}
+                          onCheckedChange={(checked) => setRolePermissions(prev => ({
+                            ...prev,
+                            documentManagement: {
+                              ...prev.documentManagement,
+                              [docType.key]: {
+                                ...prev.documentManagement[docType.key as keyof typeof prev.documentManagement],
+                                canCreateFolder: checked
+                              }
+                            }
+                          }))}
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <Label>文件删除</Label>
-                    <Switch 
-                      checked={rolePermissions.documentManagement.fileDelete}
-                      onCheckedChange={(checked) => setRolePermissions(prev => ({
-                        ...prev,
-                        documentManagement: { ...prev.documentManagement, fileDelete: checked }
-                      }))}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Label>文件查看</Label>
-                    <Switch 
-                      checked={rolePermissions.documentManagement.fileView}
-                      onCheckedChange={(checked) => setRolePermissions(prev => ({
-                        ...prev,
-                        documentManagement: { ...prev.documentManagement, fileView: checked }
-                      }))}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Label>文件分组</Label>
-                    <Switch 
-                      checked={rolePermissions.documentManagement.fileGroup}
-                      onCheckedChange={(checked) => setRolePermissions(prev => ({
-                        ...prev,
-                        documentManagement: { ...prev.documentManagement, fileGroup: checked }
-                      }))}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Label>文件解析</Label>
-                    <Switch 
-                      checked={rolePermissions.documentManagement.fileParse}
-                      onCheckedChange={(checked) => setRolePermissions(prev => ({
-                        ...prev,
-                        documentManagement: { ...prev.documentManagement, fileParse: checked }
-                      }))}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Label>解析文件编辑</Label>
-                    <Switch 
-                      checked={rolePermissions.documentManagement.parseFileEdit}
-                      onCheckedChange={(checked) => setRolePermissions(prev => ({
-                        ...prev,
-                        documentManagement: { ...prev.documentManagement, parseFileEdit: checked }
-                      }))}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Label>文件导入</Label>
-                    <Switch 
-                      checked={rolePermissions.documentManagement.fileImport}
-                      onCheckedChange={(checked) => setRolePermissions(prev => ({
-                        ...prev,
-                        documentManagement: { ...prev.documentManagement, fileImport: checked }
-                      }))}
-                    />
-                  </div>
-                </div>
+                ))}
               </CardContent>
             </Card>
 
-            {/* 智能问答权限 */}
+            {/* 专家权限 */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <MessageSquare className="h-5 w-5" />
-                  智能问答权限
+                  专家权限
                 </CardTitle>
+                <CardDescription>专家拥有知识图谱审核、智能问答答案审核权限</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <Label>角色设置</Label>
+                    <div>
+                      <Label className="text-base font-medium">知识图谱审核</Label>
+                      <p className="text-sm text-muted-foreground">审核知识图谱构建和调整</p>
+                    </div>
                     <Switch 
-                      checked={rolePermissions.intelligentQA.roleSettings}
+                      checked={rolePermissions.expertPermissions.knowledgeGraphReview.enabled}
                       onCheckedChange={(checked) => setRolePermissions(prev => ({
                         ...prev,
-                        intelligentQA: { ...prev.intelligentQA, roleSettings: checked }
+                        expertPermissions: {
+                          ...prev.expertPermissions,
+                          knowledgeGraphReview: {
+                            ...prev.expertPermissions.knowledgeGraphReview,
+                            enabled: checked
+                          }
+                        }
                       }))}
                     />
                   </div>
+                  
                   <div className="flex items-center justify-between">
-                    <Label>参数调整</Label>
+                    <div>
+                      <Label className="text-base font-medium">智能问答答案审核</Label>
+                      <p className="text-sm text-muted-foreground">审核智能问答系统的答案质量</p>
+                    </div>
                     <Switch 
-                      checked={rolePermissions.intelligentQA.parameterAdjustment}
+                      checked={rolePermissions.expertPermissions.intelligentQAReview.enabled}
                       onCheckedChange={(checked) => setRolePermissions(prev => ({
                         ...prev,
-                        intelligentQA: { ...prev.intelligentQA, parameterAdjustment: checked }
+                        expertPermissions: {
+                          ...prev.expertPermissions,
+                          intelligentQAReview: {
+                            ...prev.expertPermissions.intelligentQAReview,
+                            enabled: checked
+                          }
+                        }
                       }))}
                     />
+                  </div>
+                </div>
+                
+                <div className="border-t pt-4">
+                  <Label className="text-sm font-medium mb-2 block">专家权限适用部门</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {expertDepartments.map((dept) => (
+                      <div key={dept} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`expert-${dept}`}
+                          checked={rolePermissions.expertPermissions.knowledgeGraphReview.allowedDepartments.includes(dept) ||
+                                   rolePermissions.expertPermissions.intelligentQAReview.allowedDepartments.includes(dept)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setRolePermissions(prev => ({
+                                ...prev,
+                                expertPermissions: {
+                                  knowledgeGraphReview: {
+                                    ...prev.expertPermissions.knowledgeGraphReview,
+                                    allowedDepartments: [...prev.expertPermissions.knowledgeGraphReview.allowedDepartments, dept]
+                                  },
+                                  intelligentQAReview: {
+                                    ...prev.expertPermissions.intelligentQAReview,
+                                    allowedDepartments: [...prev.expertPermissions.intelligentQAReview.allowedDepartments, dept]
+                                  }
+                                }
+                              }))
+                            } else {
+                              setRolePermissions(prev => ({
+                                ...prev,
+                                expertPermissions: {
+                                  knowledgeGraphReview: {
+                                    ...prev.expertPermissions.knowledgeGraphReview,
+                                    allowedDepartments: prev.expertPermissions.knowledgeGraphReview.allowedDepartments.filter(d => d !== dept)
+                                  },
+                                  intelligentQAReview: {
+                                    ...prev.expertPermissions.intelligentQAReview,
+                                    allowedDepartments: prev.expertPermissions.intelligentQAReview.allowedDepartments.filter(d => d !== dept)
+                                  }
+                                }
+                              }))
+                            }
+                          }}
+                        />
+                        <Label htmlFor={`expert-${dept}`} className="text-sm">{dept}</Label>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </CardContent>
@@ -671,48 +954,152 @@ export default function PermissionsPage() {
                   <Network className="h-5 w-5" />
                   知识图谱权限
                 </CardTitle>
+                <CardDescription>知识图谱构建和维护权限</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex items-center justify-between">
                     <Label>知识图谱查看</Label>
                     <Switch 
-                      checked={rolePermissions.knowledgeGraph.view}
+                      checked={rolePermissions.otherPermissions.knowledgeSearch}
                       onCheckedChange={(checked) => setRolePermissions(prev => ({
                         ...prev,
-                        knowledgeGraph: { ...prev.knowledgeGraph, view: checked }
+                        otherPermissions: { ...prev.otherPermissions, knowledgeSearch: checked }
                       }))}
                     />
                   </div>
                   <div className="flex items-center justify-between">
                     <Label>知识图谱调整</Label>
                     <Switch 
-                      checked={rolePermissions.knowledgeGraph.adjust}
+                      checked={rolePermissions.expertPermissions.knowledgeGraphReview.enabled}
                       onCheckedChange={(checked) => setRolePermissions(prev => ({
                         ...prev,
-                        knowledgeGraph: { ...prev.knowledgeGraph, adjust: checked }
+                        expertPermissions: {
+                          ...prev.expertPermissions,
+                          knowledgeGraphReview: {
+                            ...prev.expertPermissions.knowledgeGraphReview,
+                            enabled: checked
+                          }
+                        }
                       }))}
                     />
                   </div>
                   <div className="flex items-center justify-between">
                     <Label>知识图谱自定义构建</Label>
                     <Switch 
-                      checked={rolePermissions.knowledgeGraph.customBuild}
+                      checked={rolePermissions.expertPermissions.knowledgeGraphReview.enabled}
                       onCheckedChange={(checked) => setRolePermissions(prev => ({
                         ...prev,
-                        knowledgeGraph: { ...prev.knowledgeGraph, customBuild: checked }
+                        expertPermissions: {
+                          ...prev.expertPermissions,
+                          knowledgeGraphReview: {
+                            ...prev.expertPermissions.knowledgeGraphReview,
+                            enabled: checked
+                          }
+                        }
                       }))}
                     />
                   </div>
                   <div className="flex items-center justify-between">
                     <Label>知识图谱构建规则调整</Label>
                     <Switch 
-                      checked={rolePermissions.knowledgeGraph.buildRuleAdjustment}
+                      checked={rolePermissions.expertPermissions.knowledgeGraphReview.enabled}
                       onCheckedChange={(checked) => setRolePermissions(prev => ({
                         ...prev,
-                        knowledgeGraph: { ...prev.knowledgeGraph, buildRuleAdjustment: checked }
+                        expertPermissions: {
+                          ...prev.expertPermissions,
+                          knowledgeGraphReview: {
+                            ...prev.expertPermissions.knowledgeGraphReview,
+                            enabled: checked
+                          }
+                        }
                       }))}
                     />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* 系统管理权限 */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  系统管理权限
+                </CardTitle>
+                <CardDescription>权限管理和用户账号管理</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-base font-medium">权限管理</Label>
+                      <p className="text-sm text-muted-foreground">给角色配置权限</p>
+                    </div>
+                    <Switch 
+                      checked={rolePermissions.systemManagement.permissionManagement}
+                      onCheckedChange={(checked) => setRolePermissions(prev => ({
+                        ...prev,
+                        systemManagement: {
+                          ...prev.systemManagement,
+                          permissionManagement: checked
+                        }
+                      }))}
+                    />
+                  </div>
+                  
+                  <div className="border-t pt-4">
+                    <Label className="text-base font-medium mb-4 block">用户账号管理</Label>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <Label>新建账号</Label>
+                        <Switch 
+                          checked={rolePermissions.systemManagement.userAccountManagement.canCreate}
+                          onCheckedChange={(checked) => setRolePermissions(prev => ({
+                            ...prev,
+                            systemManagement: {
+                              ...prev.systemManagement,
+                              userAccountManagement: {
+                                ...prev.systemManagement.userAccountManagement,
+                                canCreate: checked
+                              }
+                            }
+                          }))}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Label>删除账号</Label>
+                        <Switch 
+                          checked={rolePermissions.systemManagement.userAccountManagement.canDelete}
+                          onCheckedChange={(checked) => setRolePermissions(prev => ({
+                            ...prev,
+                            systemManagement: {
+                              ...prev.systemManagement,
+                              userAccountManagement: {
+                                ...prev.systemManagement.userAccountManagement,
+                                canDelete: checked
+                              }
+                            }
+                          }))}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Label>编辑账号</Label>
+                        <Switch 
+                          checked={rolePermissions.systemManagement.userAccountManagement.canEdit}
+                          onCheckedChange={(checked) => setRolePermissions(prev => ({
+                            ...prev,
+                            systemManagement: {
+                              ...prev.systemManagement,
+                              userAccountManagement: {
+                                ...prev.systemManagement.userAccountManagement,
+                                canEdit: checked
+                              }
+                            }
+                          }))}
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -731,8 +1118,11 @@ export default function PermissionsPage() {
                       文件对比
                     </Label>
                     <Switch 
-                      checked={rolePermissions.fileComparison}
-                      onCheckedChange={(checked) => setRolePermissions(prev => ({ ...prev, fileComparison: checked }))}
+                      checked={rolePermissions.otherPermissions.fileComparison}
+                      onCheckedChange={(checked) => setRolePermissions(prev => ({ 
+                        ...prev, 
+                        otherPermissions: { ...prev.otherPermissions, fileComparison: checked }
+                      }))}
                     />
                   </div>
                   <div className="flex items-center justify-between">
@@ -741,8 +1131,11 @@ export default function PermissionsPage() {
                       知识搜索
                     </Label>
                     <Switch 
-                      checked={rolePermissions.knowledgeSearch}
-                      onCheckedChange={(checked) => setRolePermissions(prev => ({ ...prev, knowledgeSearch: checked }))}
+                      checked={rolePermissions.otherPermissions.knowledgeSearch}
+                      onCheckedChange={(checked) => setRolePermissions(prev => ({ 
+                        ...prev, 
+                        otherPermissions: { ...prev.otherPermissions, knowledgeSearch: checked }
+                      }))}
                     />
                   </div>
                   <div className="flex items-center justify-between">
@@ -752,19 +1145,11 @@ export default function PermissionsPage() {
                       <Badge variant="secondary" className="text-xs">仅特定人员可用</Badge>
                     </Label>
                     <Switch 
-                      checked={rolePermissions.workflowProcessing}
-                      onCheckedChange={(checked) => setRolePermissions(prev => ({ ...prev, workflowProcessing: checked }))}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Label className="flex items-center gap-2">
-                      <Lock className="h-4 w-4" />
-                      权限管理
-                      <Badge variant="secondary" className="text-xs">仅特定人员可用</Badge>
-                    </Label>
-                    <Switch 
-                      checked={rolePermissions.permissionManagement}
-                      onCheckedChange={(checked) => setRolePermissions(prev => ({ ...prev, permissionManagement: checked }))}
+                      checked={rolePermissions.otherPermissions.workflowProcessing}
+                      onCheckedChange={(checked) => setRolePermissions(prev => ({ 
+                        ...prev, 
+                        otherPermissions: { ...prev.otherPermissions, workflowProcessing: checked }
+                      }))}
                     />
                   </div>
                   <div className="flex items-center justify-between">
@@ -774,8 +1159,11 @@ export default function PermissionsPage() {
                       <Badge variant="outline" className="text-xs">普通用户可设置项较少</Badge>
                     </Label>
                     <Switch 
-                      checked={rolePermissions.systemSettings}
-                      onCheckedChange={(checked) => setRolePermissions(prev => ({ ...prev, systemSettings: checked }))}
+                      checked={rolePermissions.otherPermissions.systemSettings}
+                      onCheckedChange={(checked) => setRolePermissions(prev => ({ 
+                        ...prev, 
+                        otherPermissions: { ...prev.otherPermissions, systemSettings: checked }
+                      }))}
                     />
                   </div>
                 </div>
