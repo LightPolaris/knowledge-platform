@@ -193,6 +193,7 @@ export default function DocumentsPage() {
   // Document categorization states
   const [selectedDocumentsForGroup, setSelectedDocumentsForGroup] = useState<number[]>([])
   const [showDocumentSelection, setShowDocumentSelection] = useState(false)
+  const [activeTab, setActiveTab] = useState("documents")
 
   const filteredDocuments = mockDocuments.filter((doc) => {
     const matchesSearch =
@@ -460,13 +461,21 @@ export default function DocumentsPage() {
         <Header title="文档管理" subtitle="上传、组织和管理您的技术文档" />
 
         <main className="flex-1 overflow-auto p-6">
-          <Tabs defaultValue="documents" className="space-y-6">
-            <TabsList>
-              <TabsTrigger value="documents">所有文档</TabsTrigger>
-              <TabsTrigger value="upload">上传文档</TabsTrigger>
-              <TabsTrigger value="groups">分组管理</TabsTrigger>
-              <TabsTrigger value="analytics">数据分析</TabsTrigger>
-            </TabsList>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <div className="flex items-center justify-between">
+              <TabsList>
+                <TabsTrigger value="documents">所有文档</TabsTrigger>
+                <TabsTrigger value="upload">上传文档</TabsTrigger>
+                <TabsTrigger value="groups">分组管理</TabsTrigger>
+                <TabsTrigger value="analytics">数据分析</TabsTrigger>
+              </TabsList>
+              {activeTab === "groups" && (
+                <Button onClick={() => setIsGroupDialogOpen(true)}>
+                  <FolderPlus className="mr-2 h-4 w-4" />
+                  新建分组
+                </Button>
+              )}
+            </div>
 
             <TabsContent value="documents" className="space-y-6">
               {/* Filters and Actions */}
@@ -781,15 +790,9 @@ export default function DocumentsPage() {
             <TabsContent value="groups" className="space-y-6">
               <Card>
                 <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="font-serif">文档分组管理</CardTitle>
-                      <CardDescription>管理文档分组，创建、编辑和删除分组</CardDescription>
-                    </div>
-                    <Button onClick={() => setIsGroupDialogOpen(true)}>
-                      <FolderPlus className="mr-2 h-4 w-4" />
-                      新建分组
-                    </Button>
+                  <div>
+                    <CardTitle className="font-serif">文档分组管理</CardTitle>
+                    <CardDescription>管理文档分组，创建、编辑和删除分组</CardDescription>
                   </div>
                 </CardHeader>
                 <CardContent>

@@ -11,6 +11,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
@@ -39,6 +41,8 @@ import {
   Search as SearchIcon,
   Workflow,
   Lock,
+  ChevronDown,
+  Check,
 } from "lucide-react"
 
 export default function PermissionsPage() {
@@ -49,6 +53,7 @@ export default function PermissionsPage() {
   const [editingRole, setEditingRole] = useState<any>(null)
   const [showUserEditDialog, setShowUserEditDialog] = useState(false)
   const [editingUser, setEditingUser] = useState<any>(null)
+  const [isGroupPopoverOpen, setIsGroupPopoverOpen] = useState(false)
 
   // 权限配置数据结构
   const [rolePermissions, setRolePermissions] = useState({
@@ -132,26 +137,26 @@ export default function PermissionsPage() {
     },
     {
       id: 3,
-      name: "编辑者",
-      description: "编辑和发布内容",
-      users: 15,
-      permissions: ["内容创建", "内容编辑", "内容发布"],
+      name: "文档管理员",
+      description: "管理文档上传、解析、分组和权限",
+      users: 12,
+      permissions: ["文档上传", "文档解析", "文档分组", "文档权限"],
       status: "active",
     },
     {
       id: 4,
-      name: "审阅者",
-      description: "审阅和批准内容",
-      users: 8,
-      permissions: ["内容审阅", "内容批准"],
+      name: "知识图谱专家",
+      description: "构建和维护知识图谱",
+      users: 6,
+      permissions: ["知识图谱构建", "图谱调整", "规则配置"],
       status: "active",
     },
     {
       id: 5,
-      name: "普通用户",
-      description: "基本的系统使用权限",
-      users: 45,
-      permissions: ["内容查看", "提问"],
+      name: "个人知识库管理员",
+      description: "管理个人知识库和文档",
+      users: 28,
+      permissions: ["个人文档管理", "知识库维护", "内容整理"],
       status: "active",
     },
   ]
@@ -182,10 +187,28 @@ export default function PermissionsPage() {
       id: 3,
       name: "王五",
       email: "wang.wu@dongfang.com",
-      role: "编辑者",
+      role: "文档管理员",
       department: "技术部门",
       lastActive: "2024-01-13",
-      status: "inactive",
+      status: "active",
+    },
+    {
+      id: 4,
+      name: "赵六",
+      email: "zhao.liu@dongfang.com",
+      role: "知识图谱专家",
+      department: "技术部门",
+      lastActive: "2024-01-12",
+      status: "active",
+    },
+    {
+      id: 5,
+      name: "钱七",
+      email: "qian.qi@dongfang.com",
+      role: "个人知识库管理员",
+      department: "质量部门",
+      lastActive: "2024-01-11",
+      status: "active",
     },
   ]
 
@@ -263,9 +286,9 @@ export default function PermissionsPage() {
                           <SelectItem value="all">所有角色</SelectItem>
                           <SelectItem value="超级管理员">超级管理员</SelectItem>
                           <SelectItem value="管理员">管理员</SelectItem>
-                          <SelectItem value="编辑者">编辑者</SelectItem>
-                          <SelectItem value="审阅者">审阅者</SelectItem>
-                          <SelectItem value="普通用户">普通用户</SelectItem>
+                          <SelectItem value="文档管理员">文档管理员</SelectItem>
+                          <SelectItem value="知识图谱专家">知识图谱专家</SelectItem>
+                          <SelectItem value="个人知识库管理员">个人知识库管理员</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -448,32 +471,76 @@ export default function PermissionsPage() {
                 
                 <div>
                   <Label>文档分组权限</Label>
-                  <div className="grid grid-cols-2 gap-2 mt-2">
-                    {documentGroups.map((group) => (
-                      <div key={group} className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          id={group}
-                          checked={rolePermissions.documentGroups.includes(group)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setRolePermissions(prev => ({
-                                ...prev,
-                                documentGroups: [...prev.documentGroups, group]
-                              }))
-                            } else {
-                              setRolePermissions(prev => ({
-                                ...prev,
-                                documentGroups: prev.documentGroups.filter(g => g !== group)
-                              }))
-                            }
-                          }}
-                          className="rounded"
-                        />
-                        <Label htmlFor={group} className="text-sm">{group}</Label>
+                  <Popover open={isGroupPopoverOpen} onOpenChange={setIsGroupPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={isGroupPopoverOpen}
+                        className="w-full justify-between mt-2"
+                      >
+                        {rolePermissions.documentGroups.length > 0 
+                          ? `${rolePermissions.documentGroups.length} 个分组已选择`
+                          : "选择文档分组权限"
+                        }
+                        <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0" align="start">
+                      <div className="max-h-60 overflow-y-auto">
+                        <div className="p-2">
+                          <div className="flex items-center space-x-2 p-2 hover:bg-muted rounded">
+                            <Checkbox
+                              id="select-all-groups"
+                              checked={rolePermissions.documentGroups.length === documentGroups.length}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setRolePermissions(prev => ({
+                                    ...prev,
+                                    documentGroups: [...documentGroups]
+                                  }))
+                                } else {
+                                  setRolePermissions(prev => ({
+                                    ...prev,
+                                    documentGroups: []
+                                  }))
+                                }
+                              }}
+                            />
+                            <Label htmlFor="select-all-groups" className="text-sm font-medium">
+                              全选
+                            </Label>
+                          </div>
+                          <div className="border-t my-1" />
+                          {documentGroups.map((group) => (
+                            <div key={group} className="flex items-center space-x-2 p-2 hover:bg-muted rounded">
+                              <Checkbox
+                                id={group}
+                                checked={rolePermissions.documentGroups.includes(group)}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    setRolePermissions(prev => ({
+                                      ...prev,
+                                      documentGroups: [...prev.documentGroups, group]
+                                    }))
+                                  } else {
+                                    setRolePermissions(prev => ({
+                                      ...prev,
+                                      documentGroups: prev.documentGroups.filter(g => g !== group)
+                                    }))
+                                  }
+                                }}
+                              />
+                              <Label htmlFor={group} className="text-sm flex-1">{group}</Label>
+                              {rolePermissions.documentGroups.includes(group) && (
+                                <Check className="h-4 w-4 text-primary" />
+                              )}
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    ))}
-                  </div>
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </CardContent>
             </Card>
@@ -780,9 +847,9 @@ export default function PermissionsPage() {
                       <SelectContent>
                         <SelectItem value="超级管理员">超级管理员</SelectItem>
                         <SelectItem value="管理员">管理员</SelectItem>
-                        <SelectItem value="编辑者">编辑者</SelectItem>
-                        <SelectItem value="审阅者">审阅者</SelectItem>
-                        <SelectItem value="普通用户">普通用户</SelectItem>
+                        <SelectItem value="文档管理员">文档管理员</SelectItem>
+                        <SelectItem value="知识图谱专家">知识图谱专家</SelectItem>
+                        <SelectItem value="个人知识库管理员">个人知识库管理员</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
