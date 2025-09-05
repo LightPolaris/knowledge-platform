@@ -164,8 +164,6 @@ export default function SearchPage() {
     category: "all",
     subCategory: "all",
   })
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
-  const [showSearchHistory, setShowSearchHistory] = useState(false)
   const [hasSearched, setHasSearched] = useState(false)
 
   const handleSearch = (query?: string) => {
@@ -207,7 +205,7 @@ export default function SearchPage() {
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col">
               {/* Search Bar */}
-              <div className="p-6 border-b border-border">
+              <div className="p-4 border-b border-border">
                 <div className="flex items-center space-x-4">
                   <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -224,50 +222,17 @@ export default function SearchPage() {
                   </Button>
                 </div>
 
-                {/* Search Mode Toggle */}
-                <div className="flex items-center space-x-4 mt-4">
-                  <div className="flex items-center space-x-2">
-                    <Label className="text-sm">搜索模式:</Label>
-                    <Button
-                      variant={searchMode === "semantic" ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setSearchMode("semantic")}
-                    >
-                      <Brain className="h-4 w-4 mr-1" />
-                      语义匹配
-                    </Button>
-                    <Button
-                      variant={searchMode === "keyword" ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setSearchMode("keyword")}
-                    >
-                      <Target className="h-4 w-4 mr-1" />
-                      关键字匹配
-                    </Button>
-                  </div>
-
-                  <Button variant="outline" onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}>
-                    <Filter className="mr-2 h-4 w-4" />
-                    范围筛选
-                    {showAdvancedFilters ? (
-                      <ChevronUp className="ml-2 h-4 w-4" />
-                    ) : (
-                      <ChevronDown className="ml-2 h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-
-                {/* Advanced Filters */}
-                {showAdvancedFilters && (
-                  <div className="mt-4 p-4 bg-muted/50 rounded-lg">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label className="text-sm font-medium mb-2 block">技术范围</Label>
+                {/* Advanced Filters - Always Visible */}
+                <div className="mt-3 p-3 bg-muted/50 rounded-lg">
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-2">
+                        <Label className="text-sm">技术范围</Label>
                         <Select
                           value={selectedFilters.category}
                           onValueChange={(value) => setSelectedFilters({ ...selectedFilters, category: value })}
                         >
-                          <SelectTrigger>
+                          <SelectTrigger className="w-32">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -279,13 +244,13 @@ export default function SearchPage() {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div>
-                        <Label className="text-sm font-medium mb-2 block">专业分类</Label>
+                      <div className="flex items-center space-x-2">
+                        <Label className="text-sm">专业分类</Label>
                         <Select
                           value={selectedFilters.subCategory}
                           onValueChange={(value) => setSelectedFilters({ ...selectedFilters, subCategory: value })}
                         >
-                          <SelectTrigger>
+                          <SelectTrigger className="w-32">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -299,43 +264,23 @@ export default function SearchPage() {
                       </div>
                     </div>
                   </div>
-                )}
+                </div>
 
                 {/* Search History */}
                 {!hasSearched && (
-                  <div className="mt-4">
-                    <div className="flex items-center justify-between mb-2">
+                  <div className="mt-3">
+                    <div className="mb-2">
                       <Label className="text-sm font-medium">搜索历史</Label>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setShowSearchHistory(!showSearchHistory)}
-                      >
-                        {showSearchHistory ? "收起" : "展开"}
-                        {showSearchHistory ? (
-                          <ChevronUp className="h-4 w-4 ml-1" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4 ml-1" />
-                        )}
-                      </Button>
                     </div>
-                    <div className="space-y-1">
-                      {mockSearchHistory.slice(0, showSearchHistory ? mockSearchHistory.length : 3).map((item, index) => (
+                    <div className="flex flex-wrap gap-2">
+                      {mockSearchHistory.map((item, index) => (
                         <div
                           key={index}
-                          className="flex items-center justify-between p-2 rounded hover:bg-muted cursor-pointer"
+                          className="flex items-center space-x-2 px-3 py-1.5 bg-muted/50 rounded-full hover:bg-muted cursor-pointer text-sm"
                           onClick={() => handleHistorySearch(item.query)}
                         >
-                          <div className="flex items-center space-x-2">
-                            <History className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm">{item.query}</span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <span className="text-xs text-muted-foreground">{item.time}</span>
-                            <Button variant="ghost" size="sm">
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </div>
+                          <History className="h-3 w-3 text-muted-foreground" />
+                          <span>{item.query}</span>
                         </div>
                       ))}
                     </div>
@@ -345,8 +290,8 @@ export default function SearchPage() {
 
               {/* Search Results */}
               {hasSearched && (
-                <ScrollArea className="flex-1 p-6">
-                  <div className="space-y-4">
+                <ScrollArea className="flex-1 p-4">
+                  <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <p className="text-sm text-muted-foreground">
                         找到 {filteredResults.length} 个结果 {searchQuery && `关于 "${searchQuery}"`}
@@ -365,7 +310,7 @@ export default function SearchPage() {
 
                     {filteredResults.map((result) => (
                       <Card key={result.id} className="hover:shadow-md transition-shadow cursor-pointer">
-                        <CardHeader className="pb-3">
+                        <CardHeader className="pb-2">
                           <div className="flex items-start justify-between">
                             <div className="flex items-center space-x-2">
                               {getResultIcon(result.type)}
@@ -387,8 +332,8 @@ export default function SearchPage() {
                             </div>
                           </div>
                         </CardHeader>
-                        <CardContent>
-                          <p className="text-sm text-muted-foreground mb-3">{result.content}</p>
+                        <CardContent className="pt-2">
+                          <p className="text-sm text-muted-foreground mb-2">{result.content}</p>
                           <div className="flex items-center justify-between text-xs text-muted-foreground">
                             <div className="flex items-center space-x-4">
                               <span>来源: {result.source}</span>
@@ -446,56 +391,78 @@ export default function SearchPage() {
                 </ScrollArea>
               )}
 
-              {/* Welcome State */}
+              {/* Welcome State with Hot Searches */}
               {!hasSearched && (
-                <div className="flex-1 flex items-center justify-center">
-                  <div className="text-center">
-                    <Search className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-medium mb-2">开始搜索</h3>
-                    <p className="text-muted-foreground">输入关键词开始搜索技术文档和标准</p>
+                <div className="flex-1 p-4">
+                  
+                  {/* Hot Search Results */}
+                  <div className="max-w-4xl mx-auto">
+                    <h4 className="text-lg font-semibold mb-3 flex items-center">
+                      <TrendingUp className="h-5 w-5 mr-2 text-primary" />
+                      热门搜索
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {mockSearchResults.slice(0, 6).map((result) => (
+                        <Card key={result.id} className="hover:shadow-md transition-shadow cursor-pointer">
+                          <CardHeader className="pb-2">
+                            <div className="flex items-start justify-between">
+                              <div className="flex items-center space-x-2">
+                                {getResultIcon(result.type)}
+                                <CardTitle className="text-base font-serif">{result.title}</CardTitle>
+                              </div>
+                              <div className="flex items-center space-x-1">
+                                <Button variant="ghost" size="sm">
+                                  <Bookmark className="h-4 w-4" />
+                                </Button>
+                                <Button variant="ghost" size="sm">
+                                  <Share className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="pt-2">
+                            <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{result.content}</p>
+                            <div className="flex items-center justify-between text-xs text-muted-foreground">
+                              <div className="flex items-center space-x-3">
+                                <span>来源: {result.source}</span>
+                                <Badge variant="secondary" className="text-xs">
+                                  {result.category}
+                                </Badge>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <div className="flex items-center space-x-1">
+                                  <Eye className="h-3 w-3" />
+                                  <span>{result.viewCount}</span>
+                                </div>
+                                <div className="flex items-center space-x-1">
+                                  <Download className="h-3 w-3" />
+                                  <span>{result.downloadCount}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
             </div>
 
             {/* Right Sidebar - Recommendations */}
-            <div className="w-80 border-l border-border bg-muted/20 p-4">
-              {/* Hot Searches */}
-              <Card className="mb-4">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium flex items-center">
-                    <TrendingUp className="h-4 w-4 mr-2" />
-                    热门搜索
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  {mockHotSearches.slice(0, 10).map((item, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-2 rounded hover:bg-muted cursor-pointer"
-                      onClick={() => handleHotSearch(item.keyword)}
-                    >
-                      <span className="text-sm font-medium">{item.keyword}</span>
-                      <div className="flex items-center space-x-1 text-xs text-muted-foreground">
-                        <Eye className="h-3 w-3" />
-                        <span>{item.clicks}</span>
-                      </div>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
+            <div className="w-80 border-l border-border bg-muted/20 p-3">
 
               {/* Hot Documents */}
-              <Card className="mb-4">
-                <CardHeader className="pb-3">
+              <Card className="mb-3">
+                <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium flex items-center">
                     <Star className="h-4 w-4 mr-2" />
                     热门文档
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2">
+                <CardContent className="space-y-1.5">
                   {mockHotDocuments.map((doc, index) => (
-                    <div key={index} className="p-2 rounded hover:bg-muted cursor-pointer">
+                    <div key={index} className="p-1.5 rounded hover:bg-muted cursor-pointer">
                       <p className="text-sm font-medium">{doc.title}</p>
                       <div className="flex items-center justify-between mt-1">
                         <Badge variant="secondary" className="text-xs">
@@ -512,15 +479,15 @@ export default function SearchPage() {
 
               {/* Featured Questions */}
               <Card>
-                <CardHeader className="pb-3">
+                <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium flex items-center">
                     <ThumbsUp className="h-4 w-4 mr-2" />
                     精选问题
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-2">
+                <CardContent className="space-y-1.5">
                   {mockFeaturedQuestions.map((q, index) => (
-                    <div key={index} className="p-2 rounded hover:bg-muted cursor-pointer">
+                    <div key={index} className="p-1.5 rounded hover:bg-muted cursor-pointer">
                       <p className="text-sm font-medium">{q.question}</p>
                       <div className="flex items-center justify-between mt-1">
                         <Badge variant="outline" className="text-xs">

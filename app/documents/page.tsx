@@ -34,6 +34,12 @@ import {
   X,
   Plus,
   Folder,
+  Play,
+  CheckCircle2,
+  Import,
+  Settings,
+  FolderPlus,
+  FolderEdit,
 } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
@@ -119,6 +125,18 @@ const documentGroups = [
   "工艺标准"
 ]
 
+// Mock data for document groups management
+const mockGroups = [
+  { id: 1, name: "安全标准", description: "安全相关的标准和规范文档", documentCount: 15, color: "blue" },
+  { id: 2, name: "技术文档", description: "技术规格和说明文档", documentCount: 23, color: "green" },
+  { id: 3, name: "维护保养", description: "设备维护和保养相关文档", documentCount: 8, color: "orange" },
+  { id: 4, name: "质量控制", description: "质量管理和控制文档", documentCount: 12, color: "purple" },
+  { id: 5, name: "安装指南", description: "设备安装和操作指南", documentCount: 6, color: "red" },
+  { id: 6, name: "检验规程", description: "检验和测试规程文档", documentCount: 9, color: "yellow" },
+  { id: 7, name: "设计规范", description: "设计标准和规范文档", documentCount: 18, color: "indigo" },
+  { id: 8, name: "工艺标准", description: "工艺流程和标准文档", documentCount: 11, color: "pink" },
+]
+
 const getStatusIcon = (status: string) => {
   switch (status) {
     case "未解析":
@@ -161,9 +179,20 @@ export default function DocumentsPage() {
   // Upload related states
   const [uploadFiles, setUploadFiles] = useState<File[]>([])
   const [selectedGroup, setSelectedGroup] = useState("待分组")
-  const [showUploadDialog, setShowUploadDialog] = useState(false)
   const [uploadProgress, setUploadProgress] = useState<{[key: string]: number}>({})
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Group management states
+  const [groups, setGroups] = useState(mockGroups)
+  const [isGroupDialogOpen, setIsGroupDialogOpen] = useState(false)
+  const [editingGroup, setEditingGroup] = useState<any>(null)
+  const [newGroupName, setNewGroupName] = useState("")
+  const [newGroupDescription, setNewGroupDescription] = useState("")
+  const [newGroupColor, setNewGroupColor] = useState("blue")
+  
+  // Document categorization states
+  const [selectedDocumentsForGroup, setSelectedDocumentsForGroup] = useState<number[]>([])
+  const [showDocumentSelection, setShowDocumentSelection] = useState(false)
 
   const filteredDocuments = mockDocuments.filter((doc) => {
     const matchesSearch =
@@ -195,7 +224,6 @@ export default function DocumentsPage() {
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || [])
     setUploadFiles(prev => [...prev, ...files])
-    setShowUploadDialog(true)
   }
 
   const handleRemoveFile = (index: number) => {
@@ -223,13 +251,205 @@ export default function DocumentsPage() {
     // Clear files after upload
     setTimeout(() => {
       setUploadFiles([])
-      setShowUploadDialog(false)
       setUploadProgress({})
     }, 3000)
   }
 
   const triggerFileInput = () => {
     fileInputRef.current?.click()
+  }
+
+  // Group management functions
+  const handleCreateGroup = () => {
+    if (newGroupName.trim()) {
+      const newGroup = {
+        id: groups.length + 1,
+        name: newGroupName.trim(),
+        description: newGroupDescription.trim(),
+        documentCount: 0,
+        color: newGroupColor
+      }
+      setGroups([...groups, newGroup])
+      setNewGroupName("")
+      setNewGroupDescription("")
+      setNewGroupColor("blue")
+      setIsGroupDialogOpen(false)
+    }
+  }
+
+  const handleEditGroup = (group: any) => {
+    setEditingGroup(group)
+    setNewGroupName(group.name)
+    setNewGroupDescription(group.description)
+    setNewGroupColor(group.color)
+    setSelectedDocumentsForGroup([])
+    setShowDocumentSelection(false)
+    setIsGroupDialogOpen(true)
+  }
+
+  const handleUpdateGroup = () => {
+    if (editingGroup && newGroupName.trim()) {
+      setGroups(groups.map(group => 
+        group.id === editingGroup.id 
+          ? { ...group, name: newGroupName.trim(), description: newGroupDescription.trim(), color: newGroupColor }
+          : group
+      ))
+      setEditingGroup(null)
+      setNewGroupName("")
+      setNewGroupDescription("")
+      setNewGroupColor("blue")
+      setIsGroupDialogOpen(false)
+    }
+  }
+
+  const handleDeleteGroup = (groupId: number) => {
+    setGroups(groups.filter(group => group.id !== groupId))
+  }
+
+  const handleCloseGroupDialog = () => {
+    setIsGroupDialogOpen(false)
+    setEditingGroup(null)
+    setNewGroupName("")
+    setNewGroupDescription("")
+    setNewGroupColor("blue")
+    setSelectedDocumentsForGroup([])
+    setShowDocumentSelection(false)
+  }
+
+  // Document categorization functions
+  const handleSelectDocumentForGroup = (docId: number, checked: boolean) => {
+    if (checked) {
+      setSelectedDocumentsForGroup([...selectedDocumentsForGroup, docId])
+    } else {
+      setSelectedDocumentsForGroup(selectedDocumentsForGroup.filter(id => id !== docId))
+    }
+  }
+
+  const handleSelectAllDocumentsForGroup = (checked: boolean) => {
+    if (checked) {
+      setSelectedDocumentsForGroup(mockDocuments.map(doc => doc.id))
+    } else {
+      setSelectedDocumentsForGroup([])
+    }
+  }
+
+  const handleCategorizeDocuments = () => {
+    if (editingGroup && selectedDocumentsForGroup.length > 0) {
+      // Update document categories
+      const updatedDocuments = mockDocuments.map(doc => 
+        selectedDocumentsForGroup.includes(doc.id) 
+          ? { ...doc, category: editingGroup.name }
+          : doc
+      )
+      
+      // Update group document count
+      const updatedGroups = groups.map(group => 
+        group.id === editingGroup.id 
+          ? { ...group, documentCount: group.documentCount + selectedDocumentsForGroup.length }
+          : group
+      )
+      
+      setGroups(updatedGroups)
+      setSelectedDocumentsForGroup([])
+      setShowDocumentSelection(false)
+      console.log(`已将 ${selectedDocumentsForGroup.length} 个文档归类到分组 "${editingGroup.name}"`)
+    }
+  }
+
+  const getColorClasses = (color: string) => {
+    const colorMap = {
+      blue: "bg-blue-100 text-blue-800 border-blue-200",
+      green: "bg-green-100 text-green-800 border-green-200",
+      orange: "bg-orange-100 text-orange-800 border-orange-200",
+      purple: "bg-purple-100 text-purple-800 border-purple-200",
+      red: "bg-red-100 text-red-800 border-red-200",
+      yellow: "bg-yellow-100 text-yellow-800 border-yellow-200",
+      indigo: "bg-indigo-100 text-indigo-800 border-indigo-200",
+      pink: "bg-pink-100 text-pink-800 border-pink-200",
+    }
+    return colorMap[color as keyof typeof colorMap] || colorMap.blue
+  }
+
+  // Document action handlers
+  const handleParseDocument = (docId: number) => {
+    console.log(`开始解析文档 ${docId}`)
+    // TODO: 实现解析逻辑
+  }
+
+  const handleReviewDocument = (docId: number) => {
+    console.log(`开始审核文档 ${docId}`)
+    // TODO: 实现审核逻辑
+  }
+
+  const handleImportDocument = (docId: number) => {
+    console.log(`开始导入文档 ${docId}`)
+    // TODO: 实现导入逻辑
+  }
+
+  // Get action buttons based on document status
+  const getActionButtons = (doc: any) => {
+    const buttons = []
+    
+    switch (doc.status) {
+      case "未解析":
+        buttons.push(
+          <Button
+            key="parse"
+            variant="outline"
+            size="sm"
+            onClick={() => handleParseDocument(doc.id)}
+            className="h-8 shrink-0"
+          >
+            <Play className="mr-1 h-3 w-3" />
+            解析
+          </Button>
+        )
+        break
+      case "已解析未审核":
+        buttons.push(
+          <Button
+            key="review"
+            variant="outline"
+            size="sm"
+            onClick={() => handleReviewDocument(doc.id)}
+            className="h-8 shrink-0"
+          >
+            <CheckCircle2 className="mr-1 h-3 w-3" />
+            审核
+          </Button>
+        )
+        break
+      case "已解析":
+        buttons.push(
+          <Button
+            key="import"
+            variant="outline"
+            size="sm"
+            onClick={() => handleImportDocument(doc.id)}
+            className="h-8 shrink-0"
+          >
+            <Import className="mr-1 h-3 w-3" />
+            导入
+          </Button>
+        )
+        break
+      case "已导入未审核":
+        buttons.push(
+          <Button
+            key="review"
+            variant="outline"
+            size="sm"
+            onClick={() => handleReviewDocument(doc.id)}
+            className="h-8 shrink-0"
+          >
+            <CheckCircle2 className="mr-1 h-3 w-3" />
+            审核
+          </Button>
+        )
+        break
+    }
+    
+    return buttons
   }
 
   return (
@@ -244,26 +464,13 @@ export default function DocumentsPage() {
             <TabsList>
               <TabsTrigger value="documents">所有文档</TabsTrigger>
               <TabsTrigger value="upload">上传文档</TabsTrigger>
+              <TabsTrigger value="groups">分组管理</TabsTrigger>
               <TabsTrigger value="analytics">数据分析</TabsTrigger>
             </TabsList>
 
             <TabsContent value="documents" className="space-y-6">
               {/* Filters and Actions */}
               <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="font-serif">文档库</CardTitle>
-                      <CardDescription>管理和组织您的技术文档</CardDescription>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Button>
-                        <Upload className="mr-2 h-4 w-4" />
-                        上传文档
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
                 <CardContent>
                   <div className="flex items-center space-x-4 mb-6">
                     {/* Search */}
@@ -299,18 +506,14 @@ export default function DocumentsPage() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">所有分组</SelectItem>
-                        <SelectItem value="安全标准">安全标准</SelectItem>
-                        <SelectItem value="技术文档">技术文档</SelectItem>
-                        <SelectItem value="维护保养">维护保养</SelectItem>
-                        <SelectItem value="质量控制">质量控制</SelectItem>
-                        <SelectItem value="安装指南">安装指南</SelectItem>
+                        {groups.map((group) => (
+                          <SelectItem key={group.id} value={group.name}>
+                            {group.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
 
-                    <Button variant="outline" size="sm">
-                      <Filter className="mr-2 h-4 w-4" />
-                      更多筛选
-                    </Button>
                   </div>
 
                   {/* Batch Actions */}
@@ -405,31 +608,34 @@ export default function DocumentsPage() {
                           </div>
                         </div>
                         <div className="col-span-1">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem>
-                                <Eye className="mr-2 h-4 w-4" />
-                                预览
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <Download className="mr-2 h-4 w-4" />
-                                下载
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <Edit className="mr-2 h-4 w-4" />
-                                编辑详情
-                              </DropdownMenuItem>
-                              <DropdownMenuItem className="text-destructive">
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                删除
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                          <div className="flex items-center justify-end gap-1">
+                            {getActionButtons(doc)}
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 shrink-0">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem>
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  预览
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                  <Download className="mr-2 h-4 w-4" />
+                                  下载
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                  <Edit className="mr-2 h-4 w-4" />
+                                  编辑详情
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="text-destructive">
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  删除
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -452,7 +658,58 @@ export default function DocumentsPage() {
                   <CardTitle className="font-serif">上传文档</CardTitle>
                   <CardDescription>向知识平台上传新文档，支持批量上传和分组选择</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-6">
+                  {/* Group Selection */}
+                  <div>
+                    <Label htmlFor="groupSelect" className="text-sm font-medium mb-2 block">
+                      选择文档分组
+                    </Label>
+                    <Select value={selectedGroup} onValueChange={setSelectedGroup}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="选择文档分组" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="待分组">待分组</SelectItem>
+                        {groups.map((group) => (
+                          <SelectItem key={group.id} value={group.name}>
+                            {group.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Selected Files */}
+                  {uploadFiles.length > 0 && (
+                    <div>
+                      <Label className="text-sm font-medium mb-2 block">
+                        已选择的文件 ({uploadFiles.length} 个)
+                      </Label>
+                      <div className="max-h-60 overflow-y-auto space-y-2">
+                        {uploadFiles.map((file, index) => (
+                          <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                            <div className="flex items-center space-x-3">
+                              <FileText className="h-5 w-5 text-muted-foreground" />
+                              <div>
+                                <p className="text-sm font-medium">{file.name}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {(file.size / 1024 / 1024).toFixed(2)} MB
+                                </p>
+                              </div>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRemoveFile(index)}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Upload Area */}
                   <div 
                     className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-12 text-center hover:border-muted-foreground/50 transition-colors cursor-pointer"
@@ -478,26 +735,113 @@ export default function DocumentsPage() {
                     className="hidden"
                   />
 
-                  {/* Upload Progress */}
-                  <div className="mt-6 space-y-4">
-                    <h4 className="font-medium">上传进度</h4>
-                    <div className="space-y-3">
-                      {Object.entries(uploadProgress).map(([fileName, progress]) => (
-                        <div key={fileName} className="flex items-center space-x-4 p-3 border rounded-lg">
-                          <FileText className="h-5 w-5 text-muted-foreground" />
-                          <div className="flex-1">
-                            <p className="text-sm font-medium">{fileName}</p>
-                            <div className="flex items-center space-x-2 mt-1">
-                              <Progress value={progress} className="flex-1 h-2" />
-                              <span className="text-xs text-muted-foreground">{progress}%</span>
-                            </div>
-                          </div>
-                          <Badge variant={progress === 100 ? "default" : "outline"}>
-                            {progress === 100 ? "已完成" : "上传中"}
-                          </Badge>
-                        </div>
-                      ))}
+                  {/* Upload Actions */}
+                  {uploadFiles.length > 0 && (
+                    <div className="flex justify-end space-x-2">
+                      <Button variant="outline" onClick={() => setUploadFiles([])}>
+                        清空选择
+                      </Button>
+                      <Button 
+                        onClick={handleUpload}
+                        disabled={uploadFiles.length === 0}
+                      >
+                        <Upload className="mr-2 h-4 w-4" />
+                        开始上传
+                      </Button>
                     </div>
+                  )}
+
+                  {/* Upload Progress */}
+                  {Object.keys(uploadProgress).length > 0 && (
+                    <div className="space-y-4">
+                      <h4 className="font-medium">上传进度</h4>
+                      <div className="space-y-3">
+                        {Object.entries(uploadProgress).map(([fileName, progress]) => (
+                          <div key={fileName} className="flex items-center space-x-4 p-3 border rounded-lg">
+                            <FileText className="h-5 w-5 text-muted-foreground" />
+                            <div className="flex-1">
+                              <p className="text-sm font-medium">{fileName}</p>
+                              <div className="flex items-center space-x-2 mt-1">
+                                <Progress value={progress} className="flex-1 h-2" />
+                                <span className="text-xs text-muted-foreground">{progress}%</span>
+                              </div>
+                            </div>
+                            <Badge variant={progress === 100 ? "default" : "outline"}>
+                              {progress === 100 ? "已完成" : "上传中"}
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="groups" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="font-serif">文档分组管理</CardTitle>
+                      <CardDescription>管理文档分组，创建、编辑和删除分组</CardDescription>
+                    </div>
+                    <Button onClick={() => setIsGroupDialogOpen(true)}>
+                      <FolderPlus className="mr-2 h-4 w-4" />
+                      新建分组
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {groups.map((group) => (
+                      <div key={group.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center space-x-2">
+                            <Folder className="h-5 w-5 text-muted-foreground" />
+                            <h3 className="font-medium">{group.name}</h3>
+                          </div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleEditGroup(group)}>
+                                <FolderEdit className="mr-2 h-4 w-4" />
+                                编辑
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                className="text-destructive"
+                                onClick={() => handleDeleteGroup(group.id)}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                删除
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-3">{group.description}</p>
+                        <div className="flex items-center justify-between">
+                          <Badge className={`${getColorClasses(group.color)} text-xs`}>
+                            {group.documentCount} 个文档
+                          </Badge>
+                          <div className="flex items-center space-x-1">
+                            <div className={`w-3 h-3 rounded-full ${
+                              group.color === 'blue' ? 'bg-blue-500' :
+                              group.color === 'green' ? 'bg-green-500' :
+                              group.color === 'orange' ? 'bg-orange-500' :
+                              group.color === 'purple' ? 'bg-purple-500' :
+                              group.color === 'red' ? 'bg-red-500' :
+                              group.color === 'yellow' ? 'bg-yellow-500' :
+                              group.color === 'indigo' ? 'bg-indigo-500' :
+                              group.color === 'pink' ? 'bg-pink-500' : 'bg-blue-500'
+                            }`}></div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
@@ -562,81 +906,132 @@ export default function DocumentsPage() {
         </main>
       </div>
 
-      {/* Upload Dialog */}
-      <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
-        <DialogContent className="max-w-2xl">
+      {/* Group Management Dialog */}
+      <Dialog open={isGroupDialogOpen} onOpenChange={handleCloseGroupDialog}>
+        <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Folder className="h-5 w-5" />
-              批量上传文档
+            <DialogTitle>
+              {editingGroup ? '编辑分组' : '新建分组'}
             </DialogTitle>
           </DialogHeader>
-          
           <div className="space-y-6">
-            {/* Group Selection */}
-            <div>
-              <Label htmlFor="groupSelect" className="text-sm font-medium mb-2 block">
-                选择文档分组
-              </Label>
-              <Select value={selectedGroup} onValueChange={setSelectedGroup}>
-                <SelectTrigger>
-                  <SelectValue placeholder="选择文档分组" />
-                </SelectTrigger>
-                <SelectContent>
-                  {documentGroups.map((group) => (
-                    <SelectItem key={group} value={group}>
-                      {group}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Selected Files */}
-            <div>
-              <Label className="text-sm font-medium mb-2 block">
-                已选择的文件 ({uploadFiles.length} 个)
-              </Label>
-              <div className="max-h-60 overflow-y-auto space-y-2">
-                {uploadFiles.map((file, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <FileText className="h-5 w-5 text-muted-foreground" />
-                      <div>
-                        <p className="text-sm font-medium">{file.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {(file.size / 1024 / 1024).toFixed(2)} MB
-                        </p>
-                      </div>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleRemoveFile(index)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
+            {/* Basic Group Info */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="groupName">分组名称</Label>
+                <Input
+                  id="groupName"
+                  value={newGroupName}
+                  onChange={(e) => setNewGroupName(e.target.value)}
+                  placeholder="输入分组名称"
+                />
+              </div>
+              <div>
+                <Label htmlFor="groupDescription">分组描述</Label>
+                <Input
+                  id="groupDescription"
+                  value={newGroupDescription}
+                  onChange={(e) => setNewGroupDescription(e.target.value)}
+                  placeholder="输入分组描述"
+                />
+              </div>
+              <div>
+                <Label htmlFor="groupColor">分组颜色</Label>
+                <Select value={newGroupColor} onValueChange={setNewGroupColor}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="选择颜色" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="blue">蓝色</SelectItem>
+                    <SelectItem value="green">绿色</SelectItem>
+                    <SelectItem value="orange">橙色</SelectItem>
+                    <SelectItem value="purple">紫色</SelectItem>
+                    <SelectItem value="red">红色</SelectItem>
+                    <SelectItem value="yellow">黄色</SelectItem>
+                    <SelectItem value="indigo">靛蓝</SelectItem>
+                    <SelectItem value="pink">粉色</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
-            {/* Actions */}
+            {/* Document Categorization (only for editing) */}
+            {editingGroup && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label className="text-base font-medium">文档归类</Label>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowDocumentSelection(!showDocumentSelection)}
+                  >
+                    {showDocumentSelection ? '隐藏文档列表' : '选择文档归类'}
+                  </Button>
+                </div>
+                
+                {showDocumentSelection && (
+                  <div className="border rounded-lg p-4 max-h-60 overflow-y-auto">
+                    <div className="flex items-center space-x-2 mb-3">
+                      <Checkbox
+                        checked={selectedDocumentsForGroup.length === mockDocuments.length && mockDocuments.length > 0}
+                        onCheckedChange={handleSelectAllDocumentsForGroup}
+                      />
+                      <Label className="text-sm font-medium">全选文档</Label>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      {mockDocuments.map((doc) => (
+                        <div key={doc.id} className="flex items-center space-x-2 p-2 hover:bg-muted/50 rounded">
+                          <Checkbox
+                            checked={selectedDocumentsForGroup.includes(doc.id)}
+                            onCheckedChange={(checked) => handleSelectDocumentForGroup(doc.id, checked as boolean)}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{doc.name}</p>
+                            <p className="text-xs text-muted-foreground truncate">{doc.description}</p>
+                          </div>
+                          <Badge variant="outline" className="text-xs">
+                            {doc.category}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {selectedDocumentsForGroup.length > 0 && (
+                      <div className="mt-3 pt-3 border-t">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-muted-foreground">
+                            已选择 {selectedDocumentsForGroup.length} 个文档
+                          </span>
+                          <Button
+                            size="sm"
+                            onClick={handleCategorizeDocuments}
+                          >
+                            归类到分组
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={() => setShowUploadDialog(false)}>
+              <Button variant="outline" onClick={handleCloseGroupDialog}>
                 取消
               </Button>
               <Button 
-                onClick={handleUpload}
-                disabled={uploadFiles.length === 0}
+                onClick={editingGroup ? handleUpdateGroup : handleCreateGroup}
+                disabled={!newGroupName.trim()}
               >
-                <Upload className="mr-2 h-4 w-4" />
-                开始上传
+                {editingGroup ? '更新' : '创建'}
               </Button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
+
     </div>
   )
 }
