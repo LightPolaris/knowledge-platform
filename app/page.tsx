@@ -44,6 +44,7 @@ import {
   FolderOpen,
   HelpCircle,
   Upload,
+  X,
 } from "lucide-react"
 
 export default function QAPage() {
@@ -140,20 +141,63 @@ export default function QAPage() {
     }
   ]
 
-  // 知识领域数据
-  const knowledgeDomains = [
-    "通用",
-    "技术导则",
-    "相关标准",
-    "安全规范",
-    "维护手册",
-    "操作指南",
-    "故障诊断",
-    "质量控制",
-    "环保要求",
-    "能源管理",
-    "设备选型"
-  ]
+  // 三级分类知识领域数据
+  const knowledgeHierarchy = {
+    "通用": {
+      "通用文档": ["通用标准", "基础规范", "通用流程"]
+    },
+    "技术导则": {
+      "锅炉": ["锅炉设计", "锅炉制造", "锅炉安装", "锅炉调试"],
+      "汽轮机": ["汽轮机设计", "汽轮机制造", "汽轮机维护"],
+      "发电机": ["发电机设计", "发电机制造", "发电机检修"],
+      "辅助设备": ["泵类设备", "阀门设备", "管道系统"]
+    },
+    "相关标准": {
+      "国家标准": ["GB标准", "GB/T标准", "GBJ标准"],
+      "行业标准": ["JB标准", "HG标准", "SH标准"],
+      "国际标准": ["ISO标准", "IEC标准", "ASME标准"]
+    },
+    "安全规范": {
+      "压力容器": ["压力容器设计", "压力容器制造", "压力容器检验"],
+      "锅炉安全": ["锅炉安全技术", "锅炉安全监察", "锅炉安全运行"],
+      "电气安全": ["电气安全规范", "防爆电气", "接地保护"]
+    },
+    "维护手册": {
+      "预防性维护": ["定期检查", "润滑保养", "清洁维护"],
+      "故障维修": ["故障诊断", "故障排除", "备件更换"],
+      "大修指南": ["大修计划", "大修工艺", "大修验收"]
+    },
+    "操作指南": {
+      "启动操作": ["冷态启动", "热态启动", "紧急启动"],
+      "运行操作": ["正常运行", "负荷调节", "参数监控"],
+      "停机操作": ["正常停机", "紧急停机", "维护停机"]
+    },
+    "故障诊断": {
+      "机械故障": ["振动故障", "磨损故障", "密封故障"],
+      "电气故障": ["电机故障", "控制故障", "保护故障"],
+      "热力故障": ["传热故障", "燃烧故障", "汽水故障"]
+    },
+    "质量控制": {
+      "材料检验": ["原材料检验", "焊接材料检验", "成品检验"],
+      "工艺控制": ["焊接工艺", "热处理工艺", "机械加工工艺"],
+      "质量体系": ["ISO9001", "质量审核", "质量改进"]
+    },
+    "环保要求": {
+      "排放控制": ["大气排放", "水排放", "噪声控制"],
+      "环保设备": ["除尘设备", "脱硫设备", "脱硝设备"],
+      "环保监测": ["在线监测", "定期监测", "应急监测"]
+    },
+    "能源管理": {
+      "节能技术": ["余热利用", "变频技术", "优化控制"],
+      "能源监测": ["能耗统计", "能效分析", "节能评估"],
+      "新能源": ["太阳能", "风能", "生物质能"]
+    },
+    "设备选型": {
+      "锅炉选型": ["锅炉类型", "容量选择", "参数匹配"],
+      "汽轮机选型": ["汽轮机类型", "功率选择", "效率优化"],
+      "辅助设备选型": ["泵类选型", "阀门选型", "管道选型"]
+    }
+  }
 
   const [isLoading, setIsLoading] = useState(false)
   const [webSearchEnabled, setWebSearchEnabled] = useState(false)
@@ -164,8 +208,16 @@ export default function QAPage() {
   const [selectedRole, setSelectedRole] = useState("标准查询助手")
   const [customRoles, setCustomRoles] = useState<string[]>([])
   const [showNewRoleDialog, setShowNewRoleDialog] = useState(false)
-  const [selectedDomain, setSelectedDomain] = useState("通用")
+  const [selectedDomains, setSelectedDomains] = useState<string[]>([])
   const [domainOpen, setDomainOpen] = useState(false)
+  const [currentLevel1, setCurrentLevel1] = useState<string | null>(null)
+  const [currentLevel2, setCurrentLevel2] = useState<string | null>(null)
+  const [showLevel2, setShowLevel2] = useState(false)
+  const [showLevel3, setShowLevel3] = useState(false)
+  const [selectedLevel1Categories, setSelectedLevel1Categories] = useState<string[]>([])
+  const [selectedLevel2Categories, setSelectedLevel2Categories] = useState<string[]>([])
+  const [isGeneralSelected, setIsGeneralSelected] = useState(false)
+  const [currentPath, setCurrentPath] = useState<string[]>([])
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false)
   const [feedbackMessageId, setFeedbackMessageId] = useState<number | null>(null)
   const [showQuickFeedbackDialog, setShowQuickFeedbackDialog] = useState(false)
@@ -235,6 +287,164 @@ export default function QAPage() {
   const handleEditRole = (role: string) => {
     console.log('编辑角色:', role)
     // 这里可以添加编辑角色的逻辑，比如打开编辑对话框
+  }
+
+  // 处理知识领域选择
+  const handleLevel1Select = (level1: string) => {
+    setCurrentPath([level1])
+    setIsGeneralSelected(false)
+  }
+
+  // 处理专业选择
+  const handleLevel2Select = (level2: string) => {
+    if (currentPath.length === 1) {
+      setCurrentPath([...currentPath, level2])
+    }
+  }
+
+  // 处理文档选择
+  const handleLevel3Select = (level3: string) => {
+    if (currentPath.length === 2) {
+      const fullPath = `${currentPath[0]} > ${currentPath[1]} > ${level3}`
+      setSelectedDomains(prev => {
+        if (prev.includes(fullPath)) {
+          return prev.filter(item => item !== fullPath)
+        } else {
+          return [...prev, fullPath]
+        }
+      })
+
+      // 更新知识领域选择状态
+      setSelectedLevel1Categories(prev => {
+        if (prev.includes(currentPath[0])) {
+          return prev
+        } else {
+          return [...prev, currentPath[0]]
+        }
+      })
+
+      // 更新专业选择状态
+      setSelectedLevel2Categories(prev => {
+        const level2Key = `${currentPath[0]} > ${currentPath[1]}`
+        if (prev.includes(level2Key)) {
+          return prev
+        } else {
+          return [...prev, level2Key]
+        }
+      })
+    }
+  }
+
+  // 返回上级目录
+  const goBack = () => {
+    if (currentPath.length > 0) {
+      setCurrentPath(currentPath.slice(0, -1))
+    }
+  }
+
+  // 处理知识领域勾选/取消勾选
+  const handleLevel1Toggle = (level1: string) => {
+    setSelectedLevel1Categories(prev => {
+      if (prev.includes(level1)) {
+        // 取消勾选：清除该知识领域下的所有选择
+        setSelectedDomains(prevDomains =>
+          prevDomains.filter(domain => !domain.startsWith(level1))
+        )
+        setSelectedLevel2Categories(prevLevel2 =>
+          prevLevel2.filter(cat => !cat.startsWith(level1))
+        )
+        return prev.filter(cat => cat !== level1)
+      } else {
+        // 勾选：自动选中该知识领域下的所有专业和文档
+        const allLevel2Categories = Object.keys(knowledgeHierarchy[level1]).map(level2 => `${level1} > ${level2}`)
+        setSelectedLevel2Categories(prevLevel2 => {
+          const newLevel2Categories = [...prevLevel2]
+          allLevel2Categories.forEach(level2Key => {
+            if (!newLevel2Categories.includes(level2Key)) {
+              newLevel2Categories.push(level2Key)
+            }
+          })
+          return newLevel2Categories
+        })
+        
+        // 选中所有文档
+        const allDocuments: string[] = []
+        Object.keys(knowledgeHierarchy[level1]).forEach(level2 => {
+          knowledgeHierarchy[level1][level2].forEach(level3 => {
+            allDocuments.push(`${level1} > ${level2} > ${level3}`)
+          })
+        })
+        setSelectedDomains(prevDomains => {
+          const newDomains = [...prevDomains]
+          allDocuments.forEach(doc => {
+            if (!newDomains.includes(doc)) {
+              newDomains.push(doc)
+            }
+          })
+          return newDomains
+        })
+        
+        return [...prev, level1]
+      }
+    })
+    setIsGeneralSelected(false)
+  }
+
+  // 处理专业选择
+
+  // 处理专业勾选/取消勾选
+  const handleLevel2Toggle = (level2: string) => {
+    if (currentPath.length === 1) {
+      const level2Key = `${currentPath[0]} > ${level2}`
+      setSelectedLevel2Categories(prev => {
+        if (prev.includes(level2Key)) {
+          // 取消勾选：清除该专业下的所有选择
+          setSelectedDomains(prevDomains =>
+            prevDomains.filter(domain => !domain.startsWith(level2Key))
+          )
+          return prev.filter(cat => cat !== level2Key)
+        } else {
+          // 勾选：自动选中该专业下的所有文档
+          const allDocuments = knowledgeHierarchy[currentPath[0]][level2].map(level3 => 
+            `${currentPath[0]} > ${level2} > ${level3}`
+          )
+          setSelectedDomains(prevDomains => {
+            const newDomains = [...prevDomains]
+            allDocuments.forEach(doc => {
+              if (!newDomains.includes(doc)) {
+                newDomains.push(doc)
+              }
+            })
+            return newDomains
+          })
+          
+          // 确保知识领域也被选中
+          setSelectedLevel1Categories(prev => {
+            if (prev.includes(currentPath[0])) {
+              return prev
+            } else {
+              return [...prev, currentPath[0]]
+            }
+          })
+          
+          return [...prev, level2Key]
+        }
+      })
+    }
+  }
+
+
+  // 清除所有选择
+  const clearAllSelections = () => {
+    setSelectedDomains([])
+    setSelectedLevel1Categories([])
+    setSelectedLevel2Categories([])
+    setCurrentLevel1(null)
+    setCurrentLevel2(null)
+    setShowLevel2(false)
+    setShowLevel3(false)
+    setIsGeneralSelected(false)
+    setCurrentPath([])
   }
 
   const handleNewRole = () => {
@@ -333,6 +543,7 @@ export default function QAPage() {
                 {/* Chat Messages Area */}
                 <div className="flex-1 p-6 bg-gray-50 min-h-0">
                   <div className="w-full h-full relative">
+                    
                     {/* Chat Messages */}
                     <div className="h-full space-y-6 overflow-y-auto pb-6">
                       {/* 推荐问题 - 只在没有用户消息时显示 */}
@@ -515,42 +726,16 @@ export default function QAPage() {
                         <div className="flex items-center space-x-4">
                           {/* Knowledge Domain Selection */}
                           <div className="flex items-center">
-                            <Popover open={domainOpen} onOpenChange={setDomainOpen}>
-                              <PopoverTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  role="combobox"
-                                  aria-expanded={domainOpen}
-                                  className="h-8 px-3 justify-between text-sm font-medium text-foreground hover:bg-accent rounded-md"
-                                >
-                                  {selectedDomain}
-                                  <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-32 p-0">
-                                <Command>
-                                  <CommandInput placeholder="搜索领域..." />
-                                  <CommandList>
-                                    <CommandEmpty>未找到相关领域</CommandEmpty>
-                                    <CommandGroup>
-                                      {knowledgeDomains.map((domain) => (
-                                        <CommandItem
-                                          key={domain}
-                                          value={domain}
-                                          onSelect={(currentValue) => {
-                                            setSelectedDomain(currentValue === selectedDomain ? "" : currentValue)
-                                            setDomainOpen(false)
-                                          }}
-                                        >
-                                          {domain}
-                                        </CommandItem>
-                                      ))}
-                                    </CommandGroup>
-                                  </CommandList>
-                                </Command>
-                              </PopoverContent>
-                            </Popover>
+                            <Button
+                              variant="ghost"
+                              onClick={() => setDomainOpen(true)}
+                              className="h-8 px-3 text-sm font-medium text-foreground hover:bg-accent rounded-md"
+                            >
+                              {selectedLevel1Categories.length > 0 ? `已选择 ${selectedLevel1Categories.length} 个领域` : "选择知识领域"}
+                              <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
                           </div>
+
 
                           {/* Model Selection */}
                           <div className="flex items-center">
@@ -880,6 +1065,211 @@ export default function QAPage() {
           <QuickFeedbackForm onSubmit={handleQuickFeedbackSubmit} onCancel={() => setShowQuickFeedbackDialog(false)} />
         </DialogContent>
       </Dialog>
+
+      {/* 知识领域资源管理器弹窗 */}
+      {domainOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-lg shadow-xl w-[90vw] max-w-4xl h-[80vh] flex flex-col">
+            {/* 弹窗头部 */}
+            <div className="p-4 border-b flex items-center justify-between">
+              <h2 className="text-lg font-semibold">知识领域选择</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setDomainOpen(false)}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            
+            {/* 弹窗内容 */}
+            <div className="flex-1 p-4 overflow-y-auto">
+              {/* 面包屑导航 */}
+              <div className="mb-4 flex items-center space-x-2 text-sm">
+                <button
+                  onClick={() => setCurrentPath([])}
+                  className="text-blue-600 hover:text-blue-800"
+                >
+                  知识领域
+                </button>
+                {currentPath.map((item, index) => (
+                  <div key={index} className="flex items-center space-x-2">
+                    <span className="text-gray-400">/</span>
+                    <button
+                      onClick={() => setCurrentPath(currentPath.slice(0, index + 1))}
+                      className="text-blue-600 hover:text-blue-800"
+                    >
+                      {item}
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* 返回按钮 */}
+              {currentPath.length > 0 && (
+                <div className="mb-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={goBack}
+                    className="flex items-center space-x-2"
+                  >
+                    <ChevronDown className="w-4 h-4 rotate-90" />
+                    <span>返回上级</span>
+                  </Button>
+                </div>
+              )}
+
+              {/* 当前目录内容 */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {currentPath.length === 0 ? (
+                  // 显示一级分类
+                  Object.keys(knowledgeHierarchy).filter(level1 => level1 !== '通用').map((level1) => {
+                    const isSelected = selectedLevel1Categories.includes(level1)
+                    return (
+                      <div 
+                        key={level1}
+                        className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-gray-50"
+                      >
+                        <div 
+                          className="w-4 h-4 border border-gray-400 rounded flex items-center justify-center cursor-pointer hover:bg-gray-100"
+                          onClick={() => handleLevel1Toggle(level1)}
+                        >
+                          {isSelected && <Check className="w-3 h-3" />}
+                        </div>
+                        <div 
+                          className="flex items-center space-x-2 cursor-pointer flex-1"
+                          onClick={() => handleLevel1Select(level1)}
+                        >
+                          <FolderOpen className="w-5 h-5 text-blue-500" />
+                          <span className="text-sm">{level1}</span>
+                        </div>
+                      </div>
+                    )
+                  })
+                ) : currentPath.length === 1 ? (
+                  // 显示二级分类
+                  Object.keys(knowledgeHierarchy[currentPath[0]]).map((level2) => {
+                    const level2Key = `${currentPath[0]} > ${level2}`
+                    const isSelected = selectedLevel2Categories.includes(level2Key)
+                    return (
+                      <div 
+                        key={level2}
+                        className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-gray-50"
+                      >
+                        <div 
+                          className="w-4 h-4 border border-gray-400 rounded flex items-center justify-center cursor-pointer hover:bg-gray-100"
+                          onClick={() => handleLevel2Toggle(level2)}
+                        >
+                          {isSelected && <Check className="w-3 h-3" />}
+                        </div>
+                        <div 
+                          className="flex items-center space-x-2 cursor-pointer flex-1"
+                          onClick={() => handleLevel2Select(level2)}
+                        >
+                          <FolderOpen className="w-5 h-5 text-green-500" />
+                          <span className="text-sm">{level2}</span>
+                        </div>
+                      </div>
+                    )
+                  })
+                ) : currentPath.length === 2 ? (
+                  // 显示三级分类
+                  knowledgeHierarchy[currentPath[0]][currentPath[1]].map((level3) => {
+                    const fullPath = `${currentPath[0]} > ${currentPath[1]} > ${level3}`
+                    const isSelected = selectedDomains.includes(fullPath)
+                    return (
+                      <div 
+                        key={level3}
+                        className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-gray-50 cursor-pointer"
+                        onClick={() => handleLevel3Select(level3)}
+                      >
+                        <div 
+                          className="w-4 h-4 border border-gray-400 rounded flex items-center justify-center"
+                        >
+                          {isSelected && <Check className="w-3 h-3" />}
+                        </div>
+                        <div className="flex items-center space-x-2 flex-1">
+                          <FileText className="w-5 h-5 text-orange-500" />
+                          <span className="text-sm">{level3}</span>
+                        </div>
+                      </div>
+                    )
+                  })
+                ) : null}
+              </div>
+              
+              {/* 选中的专业和文档 */}
+              {!isGeneralSelected && selectedLevel1Categories.length > 0 && (
+                <div className="mt-6 pt-4 border-t">
+                  <h4 className="text-sm font-medium mb-3">已选择的专业和文档：</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
+                    {selectedLevel1Categories.map((category) => (
+                      <div key={category} className="text-sm text-gray-600">
+                        <div className="flex items-center space-x-2">
+                          <FolderOpen className="w-4 h-4 text-blue-500" />
+                          <span>{category}</span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 text-xs"
+                            onClick={() => {
+                              setSelectedLevel1Categories(prev => 
+                                prev.filter(cat => cat !== category)
+                              )
+                              setSelectedLevel2Categories(prev => 
+                                prev.filter(cat => !cat.startsWith(category))
+                              )
+                              setSelectedDomains(prev => 
+                                prev.filter(domain => !domain.startsWith(category))
+                              )
+                              if (selectedLevel1Categories.length === 1) {
+                                setIsGeneralSelected(true)
+                              }
+                            }}
+                          >
+                            <X className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {/* 弹窗底部 */}
+            <div className="p-4 border-t flex items-center justify-between">
+              <div className="text-sm text-muted-foreground">
+                {selectedLevel1Categories.length > 0 ? `已选择 ${selectedLevel1Categories.length} 个领域` : "未选择任何领域"}
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    const allLevel1Categories = Object.keys(knowledgeHierarchy).filter(level1 => level1 !== '通用')
+                    setSelectedLevel1Categories(allLevel1Categories)
+                    setIsGeneralSelected(false)
+                  }}
+                >
+                  全选
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={clearAllSelections}
+                >
+                  清除
+                </Button>
+                <Button
+                  onClick={() => setDomainOpen(false)}
+                >
+                  确定
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   )
