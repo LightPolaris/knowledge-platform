@@ -144,10 +144,6 @@ export default function NotificationsPage() {
                       </p>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Button variant="outline" size="sm">
-                        <Filter className="mr-2 h-4 w-4" />
-                        筛选
-                      </Button>
                       {selectedNotifications.length > 0 && (
                         <Button variant="outline" size="sm">
                           批量标记为已读
@@ -297,13 +293,6 @@ export default function NotificationsPage() {
                             <p className="text-xs text-muted-foreground">权限和角色变更通知</p>
                           </div>
                           <Checkbox defaultChecked />
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm font-medium">团队协作通知</p>
-                            <p className="text-xs text-muted-foreground">团队成员活动通知</p>
-                          </div>
-                          <Checkbox />
                         </div>
                       </div>
                     </div>

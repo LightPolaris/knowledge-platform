@@ -33,7 +33,7 @@ const navigation = [
   { name: "知识图谱", href: "/knowledge-graph", icon: Network },
   { name: "文件对比", href: "/compare", icon: GitCompare },
   { name: "文档管理", href: "/documents", icon: FileText },
-  { name: "个人知识库（云文档）", href: "/personal-library", icon: Cloud },
+  { name: "个人知识库", href: "/personal-library", icon: Cloud },
   { name: "个人中心", href: "/profile", icon: UserCircle },
   { name: "流程处理", href: "/workflow", icon: Workflow },
   { name: "权限管理", href: "/permissions", icon: Shield },
@@ -48,7 +48,7 @@ export function Sidebar({ className }: SidebarProps) {
     <div
       className={cn(
         "flex flex-col bg-sidebar border-r border-sidebar-border transition-all duration-300",
-        collapsed ? "w-16" : "w-64",
+        collapsed ? "w-16" : "w-48",
         className,
       )}
       data-testid="sidebar"
@@ -100,26 +100,6 @@ export function Sidebar({ className }: SidebarProps) {
 
       </ScrollArea>
 
-      {/* User Profile */}
-      <div className="p-3 border-t border-sidebar-border">
-        <Button
-          variant="ghost"
-          className={cn(
-            "w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-            collapsed ? "px-2" : "px-3",
-          )}
-        >
-          <div className="w-6 h-6 bg-sidebar-primary rounded-full flex items-center justify-center mr-3">
-            <User className="h-3 w-3 text-sidebar-primary-foreground" />
-          </div>
-          {!collapsed && (
-            <div className="flex-1 text-left">
-              <p className="text-sm font-medium">管理员</p>
-              <p className="text-xs text-muted-foreground">admin@dongfang.com</p>
-            </div>
-          )}
-        </Button>
-      </div>
     </div>
   )
 }

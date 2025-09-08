@@ -4,7 +4,7 @@ import React from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Search, Bell, HelpCircle, Sun, Moon } from "lucide-react"
+import { Search, Bell, HelpCircle, Sun, Moon, User } from "lucide-react"
 import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
 
@@ -97,6 +97,17 @@ export function QAHeader({
               <Button variant="ghost" size="sm" onClick={handleThemeToggle} className="h-9 w-9 p-0 text-white hover:bg-white/20">
                 {mounted && (theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />)}
               </Button>
+
+              {/* 用户信息 */}
+              <div className="flex items-center space-x-2 ml-4 pl-4 border-l border-white/20">
+                <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                  <User className="h-4 w-4 text-white" />
+                </div>
+                <div className="text-white">
+                  <p className="text-sm font-medium">管理员</p>
+                  <p className="text-xs text-white/80">admin@dongfang.com</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

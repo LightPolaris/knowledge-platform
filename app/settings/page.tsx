@@ -90,9 +90,8 @@ const getActionIcon = (action: string) => {
 export default function SettingsPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [settings, setSettings] = useState({
-    siteName: "Knowledge Platform",
-    siteDescription: "Dongfang Electric Group Knowledge Management System",
-    allowRegistration: false,
+    siteName: "知识平台",
+    siteDescription: "东方电气集团知识管理系统",
     requireEmailVerification: true,
     enableTwoFactor: true,
     sessionTimeout: "8",
@@ -102,7 +101,6 @@ export default function SettingsPage() {
     logRetentionDays: "90",
     enableNotifications: true,
     emailNotifications: true,
-    systemMaintenance: false,
   })
 
   const handleSettingChange = (key: string, value: any) => {
@@ -158,22 +156,6 @@ export default function SettingsPage() {
                         id="siteDescription"
                         value={settings.siteDescription}
                         onChange={(e) => handleSettingChange("siteDescription", e.target.value)}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="allowRegistration">允许用户注册</Label>
-                      <Switch
-                        id="allowRegistration"
-                        checked={settings.allowRegistration}
-                        onCheckedChange={(checked) => handleSettingChange("allowRegistration", checked)}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="systemMaintenance">维护模式</Label>
-                      <Switch
-                        id="systemMaintenance"
-                        checked={settings.systemMaintenance}
-                        onCheckedChange={(checked) => handleSettingChange("systemMaintenance", checked)}
                       />
                     </div>
                   </CardContent>

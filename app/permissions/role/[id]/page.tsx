@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
-import { ArrowLeft, Save, Folder, FileText, ChevronDown } from "lucide-react"
+import { ArrowLeft, Save, Folder, FileText, ChevronDown, Workflow, Settings } from "lucide-react"
 
 export default function RolePermissionPage() {
   const router = useRouter()
@@ -37,6 +37,11 @@ export default function RolePermissionPage() {
         viewDocument: false, // 查看文档
         downloadDocument: false // 下载文档
       }
+    },
+    // 流程节点操作权限
+    workflowPermissions: {
+      documentParseReview: false, // 文档解析审核节点
+      documentImportReview: false // 文档导入审核节点
     },
     // 文档管理权限 - 按文档类型分配
     documentManagement: {
@@ -227,10 +232,6 @@ export default function RolePermissionPage() {
                   返回
                 </Button>
               </div>
-              <Button onClick={handleSavePermissions}>
-                <Save className="h-4 w-4 mr-2" />
-                保存配置
-              </Button>
             </div>
 
             {/* 文档分组权限 */}
@@ -240,9 +241,7 @@ export default function RolePermissionPage() {
                   <Folder className="h-5 w-5" />
                   文档分组权限
                 </CardTitle>
-                <CardDescription>
-                  角色权限配置可以控制对各个流程节点的操作权限，以及对系统功能（文档管理、流程处理）的使用权限
-                </CardDescription>
+                <CardDescription>配置角色对多级文档目录的操作权限</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
@@ -251,10 +250,11 @@ export default function RolePermissionPage() {
                     <div className="flex items-center justify-between mb-4">
                       <h4 className="font-medium">文档操作权限配置</h4>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-3 gap-4">
                       <div className="flex items-center space-x-2">
                         <Checkbox
                           id="add-document"
+                          className="border-2 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                           checked={rolePermissions.documentPermissions.operationPermissions.addDocument}
                           onCheckedChange={(checked) => {
                             setRolePermissions(prev => ({
@@ -274,6 +274,7 @@ export default function RolePermissionPage() {
                       <div className="flex items-center space-x-2">
                         <Checkbox
                           id="delete-document"
+                          className="border-2 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                           checked={rolePermissions.documentPermissions.operationPermissions.deleteDocument}
                           onCheckedChange={(checked) => {
                             setRolePermissions(prev => ({
@@ -293,6 +294,7 @@ export default function RolePermissionPage() {
                       <div className="flex items-center space-x-2">
                         <Checkbox
                           id="move-document"
+                          className="border-2 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                           checked={rolePermissions.documentPermissions.operationPermissions.moveDocument}
                           onCheckedChange={(checked) => {
                             setRolePermissions(prev => ({
@@ -312,6 +314,7 @@ export default function RolePermissionPage() {
                       <div className="flex items-center space-x-2">
                         <Checkbox
                           id="edit-parsed-document"
+                          className="border-2 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                           checked={rolePermissions.documentPermissions.operationPermissions.editParsedDocument}
                           onCheckedChange={(checked) => {
                             setRolePermissions(prev => ({
@@ -331,6 +334,7 @@ export default function RolePermissionPage() {
                       <div className="flex items-center space-x-2">
                         <Checkbox
                           id="view-document"
+                          className="border-2 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                           checked={rolePermissions.documentPermissions.operationPermissions.viewDocument}
                           onCheckedChange={(checked) => {
                             setRolePermissions(prev => ({
@@ -350,6 +354,7 @@ export default function RolePermissionPage() {
                       <div className="flex items-center space-x-2">
                         <Checkbox
                           id="download-document"
+                          className="border-2 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                           checked={rolePermissions.documentPermissions.operationPermissions.downloadDocument}
                           onCheckedChange={(checked) => {
                             setRolePermissions(prev => ({
@@ -533,6 +538,62 @@ export default function RolePermissionPage() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* 流程节点操作权限 */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Workflow className="h-5 w-5" />
+                  流程节点操作权限
+                </CardTitle>
+                <CardDescription>配置角色对各个流程节点的操作权限</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="document-parse-review"
+                      checked={rolePermissions.workflowPermissions.documentParseReview}
+                      onCheckedChange={(checked) => {
+                        setRolePermissions(prev => ({
+                          ...prev,
+                          workflowPermissions: {
+                            ...prev.workflowPermissions,
+                            documentParseReview: checked as boolean
+                          }
+                        }))
+                      }}
+                    />
+                    <Label htmlFor="document-parse-review" className="text-sm">文档解析审核节点</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="document-import-review"
+                      checked={rolePermissions.workflowPermissions.documentImportReview}
+                      onCheckedChange={(checked) => {
+                        setRolePermissions(prev => ({
+                          ...prev,
+                          workflowPermissions: {
+                            ...prev.workflowPermissions,
+                            documentImportReview: checked as boolean
+                          }
+                        }))
+                      }}
+                    />
+                    <Label htmlFor="document-import-review" className="text-sm">文档导入审核节点</Label>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+
+            {/* 保存配置按钮 */}
+            <div className="flex justify-end mt-6">
+              <Button onClick={handleSavePermissions} size="lg">
+                <Save className="h-4 w-4 mr-2" />
+                保存配置
+              </Button>
+            </div>
           </div>
         </main>
       </div>

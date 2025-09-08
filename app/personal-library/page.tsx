@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
 import { Sidebar } from "@/components/sidebar"
+import { Header } from "@/components/header"
 import { 
   Cloud, 
   FileText, 
@@ -136,83 +137,77 @@ export default function PersonalLibraryPage() {
       <Sidebar />
       
       <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex-1 space-y-6 p-6">
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="font-serif font-bold text-3xl text-foreground">个人知识库（云文档）</h1>
-              <p className="text-muted-foreground">您的个人专属知识存储空间，基于云技术</p>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Button variant="outline" onClick={handleUpload}>
-                <Upload className="mr-2 h-4 w-4" />
-                上传文档
-              </Button>
-              <Button variant="outline">
-                <Network className="mr-2 h-4 w-4" />
-                知识图谱
-              </Button>
-            </div>
-          </div>
-
-          {/* Storage Info */}
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <HardDrive className="h-5 w-5 text-blue-600" />
-                  <div>
-                    <p className="text-sm font-medium">存储空间</p>
-                    <p className="text-xs text-muted-foreground">
-                      {storageInfo.used}MB / {storageInfo.total}MB
-                    </p>
+        <Header title="个人知识库" subtitle="您的个人专属知识存储空间，基于云技术" />
+        <main className="flex-1 p-6">
+          <div className="space-y-6">
+            {/* Storage Info */}
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <HardDrive className="h-5 w-5 text-blue-600" />
+                    <div>
+                      <p className="text-sm font-medium">存储空间</p>
+                      <p className="text-xs text-muted-foreground">
+                        {storageInfo.used}MB / {storageInfo.total}MB
+                      </p>
+                    </div>
                   </div>
+                  <div className="flex-1 max-w-xs">
+                    <Progress value={storageInfo.percentage} className="h-2" />
+                  </div>
+                  <Badge variant={storageInfo.percentage > 80 ? "destructive" : "secondary"}>
+                    {storageInfo.percentage}%
+                  </Badge>
                 </div>
-                <div className="flex-1 max-w-xs">
-                  <Progress value={storageInfo.percentage} className="h-2" />
-                </div>
-                <Badge variant={storageInfo.percentage > 80 ? "destructive" : "secondary"}>
-                  {storageInfo.percentage}%
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          {/* Search and Filter */}
-          <div className="flex items-center space-x-4">
-            <div className="flex-1 max-w-md">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="搜索文档..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
+            {/* Search, Filter and Action Buttons - All in one row */}
+            <div className="flex items-center space-x-4">
+              <div className="flex-1 max-w-md">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="搜索文档..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              <Select>
+                <SelectTrigger className="w-32">
+                  <SelectValue placeholder="类型" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">全部</SelectItem>
+                  <SelectItem value="pdf">PDF</SelectItem>
+                  <SelectItem value="word">Word</SelectItem>
+                  <SelectItem value="excel">Excel</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select>
+                <SelectTrigger className="w-32">
+                  <SelectValue placeholder="排序" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="date">日期</SelectItem>
+                  <SelectItem value="name">名称</SelectItem>
+                  <SelectItem value="size">大小</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="flex items-center space-x-2">
+                <Button variant="outline" onClick={handleUpload}>
+                  <Upload className="mr-2 h-4 w-4" />
+                  上传文档
+                </Button>
+                <Button variant="outline">
+                  <Network className="mr-2 h-4 w-4" />
+                  知识图谱
+                </Button>
               </div>
             </div>
-            <Select>
-              <SelectTrigger className="w-32">
-                <SelectValue placeholder="类型" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">全部</SelectItem>
-                <SelectItem value="pdf">PDF</SelectItem>
-                <SelectItem value="word">Word</SelectItem>
-                <SelectItem value="excel">Excel</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select>
-              <SelectTrigger className="w-32">
-                <SelectValue placeholder="排序" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="date">日期</SelectItem>
-                <SelectItem value="name">名称</SelectItem>
-                <SelectItem value="size">大小</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
 
           {/* Main Content */}
           <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -223,7 +218,7 @@ export default function PersonalLibraryPage() {
             </TabsList>
 
             <TabsContent value="my-documents" className="space-y-4">
-              <div className="grid gap-4">
+              <div className="grid gap-4 max-h-96 overflow-y-auto">
                 {myDocuments.map((doc) => (
                   <Card key={doc.id} className="hover:shadow-md transition-shadow">
                     <CardContent className="p-4">
@@ -281,7 +276,7 @@ export default function PersonalLibraryPage() {
             </TabsContent>
 
             <TabsContent value="shared" className="space-y-4">
-              <div className="grid gap-4">
+              <div className="grid gap-4 max-h-96 overflow-y-auto">
                 {sharedDocuments.map((doc) => (
                   <Card key={doc.id} className="hover:shadow-md transition-shadow">
                     <CardContent className="p-4">
@@ -329,7 +324,7 @@ export default function PersonalLibraryPage() {
             </TabsContent>
 
             <TabsContent value="favorites" className="space-y-4">
-              <div className="grid gap-4">
+              <div className="grid gap-4 max-h-96 overflow-y-auto">
                 {favoriteDocuments.map((doc) => (
                   <Card key={doc.id} className="hover:shadow-md transition-shadow">
                     <CardContent className="p-4">
@@ -374,7 +369,8 @@ export default function PersonalLibraryPage() {
               </div>
             </TabsContent>
           </Tabs>
-        </div>
+          </div>
+        </main>
       </div>
 
       {/* Upload Dialog */}

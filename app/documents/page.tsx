@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Sidebar } from "@/components/sidebar"
 import { Header } from "@/components/header"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -50,13 +50,12 @@ const mockDocuments = [
     name: "锅炉安全标准 2024.pdf",
     type: "PDF",
     size: "2.4 MB",
-    status: "已导入",
+    status: "已导入已审核",
     uploadDate: "2024-01-15",
     lastModified: "2024-01-15",
     uploadedBy: "张伟",
     category: "安全标准",
     version: "v2.1",
-    description: "锅炉操作安全标准更新",
   },
   {
     id: 2,
@@ -69,20 +68,18 @@ const mockDocuments = [
     uploadedBy: "李明",
     category: "技术文档",
     version: "v1.0",
-    description: "新型锅炉型号详细技术规格",
   },
   {
     id: 3,
     name: "维护保养计划.xlsx",
     type: "Excel",
     size: "856 KB",
-    status: "已解析",
+    status: "已解析已审核",
     uploadDate: "2024-01-13",
     lastModified: "2024-01-13",
     uploadedBy: "王芳",
     category: "维护保养",
     version: "v3.2",
-    description: "年度维护保养计划和程序",
   },
   {
     id: 4,
@@ -95,7 +92,6 @@ const mockDocuments = [
     uploadedBy: "陈路",
     category: "质量控制",
     version: "v1.5",
-    description: "全面质量控制程序",
   },
   {
     id: 5,
@@ -108,7 +104,246 @@ const mockDocuments = [
     uploadedBy: "刘刚",
     category: "安装指南",
     version: "v2.0",
-    description: "分步安装程序指南",
+  },
+  {
+    id: 6,
+    name: "电气安全规范.pdf",
+    type: "PDF",
+    size: "1.9 MB",
+    status: "已解析已审核",
+    uploadDate: "2024-01-10",
+    lastModified: "2024-01-10",
+    uploadedBy: "赵工程师",
+    category: "安全标准",
+    version: "v1.3",
+  },
+  {
+    id: 7,
+    name: "设备维护手册.docx",
+    type: "Word",
+    size: "2.1 MB",
+    status: "已导入已审核",
+    uploadDate: "2024-01-09",
+    lastModified: "2024-01-09",
+    uploadedBy: "孙技师",
+    category: "维护保养",
+    version: "v2.1",
+  },
+  {
+    id: 8,
+    name: "检验测试报告.xlsx",
+    type: "Excel",
+    size: "1.2 MB",
+    status: "已解析未审核",
+    uploadDate: "2024-01-08",
+    lastModified: "2024-01-08",
+    uploadedBy: "周检验员",
+    category: "质量控制",
+    version: "v1.0",
+  },
+  {
+    id: 9,
+    name: "工艺流程说明.pdf",
+    type: "PDF",
+    size: "3.5 MB",
+    status: "未解析",
+    uploadDate: "2024-01-07",
+    lastModified: "2024-01-07",
+    uploadedBy: "吴工艺师",
+    category: "技术文档",
+    version: "v1.8",
+  },
+  {
+    id: 10,
+    name: "安全培训材料.pptx",
+    type: "PowerPoint",
+    size: "5.8 MB",
+    status: "已导入已审核",
+    uploadDate: "2024-01-06",
+    lastModified: "2024-01-06",
+    uploadedBy: "郑培训师",
+    category: "安全标准",
+    version: "v3.0",
+  },
+  {
+    id: 11,
+    name: "设备故障诊断手册.pdf",
+    type: "PDF",
+    size: "2.7 MB",
+    status: "已解析已审核",
+    uploadDate: "2024-01-05",
+    lastModified: "2024-01-05",
+    uploadedBy: "王维修",
+    category: "维护保养",
+    version: "v2.3",
+  },
+  {
+    id: 12,
+    name: "质量检测标准.docx",
+    type: "Word",
+    size: "1.5 MB",
+    status: "已导入未审核",
+    uploadDate: "2024-01-04",
+    lastModified: "2024-01-04",
+    uploadedBy: "李质检",
+    category: "质量控制",
+    version: "v1.6",
+  },
+  {
+    id: 13,
+    name: "技术参数表.xlsx",
+    type: "Excel",
+    size: "856 KB",
+    status: "已解析已审核",
+    uploadDate: "2024-01-03",
+    lastModified: "2024-01-03",
+    uploadedBy: "陈技术员",
+    category: "技术文档",
+    version: "v1.2",
+  },
+  {
+    id: 14,
+    name: "环保排放标准.pdf",
+    type: "PDF",
+    size: "1.8 MB",
+    status: "未解析",
+    uploadDate: "2024-01-02",
+    lastModified: "2024-01-02",
+    uploadedBy: "张环保",
+    category: "安全标准",
+    version: "v2.0",
+  },
+  {
+    id: 15,
+    name: "操作员手册.docx",
+    type: "Word",
+    size: "2.3 MB",
+    status: "已导入已审核",
+    uploadDate: "2024-01-01",
+    lastModified: "2024-01-01",
+    uploadedBy: "刘操作员",
+    category: "技术文档",
+    version: "v1.9",
+  },
+  {
+    id: 16,
+    name: "维护记录表.xlsx",
+    type: "Excel",
+    size: "642 KB",
+    status: "已解析未审核",
+    uploadDate: "2023-12-31",
+    lastModified: "2023-12-31",
+    uploadedBy: "赵维护",
+    category: "维护保养",
+    version: "v1.1",
+  },
+  {
+    id: 17,
+    name: "安全防护指南.pdf",
+    type: "PDF",
+    size: "2.9 MB",
+    status: "已解析已审核",
+    uploadDate: "2023-12-30",
+    lastModified: "2023-12-30",
+    uploadedBy: "孙安全",
+    category: "安全标准",
+    version: "v1.7",
+  },
+  {
+    id: 18,
+    name: "质量审核报告.docx",
+    type: "Word",
+    size: "1.7 MB",
+    status: "已导入未审核",
+    uploadDate: "2023-12-29",
+    lastModified: "2023-12-29",
+    uploadedBy: "吴审核员",
+    category: "质量控制",
+    version: "v1.4",
+  },
+  {
+    id: 19,
+    name: "设备配置清单.xlsx",
+    type: "Excel",
+    size: "1.1 MB",
+    status: "已解析已审核",
+    uploadDate: "2023-12-28",
+    lastModified: "2023-12-28",
+    uploadedBy: "周配置",
+    category: "技术文档",
+    version: "v1.3",
+  },
+  {
+    id: 20,
+    name: "应急预案.pdf",
+    type: "PDF",
+    size: "3.2 MB",
+    status: "未解析",
+    uploadDate: "2023-12-27",
+    lastModified: "2023-12-27",
+    uploadedBy: "郑应急",
+    category: "安全标准",
+    version: "v2.2",
+  },
+  {
+    id: 21,
+    name: "维护保养计划表.xlsx",
+    type: "Excel",
+    size: "934 KB",
+    status: "已解析已审核",
+    uploadDate: "2023-12-26",
+    lastModified: "2023-12-26",
+    uploadedBy: "王计划",
+    category: "维护保养",
+    version: "v1.5",
+  },
+  {
+    id: 22,
+    name: "技术改进方案.docx",
+    type: "Word",
+    size: "2.6 MB",
+    status: "已导入未审核",
+    uploadDate: "2023-12-25",
+    lastModified: "2023-12-25",
+    uploadedBy: "李改进",
+    category: "技术文档",
+    version: "v1.0",
+  },
+  {
+    id: 23,
+    name: "质量检验规程.pdf",
+    type: "PDF",
+    size: "2.4 MB",
+    status: "已解析已审核",
+    uploadDate: "2023-12-24",
+    lastModified: "2023-12-24",
+    uploadedBy: "陈检验",
+    category: "质量控制",
+    version: "v1.8",
+  },
+  {
+    id: 24,
+    name: "安全培训记录.xlsx",
+    type: "Excel",
+    size: "1.3 MB",
+    status: "已解析未审核",
+    uploadDate: "2023-12-23",
+    lastModified: "2023-12-23",
+    uploadedBy: "张培训",
+    category: "安全标准",
+    version: "v1.2",
+  },
+  {
+    id: 25,
+    name: "设备运行日志.docx",
+    type: "Word",
+    size: "1.9 MB",
+    status: "已导入已审核",
+    uploadDate: "2023-12-22",
+    lastModified: "2023-12-22",
+    uploadedBy: "刘运行",
+    category: "维护保养",
+    version: "v1.6",
   },
 ]
 
@@ -143,11 +378,11 @@ const getStatusIcon = (status: string) => {
       return <Clock className="h-4 w-4 text-gray-600" />
     case "已解析未审核":
       return <AlertCircle className="h-4 w-4 text-yellow-600" />
-    case "已解析":
+    case "已解析已审核":
       return <CheckCircle className="h-4 w-4 text-blue-600" />
     case "已导入未审核":
       return <AlertCircle className="h-4 w-4 text-orange-600" />
-    case "已导入":
+    case "已导入已审核":
       return <CheckCircle className="h-4 w-4 text-green-600" />
     default:
       return <Clock className="h-4 w-4 text-gray-600" />
@@ -158,9 +393,9 @@ const getStatusBadge = (status: string) => {
   const variants = {
     "未解析": "secondary",
     "已解析未审核": "outline",
-    "已解析": "default",
+    "已解析已审核": "default",
     "已导入未审核": "outline",
-    "已导入": "default",
+    "已导入已审核": "default",
   } as const
 
   return (
@@ -169,6 +404,9 @@ const getStatusBadge = (status: string) => {
     </Badge>
   )
 }
+
+// Generate document number like DF-2024-001
+const getDocumentNumber = (id: number) => `DF-2024-${String(id).padStart(3, '0')}`
 
 export default function DocumentsPage() {
   const [selectedDocuments, setSelectedDocuments] = useState<number[]>([])
@@ -194,16 +432,36 @@ export default function DocumentsPage() {
   const [selectedDocumentsForGroup, setSelectedDocumentsForGroup] = useState<number[]>([])
   const [showDocumentSelection, setShowDocumentSelection] = useState(false)
   const [activeTab, setActiveTab] = useState("documents")
+  
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+
+  // Change group dialog states
+  const [showGroupChangeDialog, setShowGroupChangeDialog] = useState(false)
+  const [selectedGroupForChange, setSelectedGroupForChange] = useState("")
 
   const filteredDocuments = mockDocuments.filter((doc) => {
-    const matchesSearch =
-      doc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      doc.description.toLowerCase().includes(searchQuery.toLowerCase())
+    const query = searchQuery.toLowerCase().trim()
+    const nameMatch = doc.name.toLowerCase().includes(query)
+    const numberMatch = getDocumentNumber(doc.id).toLowerCase().includes(query)
+    const matchesSearch = query === "" || nameMatch || numberMatch
     const matchesStatus = statusFilter === "all" || doc.status === statusFilter
     const matchesCategory = categoryFilter === "all" || doc.category === categoryFilter
 
     return matchesSearch && matchesStatus && matchesCategory
   })
+
+  // Pagination calculation
+  const totalPages = Math.ceil(filteredDocuments.length / pageSize)
+  const startIndex = (currentPage - 1) * pageSize
+  const endIndex = startIndex + pageSize
+  const currentDocuments = filteredDocuments.slice(startIndex, endIndex)
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery, statusFilter, categoryFilter])
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -420,7 +678,7 @@ export default function DocumentsPage() {
           </Button>
         )
         break
-      case "已解析":
+      case "已解析已审核":
         buttons.push(
           <Button
             key="import"
@@ -502,9 +760,9 @@ export default function DocumentsPage() {
                         <SelectItem value="all">所有状态</SelectItem>
                         <SelectItem value="未解析">未解析</SelectItem>
                         <SelectItem value="已解析未审核">已解析未审核</SelectItem>
-                        <SelectItem value="已解析">已解析</SelectItem>
+                        <SelectItem value="已解析已审核">已解析已审核</SelectItem>
                         <SelectItem value="已导入未审核">已导入未审核</SelectItem>
-                        <SelectItem value="已导入">已导入</SelectItem>
+                        <SelectItem value="已导入已审核">已导入已审核</SelectItem>
                       </SelectContent>
                     </Select>
 
@@ -534,10 +792,11 @@ export default function DocumentsPage() {
                           <Download className="mr-2 h-4 w-4" />
                           下载
                         </Button>
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" onClick={() => selectedDocuments.length && setShowGroupChangeDialog(true)} disabled={selectedDocuments.length === 0}>
                           <Edit className="mr-2 h-4 w-4" />
-                          批量编辑
+                          修改分组
                         </Button>
+                        
                         <Button variant="destructive" size="sm">
                           <Trash2 className="mr-2 h-4 w-4" />
                           删除
@@ -548,7 +807,7 @@ export default function DocumentsPage() {
 
                   {/* Documents Table */}
                   <div className="border rounded-lg">
-                    <div className="grid grid-cols-12 gap-4 p-4 border-b bg-muted/50 font-medium text-sm">
+                    <div className="grid grid-cols-16 gap-4 p-4 border-b bg-muted/50 font-medium text-sm">
                       <div className="col-span-1">
                         <Checkbox
                           checked={
@@ -557,11 +816,12 @@ export default function DocumentsPage() {
                           onCheckedChange={handleSelectAll}
                         />
                       </div>
-                      <div className="col-span-3 flex items-center">
+                      <div className="col-span-2">文档编号</div>
+                      <div className="col-span-4 flex items-center">
                         文档名称
                         <ArrowUpDown className="ml-2 h-4 w-4" />
                       </div>
-                      <div className="col-span-1">分组</div>
+                      <div className="col-span-2">分组</div>
                       <div className="col-span-1">类型</div>
                       <div className="col-span-1">大小</div>
                       <div className="col-span-2">状态</div>
@@ -569,10 +829,10 @@ export default function DocumentsPage() {
                       <div className="col-span-1">操作</div>
                     </div>
 
-                    {filteredDocuments.map((doc) => (
+                     {currentDocuments.map((doc) => (
                       <div
                         key={doc.id}
-                        className="grid grid-cols-12 gap-4 p-4 border-b hover:bg-muted/30 transition-colors"
+                        className="grid grid-cols-16 gap-4 p-4 border-b hover:bg-muted/30 transition-colors"
                       >
                         <div className="col-span-1">
                           <Checkbox
@@ -580,16 +840,18 @@ export default function DocumentsPage() {
                             onCheckedChange={(checked) => handleSelectDocument(doc.id, checked as boolean)}
                           />
                         </div>
-                        <div className="col-span-3">
+                        <div className="col-span-2">
+                          <p className="text-sm font-mono text-muted-foreground">{getDocumentNumber(doc.id)}</p>
+                        </div>
+                        <div className="col-span-4">
                           <div className="flex items-center space-x-3">
                             <FileText className="h-5 w-5 text-muted-foreground" />
                             <div>
                               <p className="font-medium text-sm">{doc.name}</p>
-                              <p className="text-xs text-muted-foreground">{doc.description}</p>
                             </div>
                           </div>
                         </div>
-                        <div className="col-span-1">
+                        <div className="col-span-2">
                           <Badge variant="secondary" className="text-xs px-2 py-1">
                             {doc.category}
                           </Badge>
@@ -655,6 +917,80 @@ export default function DocumentsPage() {
                       <FileText className="mx-auto h-12 w-12 text-muted-foreground" />
                       <h3 className="mt-4 text-lg font-medium">未找到文档</h3>
                       <p className="mt-2 text-muted-foreground">请尝试调整搜索或筛选条件</p>
+                    </div>
+                  )}
+
+                  {/* 分页组件 */}
+                  {filteredDocuments.length > 0 && (
+                    <div className="flex items-center justify-between px-6 py-4 border-t">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm text-muted-foreground">
+                          显示 {startIndex + 1} - {Math.min(endIndex, filteredDocuments.length)} 条，共 {filteredDocuments.length} 条
+                        </span>
+                        <Select value={pageSize.toString()} onValueChange={(value) => {
+                          setPageSize(Number(value))
+                          setCurrentPage(1)
+                        }}>
+                          <SelectTrigger className="w-24">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="10">10条/页</SelectItem>
+                            <SelectItem value="20">20条/页</SelectItem>
+                            <SelectItem value="50">50条/页</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                          disabled={currentPage === 1}
+                        >
+                          上一页
+                        </Button>
+                        
+                        <div className="flex items-center space-x-1">
+                          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                            const pageNum = i + 1
+                            return (
+                              <Button
+                                key={pageNum}
+                                variant={currentPage === pageNum ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => setCurrentPage(pageNum)}
+                                className="w-8 h-8 p-0"
+                              >
+                                {pageNum}
+                              </Button>
+                            )
+                          })}
+                          {totalPages > 5 && (
+                            <>
+                              <span className="text-sm text-muted-foreground">...</span>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setCurrentPage(totalPages)}
+                                className="w-8 h-8 p-0"
+                              >
+                                {totalPages}
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                        
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                          disabled={currentPage === totalPages}
+                        >
+                          下一页
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </CardContent>
@@ -991,7 +1327,6 @@ export default function DocumentsPage() {
                           />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium truncate">{doc.name}</p>
-                            <p className="text-xs text-muted-foreground truncate">{doc.description}</p>
                           </div>
                           <Badge variant="outline" className="text-xs">
                             {doc.category}
@@ -1031,6 +1366,43 @@ export default function DocumentsPage() {
                 {editingGroup ? '更新' : '创建'}
               </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* 修改分组对话框 */}
+      <Dialog open={showGroupChangeDialog} onOpenChange={setShowGroupChangeDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Edit className="h-5 w-5" />
+              修改文档分组
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">已选择 {selectedDocuments.length} 个文档</p>
+            <div>
+              <Label className="text-sm font-medium mb-2 block">选择目标分组</Label>
+              <Select value={selectedGroupForChange} onValueChange={setSelectedGroupForChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="请选择分组" />
+                </SelectTrigger>
+                <SelectContent>
+                  {groups.map((g) => (
+                    <SelectItem key={g.id} value={g.name}>{g.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => setShowGroupChangeDialog(false)}>取消</Button>
+            <Button onClick={() => {
+              if (!selectedGroupForChange) return
+              setShowGroupChangeDialog(false)
+              setSelectedGroupForChange("")
+              setSelectedDocuments([])
+            }} disabled={!selectedGroupForChange}>确认修改</Button>
           </div>
         </DialogContent>
       </Dialog>
