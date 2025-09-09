@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import React, { useState, useRef, useEffect } from "react"
 import { Sidebar } from "@/components/sidebar"
 import { Header } from "@/components/header"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -13,6 +13,28 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Progress } from "@/components/ui/progress"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverEvent,
+  DragStartEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragOverlay,
+  closestCenter,
+  DragOverlayProps,
+} from '@dnd-kit/core'
+import {
+  arrayMove,
+  SortableContext,
+  verticalListSortingStrategy,
+  rectSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable'
+import {
+  CSS,
+} from '@dnd-kit/utilities'
 import {
   FileText,
   Upload,
@@ -31,6 +53,7 @@ import {
   User,
   FileType,
   ArrowUpDown,
+  ArrowLeft,
   X,
   Plus,
   Folder,
@@ -40,6 +63,14 @@ import {
   Settings,
   FolderPlus,
   FolderEdit,
+  ChevronRight,
+  ChevronDown,
+  ChevronLeft,
+  FolderOpen,
+  File,
+  Edit3,
+  Copy,
+  Move,
 } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
@@ -345,6 +376,574 @@ const mockDocuments = [
     category: "维护保养",
     version: "v1.6",
   },
+  // 待分组文档
+  {
+    id: 21,
+    name: "临时技术方案.docx",
+    type: "Word",
+    size: "1.2 MB",
+    status: "未解析",
+    uploadDate: "2024-01-20",
+    lastModified: "2024-01-20",
+    uploadedBy: "李工程师",
+    category: "待分组",
+    version: "v1.0",
+  },
+  {
+    id: 22,
+    name: "会议纪要 2024-01-19.pdf",
+    type: "PDF",
+    size: "856 KB",
+    status: "已解析未审核",
+    uploadDate: "2024-01-19",
+    lastModified: "2024-01-19",
+    uploadedBy: "王秘书",
+    category: "待分组",
+    version: "v1.0",
+  },
+  {
+    id: 23,
+    name: "设备故障报告.xlsx",
+    type: "Excel",
+    size: "1.5 MB",
+    status: "已导入未审核",
+    uploadDate: "2024-01-18",
+    lastModified: "2024-01-18",
+    uploadedBy: "张技师",
+    category: "待分组",
+    version: "v1.0",
+  },
+  {
+    id: 24,
+    name: "新员工培训资料.pptx",
+    type: "PowerPoint",
+    size: "3.2 MB",
+    status: "未解析",
+    uploadDate: "2024-01-17",
+    lastModified: "2024-01-17",
+    uploadedBy: "陈主管",
+    category: "待分组",
+    version: "v1.0",
+  },
+  {
+    id: 25,
+    name: "供应商评估表.pdf",
+    type: "PDF",
+    size: "2.1 MB",
+    status: "已解析已审核",
+    uploadDate: "2024-01-16",
+    lastModified: "2024-01-16",
+    uploadedBy: "刘采购",
+    category: "待分组",
+    version: "v1.0",
+  },
+  {
+    id: 26,
+    name: "项目进度跟踪表.xlsx",
+    type: "Excel",
+    size: "1.8 MB",
+    status: "已导入已审核",
+    uploadDate: "2024-01-15",
+    lastModified: "2024-01-15",
+    uploadedBy: "赵项目经理",
+    category: "待分组",
+    version: "v1.0",
+  },
+  {
+    id: 27,
+    name: "技术交流会议记录.docx",
+    type: "Word",
+    size: "1.4 MB",
+    status: "已解析未审核",
+    uploadDate: "2024-01-14",
+    lastModified: "2024-01-14",
+    uploadedBy: "孙工程师",
+    category: "待分组",
+    version: "v1.0",
+  },
+  {
+    id: 28,
+    name: "设备运行数据.txt",
+    type: "Text",
+    size: "512 KB",
+    status: "未解析",
+    uploadDate: "2024-01-13",
+    lastModified: "2024-01-13",
+    uploadedBy: "周操作员",
+    category: "待分组",
+    version: "v1.0",
+  },
+  {
+    id: 29,
+    name: "客户反馈意见.pdf",
+    type: "PDF",
+    size: "1.7 MB",
+    status: "已导入未审核",
+    uploadDate: "2024-01-12",
+    lastModified: "2024-01-12",
+    uploadedBy: "吴客服",
+    category: "待分组",
+    version: "v1.0",
+  },
+  {
+    id: 30,
+    name: "临时工作安排.xlsx",
+    type: "Excel",
+    size: "945 KB",
+    status: "已解析已审核",
+    uploadDate: "2024-01-11",
+    lastModified: "2024-01-11",
+    uploadedBy: "郑主管",
+    category: "待分组",
+    version: "v1.0",
+  },
+  // 检验规程文档
+  {
+    id: 31,
+    name: "电气设备检验规程.pdf",
+    type: "PDF",
+    size: "2.1 MB",
+    status: "已解析已审核",
+    uploadDate: "2024-01-10",
+    lastModified: "2024-01-10",
+    uploadedBy: "检验员A",
+    category: "检验规程",
+    version: "v1.0",
+  },
+  {
+    id: 32,
+    name: "机械部件检验标准.docx",
+    type: "Word",
+    size: "1.8 MB",
+    status: "已解析未审核",
+    uploadDate: "2024-01-09",
+    lastModified: "2024-01-09",
+    uploadedBy: "检验员B",
+    category: "检验规程",
+    version: "v1.0",
+  },
+  {
+    id: 33,
+    name: "焊接质量检验规程.pdf",
+    type: "PDF",
+    size: "2.5 MB",
+    status: "已导入已审核",
+    uploadDate: "2024-01-08",
+    lastModified: "2024-01-08",
+    uploadedBy: "检验员C",
+    category: "检验规程",
+    version: "v1.0",
+  },
+  {
+    id: 34,
+    name: "材料检验测试报告.xlsx",
+    type: "Excel",
+    size: "1.2 MB",
+    status: "已解析已审核",
+    uploadDate: "2024-01-07",
+    lastModified: "2024-01-07",
+    uploadedBy: "检验员D",
+    category: "检验规程",
+    version: "v1.0",
+  },
+  {
+    id: 35,
+    name: "产品外观检验标准.pdf",
+    type: "PDF",
+    size: "1.9 MB",
+    status: "已解析未审核",
+    uploadDate: "2024-01-06",
+    lastModified: "2024-01-06",
+    uploadedBy: "检验员E",
+    category: "检验规程",
+    version: "v1.0",
+  },
+  {
+    id: 36,
+    name: "尺寸精度检验规程.docx",
+    type: "Word",
+    size: "1.6 MB",
+    status: "已导入未审核",
+    uploadDate: "2024-01-05",
+    lastModified: "2024-01-05",
+    uploadedBy: "检验员F",
+    category: "检验规程",
+    version: "v1.0",
+  },
+  {
+    id: 37,
+    name: "功能性能检验标准.pdf",
+    type: "PDF",
+    size: "2.3 MB",
+    status: "已解析已审核",
+    uploadDate: "2024-01-04",
+    lastModified: "2024-01-04",
+    uploadedBy: "检验员G",
+    category: "检验规程",
+    version: "v1.0",
+  },
+  {
+    id: 38,
+    name: "安全防护检验规程.docx",
+    type: "Word",
+    size: "1.4 MB",
+    status: "已解析已审核",
+    uploadDate: "2024-01-03",
+    lastModified: "2024-01-03",
+    uploadedBy: "检验员H",
+    category: "检验规程",
+    version: "v1.0",
+  },
+  {
+    id: 39,
+    name: "环境适应性检验标准.pdf",
+    type: "PDF",
+    size: "2.0 MB",
+    status: "已导入已审核",
+    uploadDate: "2024-01-02",
+    lastModified: "2024-01-02",
+    uploadedBy: "检验员I",
+    category: "检验规程",
+    version: "v1.0",
+  },
+  // 设计规范文档 (需要18个，目前只有1个)
+  {
+    id: 40,
+    name: "建筑设计规范.pdf",
+    type: "PDF",
+    size: "3.2 MB",
+    status: "已解析已审核",
+    uploadDate: "2024-01-01",
+    lastModified: "2024-01-01",
+    uploadedBy: "设计师A",
+    category: "设计规范",
+    version: "v1.0",
+  },
+  {
+    id: 41,
+    name: "结构设计标准.docx",
+    type: "Word",
+    size: "2.8 MB",
+    status: "已解析未审核",
+    uploadDate: "2023-12-31",
+    lastModified: "2023-12-31",
+    uploadedBy: "设计师B",
+    category: "设计规范",
+    version: "v1.0",
+  },
+  {
+    id: 42,
+    name: "电气设计规范.pdf",
+    type: "PDF",
+    size: "2.5 MB",
+    status: "已导入已审核",
+    uploadDate: "2023-12-30",
+    lastModified: "2023-12-30",
+    uploadedBy: "设计师C",
+    category: "设计规范",
+    version: "v1.0",
+  },
+  {
+    id: 43,
+    name: "机械设计标准.docx",
+    type: "Word",
+    size: "2.1 MB",
+    status: "已解析已审核",
+    uploadDate: "2023-12-29",
+    lastModified: "2023-12-29",
+    uploadedBy: "设计师D",
+    category: "设计规范",
+    version: "v1.0",
+  },
+  {
+    id: 44,
+    name: "管道设计规范.pdf",
+    type: "PDF",
+    size: "2.9 MB",
+    status: "已解析未审核",
+    uploadDate: "2023-12-28",
+    lastModified: "2023-12-28",
+    uploadedBy: "设计师E",
+    category: "设计规范",
+    version: "v1.0",
+  },
+  {
+    id: 45,
+    name: "暖通设计标准.docx",
+    type: "Word",
+    size: "2.3 MB",
+    status: "已导入未审核",
+    uploadDate: "2023-12-27",
+    lastModified: "2023-12-27",
+    uploadedBy: "设计师F",
+    category: "设计规范",
+    version: "v1.0",
+  },
+  {
+    id: 46,
+    name: "给排水设计规范.pdf",
+    type: "PDF",
+    size: "2.7 MB",
+    status: "已解析已审核",
+    uploadDate: "2023-12-26",
+    lastModified: "2023-12-26",
+    uploadedBy: "设计师G",
+    category: "设计规范",
+    version: "v1.0",
+  },
+  {
+    id: 47,
+    name: "消防设计标准.docx",
+    type: "Word",
+    size: "2.4 MB",
+    status: "已解析已审核",
+    uploadDate: "2023-12-25",
+    lastModified: "2023-12-25",
+    uploadedBy: "设计师H",
+    category: "设计规范",
+    version: "v1.0",
+  },
+  {
+    id: 48,
+    name: "环保设计规范.pdf",
+    type: "PDF",
+    size: "2.6 MB",
+    status: "已导入已审核",
+    uploadDate: "2023-12-24",
+    lastModified: "2023-12-24",
+    uploadedBy: "设计师I",
+    category: "设计规范",
+    version: "v1.0",
+  },
+  {
+    id: 49,
+    name: "景观设计标准.docx",
+    type: "Word",
+    size: "2.0 MB",
+    status: "已解析未审核",
+    uploadDate: "2023-12-23",
+    lastModified: "2023-12-23",
+    uploadedBy: "设计师J",
+    category: "设计规范",
+    version: "v1.0",
+  },
+  {
+    id: 50,
+    name: "智能化设计规范.pdf",
+    type: "PDF",
+    size: "2.8 MB",
+    status: "已解析已审核",
+    uploadDate: "2023-12-22",
+    lastModified: "2023-12-22",
+    uploadedBy: "设计师K",
+    category: "设计规范",
+    version: "v1.0",
+  },
+  {
+    id: 51,
+    name: "节能设计标准.docx",
+    type: "Word",
+    size: "2.2 MB",
+    status: "已导入未审核",
+    uploadDate: "2023-12-21",
+    lastModified: "2023-12-21",
+    uploadedBy: "设计师L",
+    category: "设计规范",
+    version: "v1.0",
+  },
+  {
+    id: 52,
+    name: "抗震设计规范.pdf",
+    type: "PDF",
+    size: "3.0 MB",
+    status: "已解析已审核",
+    uploadDate: "2023-12-20",
+    lastModified: "2023-12-20",
+    uploadedBy: "设计师M",
+    category: "设计规范",
+    version: "v1.0",
+  },
+  {
+    id: 53,
+    name: "无障碍设计标准.docx",
+    type: "Word",
+    size: "1.9 MB",
+    status: "已解析已审核",
+    uploadDate: "2023-12-19",
+    lastModified: "2023-12-19",
+    uploadedBy: "设计师N",
+    category: "设计规范",
+    version: "v1.0",
+  },
+  {
+    id: 54,
+    name: "人防设计规范.pdf",
+    type: "PDF",
+    size: "2.5 MB",
+    status: "已导入已审核",
+    uploadDate: "2023-12-18",
+    lastModified: "2023-12-18",
+    uploadedBy: "设计师O",
+    category: "设计规范",
+    version: "v1.0",
+  },
+  {
+    id: 55,
+    name: "幕墙设计标准.docx",
+    type: "Word",
+    size: "2.3 MB",
+    status: "已解析未审核",
+    uploadDate: "2023-12-17",
+    lastModified: "2023-12-17",
+    uploadedBy: "设计师P",
+    category: "设计规范",
+    version: "v1.0",
+  },
+  {
+    id: 56,
+    name: "钢结构设计规范.pdf",
+    type: "PDF",
+    size: "2.7 MB",
+    status: "已解析已审核",
+    uploadDate: "2023-12-16",
+    lastModified: "2023-12-16",
+    uploadedBy: "设计师Q",
+    category: "设计规范",
+    version: "v1.0",
+  },
+  {
+    id: 57,
+    name: "混凝土设计标准.docx",
+    type: "Word",
+    size: "2.4 MB",
+    status: "已导入已审核",
+    uploadDate: "2023-12-15",
+    lastModified: "2023-12-15",
+    uploadedBy: "设计师R",
+    category: "设计规范",
+    version: "v1.0",
+  },
+  // 工艺标准文档 (需要11个，目前只有1个)
+  {
+    id: 58,
+    name: "焊接工艺标准.pdf",
+    type: "PDF",
+    size: "2.1 MB",
+    status: "已解析已审核",
+    uploadDate: "2023-12-14",
+    lastModified: "2023-12-14",
+    uploadedBy: "工艺师A",
+    category: "工艺标准",
+    version: "v1.0",
+  },
+  {
+    id: 59,
+    name: "机械加工工艺标准.docx",
+    type: "Word",
+    size: "1.8 MB",
+    status: "已解析未审核",
+    uploadDate: "2023-12-13",
+    lastModified: "2023-12-13",
+    uploadedBy: "工艺师B",
+    category: "工艺标准",
+    version: "v1.0",
+  },
+  {
+    id: 60,
+    name: "热处理工艺标准.pdf",
+    type: "PDF",
+    size: "2.3 MB",
+    status: "已导入已审核",
+    uploadDate: "2023-12-12",
+    lastModified: "2023-12-12",
+    uploadedBy: "工艺师C",
+    category: "工艺标准",
+    version: "v1.0",
+  },
+  {
+    id: 61,
+    name: "表面处理工艺标准.docx",
+    type: "Word",
+    size: "1.9 MB",
+    status: "已解析已审核",
+    uploadDate: "2023-12-11",
+    lastModified: "2023-12-11",
+    uploadedBy: "工艺师D",
+    category: "工艺标准",
+    version: "v1.0",
+  },
+  {
+    id: 62,
+    name: "装配工艺标准.pdf",
+    type: "PDF",
+    size: "2.0 MB",
+    status: "已解析未审核",
+    uploadDate: "2023-12-10",
+    lastModified: "2023-12-10",
+    uploadedBy: "工艺师E",
+    category: "工艺标准",
+    version: "v1.0",
+  },
+  {
+    id: 63,
+    name: "涂装工艺标准.docx",
+    type: "Word",
+    size: "1.7 MB",
+    status: "已导入已审核",
+    uploadDate: "2023-12-09",
+    lastModified: "2023-12-09",
+    uploadedBy: "工艺师F",
+    category: "工艺标准",
+    version: "v1.0",
+  },
+  {
+    id: 64,
+    name: "铸造工艺标准.pdf",
+    type: "PDF",
+    size: "2.4 MB",
+    status: "已解析已审核",
+    uploadDate: "2023-12-08",
+    lastModified: "2023-12-08",
+    uploadedBy: "工艺师G",
+    category: "工艺标准",
+    version: "v1.0",
+  },
+  {
+    id: 65,
+    name: "锻造工艺标准.docx",
+    type: "Word",
+    size: "1.6 MB",
+    status: "已解析未审核",
+    uploadDate: "2023-12-07",
+    lastModified: "2023-12-07",
+    uploadedBy: "工艺师H",
+    category: "工艺标准",
+    version: "v1.0",
+  },
+  {
+    id: 66,
+    name: "冲压工艺标准.pdf",
+    type: "PDF",
+    size: "2.2 MB",
+    status: "已导入已审核",
+    uploadDate: "2023-12-06",
+    lastModified: "2023-12-06",
+    uploadedBy: "工艺师I",
+    category: "工艺标准",
+    version: "v1.0",
+  },
+  {
+    id: 67,
+    name: "注塑工艺标准.docx",
+    type: "Word",
+    size: "1.8 MB",
+    status: "已解析已审核",
+    uploadDate: "2023-12-05",
+    lastModified: "2023-12-05",
+    uploadedBy: "工艺师J",
+    category: "工艺标准",
+    version: "v1.0",
+  },
 ]
 
 // Document groups for upload
@@ -360,16 +959,95 @@ const documentGroups = [
   "工艺标准"
 ]
 
-// Mock data for document groups management
+// Mock data for document groups management with hierarchical structure
 const mockGroups = [
-  { id: 1, name: "安全标准", description: "安全相关的标准和规范文档", documentCount: 15, color: "blue" },
-  { id: 2, name: "技术文档", description: "技术规格和说明文档", documentCount: 23, color: "green" },
-  { id: 3, name: "维护保养", description: "设备维护和保养相关文档", documentCount: 8, color: "orange" },
-  { id: 4, name: "质量控制", description: "质量管理和控制文档", documentCount: 12, color: "purple" },
-  { id: 5, name: "安装指南", description: "设备安装和操作指南", documentCount: 6, color: "red" },
-  { id: 6, name: "检验规程", description: "检验和测试规程文档", documentCount: 9, color: "yellow" },
-  { id: 7, name: "设计规范", description: "设计标准和规范文档", documentCount: 18, color: "indigo" },
-  { id: 8, name: "工艺标准", description: "工艺流程和标准文档", documentCount: 11, color: "pink" },
+  { 
+    id: 0, 
+    name: "待分组", 
+    description: "尚未分类的文档", 
+    documentCount: 10, 
+    color: "gray",
+    parentId: null,
+    children: []
+  },
+  { 
+    id: 1, 
+    name: "安全标准", 
+    description: "安全相关的标准和规范文档", 
+    documentCount: 4, 
+    color: "blue",
+    parentId: null,
+    children: [
+      { id: 11, name: "电气安全", description: "电气安全相关文档", documentCount: 2, color: "blue", parentId: 1, children: [] },
+      { id: 12, name: "机械安全", description: "机械安全相关文档", documentCount: 2, color: "blue", parentId: 1, children: [] }
+    ]
+  },
+  { 
+    id: 2, 
+    name: "技术文档", 
+    description: "技术规格和说明文档", 
+    documentCount: 4, 
+    color: "green",
+    parentId: null,
+    children: [
+      { id: 21, name: "设备规格", description: "设备技术规格文档", documentCount: 2, color: "green", parentId: 2, children: [] },
+      { id: 22, name: "操作手册", description: "设备操作手册", documentCount: 2, color: "green", parentId: 2, children: [] }
+    ]
+  },
+  { 
+    id: 3, 
+    name: "维护保养", 
+    description: "设备维护和保养相关文档", 
+    documentCount: 4, 
+    color: "orange",
+    parentId: null,
+    children: []
+  },
+  { 
+    id: 4, 
+    name: "质量控制", 
+    description: "质量管理和控制文档", 
+    documentCount: 4, 
+    color: "purple",
+    parentId: null,
+    children: []
+  },
+  { 
+    id: 5, 
+    name: "安装指南", 
+    description: "设备安装和操作指南", 
+    documentCount: 1, 
+    color: "red",
+    parentId: null,
+    children: []
+  },
+  { 
+    id: 6, 
+    name: "检验规程", 
+    description: "检验和测试规程文档", 
+    documentCount: 9, 
+    color: "yellow",
+    parentId: null,
+    children: []
+  },
+  { 
+    id: 7, 
+    name: "设计规范", 
+    description: "设计标准和规范文档", 
+    documentCount: 18, 
+    color: "indigo",
+    parentId: null,
+    children: []
+  },
+  { 
+    id: 8, 
+    name: "工艺标准", 
+    description: "工艺流程和标准文档", 
+    documentCount: 11, 
+    color: "pink",
+    parentId: null,
+    children: []
+  },
 ]
 
 const getStatusIcon = (status: string) => {
@@ -408,6 +1086,151 @@ const getStatusBadge = (status: string) => {
 // Generate document number like DF-2024-001
 const getDocumentNumber = (id: number) => `DF-2024-${String(id).padStart(3, '0')}`
 
+// Draggable Folder Component
+const DraggableFolder = ({ folder, isSelected, isRenaming, onRename, onConfirmRename, onCancelRename, onSelect, onDoubleClick, onContextMenu, isDragOver }: any) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: folder.id.toString() })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  }
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      className={`relative flex flex-col items-center p-3 border rounded-lg cursor-pointer transition-all hover:shadow-md ${
+        isSelected ? 'bg-blue-50 border-blue-200' : 
+        isDragOver ? 'bg-green-50 border-green-300 ring-2 ring-green-200' :
+        'hover:bg-muted/50'
+      }`}
+      onDoubleClick={onDoubleClick}
+      onContextMenu={onContextMenu}
+    >
+      <div 
+        {...listeners} 
+        className="absolute inset-0 z-10"
+        onDoubleClick={(e) => {
+          e.stopPropagation()
+          onDoubleClick()
+        }}
+        onMouseDown={(e) => {
+          // Prevent drag start on double click
+          if (e.detail === 2) {
+            e.preventDefault()
+          }
+        }}
+        onTouchStart={(e) => {
+          // Prevent drag start on double tap
+          if (e.touches.length === 1) {
+            const touch = e.touches[0]
+            const now = Date.now()
+            if (now - (window as any).lastTouchTime < 300) {
+              e.preventDefault()
+              onDoubleClick()
+            }
+            (window as any).lastTouchTime = now
+          }
+        }}
+        onPointerDown={(e) => {
+          // Prevent drag start on double click
+          if (e.detail === 2) {
+            e.preventDefault()
+          }
+        }}
+      />
+      {/* 复选框 */}
+      <div className="absolute top-2 left-2">
+        <Checkbox
+          checked={isSelected}
+          onCheckedChange={onSelect}
+          onClick={(e) => e.stopPropagation()}
+        />
+      </div>
+      
+      {/* 文件夹图标 */}
+      <div className="mt-2">
+        <Folder className="h-8 w-8 text-blue-500" />
+      </div>
+      
+      {/* 文件夹名称 */}
+      <div className="mt-2 text-center">
+        <p className="text-sm font-medium truncate w-full">
+          {isRenaming ? (
+            <Input
+              value={isRenaming.name}
+              onChange={(e) => onRename({ ...isRenaming, name: e.target.value })}
+              onBlur={onConfirmRename}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') onConfirmRename()
+                if (e.key === 'Escape') onCancelRename()
+              }}
+              className="h-6 text-sm text-center"
+              autoFocus
+            />
+          ) : (
+            folder.name
+          )}
+        </p>
+        <p className="text-xs text-muted-foreground mt-1">
+          {folder.documentCount} 个文档
+        </p>
+      </div>
+    </div>
+  )
+}
+
+// Draggable Document Component
+const DraggableDocument = ({ document, onContextMenu }: any) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: document.id.toString() })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  }
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className="relative flex flex-col items-center p-3 border rounded-lg cursor-pointer transition-all hover:shadow-md hover:bg-muted/50"
+      onContextMenu={onContextMenu}
+    >
+      {/* 文档图标 */}
+      <div className="mt-2">
+        <FileText className="h-8 w-8 text-muted-foreground" />
+      </div>
+      
+      {/* 文档名称 */}
+      <div className="mt-2 text-center">
+        <p className="text-sm font-medium truncate w-full">{document.name}</p>
+        <p className="text-xs text-muted-foreground mt-1">
+          {document.size}
+        </p>
+      </div>
+    </div>
+  )
+}
+
 export default function DocumentsPage() {
   const [selectedDocuments, setSelectedDocuments] = useState<number[]>([])
   const [searchQuery, setSearchQuery] = useState("")
@@ -418,6 +1241,7 @@ export default function DocumentsPage() {
   const [uploadFiles, setUploadFiles] = useState<File[]>([])
   const [selectedGroup, setSelectedGroup] = useState("待分组")
   const [uploadProgress, setUploadProgress] = useState<{[key: string]: number}>({})
+  const [uploadContextGroup, setUploadContextGroup] = useState<string | null>(null) // 上传上下文分组
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Group management states
@@ -428,10 +1252,19 @@ export default function DocumentsPage() {
   const [newGroupDescription, setNewGroupDescription] = useState("")
   const [newGroupColor, setNewGroupColor] = useState("blue")
   
+  // File manager states
+  const [expandedFolders, setExpandedFolders] = useState<Set<number>>(new Set([1, 2]))
+  const [selectedFolder, setSelectedFolder] = useState<number | null>(1)
+  const [viewMode, setViewMode] = useState<"list" | "grid">("list")
+  const [contextMenu, setContextMenu] = useState<{x: number, y: number, item: any} | null>(null)
+  const [renamingItem, setRenamingItem] = useState<{id: number, name: string} | null>(null)
+  const [selectedFolders, setSelectedFolders] = useState<number[]>([])
+  const [currentPath, setCurrentPath] = useState<number[]>([]) // 当前路径栈
+  
   // Document categorization states
   const [selectedDocumentsForGroup, setSelectedDocumentsForGroup] = useState<number[]>([])
   const [showDocumentSelection, setShowDocumentSelection] = useState(false)
-  const [activeTab, setActiveTab] = useState("documents")
+  const [activeTab, setActiveTab] = useState("groups")
   
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1)
@@ -440,6 +1273,35 @@ export default function DocumentsPage() {
   // Change group dialog states
   const [showGroupChangeDialog, setShowGroupChangeDialog] = useState(false)
   const [selectedGroupForChange, setSelectedGroupForChange] = useState("")
+  
+  // Move file dialog states
+  const [showMoveDialog, setShowMoveDialog] = useState(false)
+  const [fileToMove, setFileToMove] = useState<any>(null)
+  const [targetGroupForMove, setTargetGroupForMove] = useState("")
+  
+  // Modify group dialog states
+  const [showModifyGroupDialog, setShowModifyGroupDialog] = useState(false)
+  const [selectedTargetGroup, setSelectedTargetGroup] = useState("")
+  const [cascadeSelections, setCascadeSelections] = useState<string[]>([])
+  
+  // 上传文档页面的级联选择状态
+  const [uploadCascadeSelections, setUploadCascadeSelections] = useState<string[]>([])
+  
+  // Drag and drop states
+  const [activeId, setActiveId] = useState<string | null>(null)
+  const [draggedItem, setDraggedItem] = useState<any>(null)
+  const [dragOverId, setDragOverId] = useState<string | null>(null)
+  const [hoverTimeout, setHoverTimeout] = useState<NodeJS.Timeout | null>(null)
+  const [showHoverHint, setShowHoverHint] = useState(false)
+  
+  // Drag sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  )
 
   const filteredDocuments = mockDocuments.filter((doc) => {
     const query = searchQuery.toLowerCase().trim()
@@ -448,8 +1310,10 @@ export default function DocumentsPage() {
     const matchesSearch = query === "" || nameMatch || numberMatch
     const matchesStatus = statusFilter === "all" || doc.status === statusFilter
     const matchesCategory = categoryFilter === "all" || doc.category === categoryFilter
+    // 如果选中了特定分组，只显示该分组的文档
+    const matchesSelectedFolder = !selectedFolder || doc.category === groups.find(g => g.id === selectedFolder)?.name
 
-    return matchesSearch && matchesStatus && matchesCategory
+    return matchesSearch && matchesStatus && matchesCategory && matchesSelectedFolder
   })
 
   // Pagination calculation
@@ -462,6 +1326,20 @@ export default function DocumentsPage() {
   useEffect(() => {
     setCurrentPage(1)
   }, [searchQuery, statusFilter, categoryFilter])
+
+  // Close context menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => {
+      if (contextMenu) {
+        closeContextMenu()
+      }
+    }
+    
+    if (contextMenu) {
+      document.addEventListener('click', handleClickOutside)
+      return () => document.removeEventListener('click', handleClickOutside)
+    }
+  }, [contextMenu])
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -506,11 +1384,18 @@ export default function DocumentsPage() {
         })
       }, 200)
     })
-    
+
+    // 模拟将文档添加到正确的分组
+    if (uploadContextGroup) {
+      // 这里可以添加逻辑将文档实际分配到 uploadContextGroup 分组
+      console.log(`文档将上传到分组: ${uploadContextGroup}`)
+    }
+
     // Clear files after upload
     setTimeout(() => {
       setUploadFiles([])
       setUploadProgress({})
+      setUploadContextGroup(null) // 清除上传上下文
     }, 3000)
   }
 
@@ -526,9 +1411,38 @@ export default function DocumentsPage() {
         name: newGroupName.trim(),
         description: newGroupDescription.trim(),
         documentCount: 0,
-        color: newGroupColor
+        color: newGroupColor,
+        parentId: currentPath.length > 0 ? currentPath[currentPath.length - 1] : null,
+        children: []
       }
-      setGroups([...groups, newGroup])
+      
+      // 如果当前在根目录，直接添加到顶级分组
+      if (currentPath.length === 0) {
+        setGroups([...groups, newGroup])
+      } else {
+        // 如果在子文件夹内，需要递归添加到对应的父分组
+        const addToParentGroup = (groupList: any[], parentId: number, newGroup: any) => {
+          return groupList.map(group => {
+            if (group.id === parentId) {
+              return {
+                ...group,
+                children: [...(group.children || []), newGroup]
+              }
+            }
+            if (group.children) {
+              return {
+                ...group,
+                children: addToParentGroup(group.children, parentId, newGroup)
+              }
+            }
+            return group
+          })
+        }
+        
+        const parentId = currentPath[currentPath.length - 1]
+        setGroups(prev => addToParentGroup(prev, parentId, newGroup))
+      }
+      
       setNewGroupName("")
       setNewGroupDescription("")
       setNewGroupColor("blue")
@@ -617,6 +1531,7 @@ export default function DocumentsPage() {
 
   const getColorClasses = (color: string) => {
     const colorMap = {
+      gray: "bg-gray-100 text-gray-800 border-gray-200",
       blue: "bg-blue-100 text-blue-800 border-blue-200",
       green: "bg-green-100 text-green-800 border-green-200",
       orange: "bg-orange-100 text-orange-800 border-orange-200",
@@ -627,6 +1542,520 @@ export default function DocumentsPage() {
       pink: "bg-pink-100 text-pink-800 border-pink-200",
     }
     return colorMap[color as keyof typeof colorMap] || colorMap.blue
+  }
+
+  // File manager helper functions
+  const toggleFolder = (folderId: number) => {
+    setExpandedFolders(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(folderId)) {
+        newSet.delete(folderId)
+      } else {
+        newSet.add(folderId)
+      }
+      return newSet
+    })
+  }
+
+  const getFolderIcon = (folderId: number) => {
+    return expandedFolders.has(folderId) ? FolderOpen : Folder
+  }
+
+  const getDocumentsInFolder = (folderId: number) => {
+    return mockDocuments.filter(doc => doc.category === groups.find(g => g.id === folderId)?.name)
+  }
+
+  const handleContextMenu = (e: React.MouseEvent, item: any) => {
+    e.preventDefault()
+    setContextMenu({ x: e.clientX, y: e.clientY, item })
+  }
+
+  const closeContextMenu = () => {
+    setContextMenu(null)
+  }
+
+  const handleRename = (item: any) => {
+    setRenamingItem({ id: item.id, name: item.name })
+    closeContextMenu()
+  }
+
+  const handleMove = (item: any) => {
+    setFileToMove(item)
+    setShowMoveDialog(true)
+    closeContextMenu()
+  }
+
+  // 修改分组处理函数
+  const handleModifyGroup = () => {
+    if (selectedDocuments.length === 0 || !selectedTargetGroup) return
+    
+    // 更新选中文档的分组
+    const updatedDocuments = mockDocuments.map(doc => 
+      selectedDocuments.includes(doc.id) 
+        ? { ...doc, category: selectedTargetGroup }
+        : doc
+    )
+    
+    // 这里可以添加实际的API调用来更新文档分组
+    console.log(`已将 ${selectedDocuments.length} 个文档移动到分组: ${selectedTargetGroup}`)
+    
+    // 关闭对话框并清除选择
+    setShowModifyGroupDialog(false)
+    setSelectedDocuments([])
+    setSelectedTargetGroup("")
+    setCascadeSelections([])
+  }
+
+  const confirmMove = () => {
+    if (fileToMove && targetGroupForMove) {
+      // Update document category
+      const updatedDocuments = mockDocuments.map(doc => 
+        doc.id === fileToMove.id 
+          ? { ...doc, category: targetGroupForMove }
+          : doc
+      )
+      
+      // Update group document counts
+      const updatedGroups = groups.map(group => {
+        if (group.name === fileToMove.category) {
+          return { ...group, documentCount: Math.max(0, group.documentCount - 1) }
+        } else if (group.name === targetGroupForMove) {
+          return { ...group, documentCount: group.documentCount + 1 }
+        }
+        return group
+      })
+      
+      setGroups(updatedGroups)
+      console.log(`文档 "${fileToMove.name}" 已移动到分组 "${targetGroupForMove}"`)
+      
+      // Reset states
+      setShowMoveDialog(false)
+      setFileToMove(null)
+      setTargetGroupForMove("")
+    }
+  }
+
+  // 根据级联选择获取当前深度的分组选项
+  const getCascadeGroupsAtDepth = (depth: number): any[] => {
+    if (depth === 0) {
+      return groups
+    }
+    
+    // 根据前面的选择找到父分组
+    let currentGroups = groups
+    for (let i = 0; i < depth; i++) {
+      const selectedGroupName = cascadeSelections[i]
+      if (!selectedGroupName) return []
+      
+      const parentGroup = currentGroups.find(group => group.name === selectedGroupName)
+      if (!parentGroup || !parentGroup.children) return []
+      
+      currentGroups = parentGroup.children
+    }
+    
+    return currentGroups
+  }
+
+  // 获取当前路径对应的分组选项
+  const getCurrentPathGroups = (): any[] => {
+    if (currentPath.length === 0) {
+      return groups
+    }
+    
+    // 根据当前路径找到对应的分组
+    let currentGroups = groups
+    for (let i = 0; i < currentPath.length; i++) {
+      const folderId = currentPath[i]
+      const folder = currentGroups.find(group => group.id === folderId)
+      if (!folder || !folder.children) return []
+      currentGroups = folder.children
+    }
+    
+    return currentGroups
+  }
+
+  // 递归查找分组
+  const findGroupByName = (groupList: any[], name: string): any => {
+    for (const group of groupList) {
+      if (group.name === name) {
+        return group
+      }
+      if (group.children && group.children.length > 0) {
+        const found = findGroupByName(group.children, name)
+        if (found) return found
+      }
+    }
+    return null
+  }
+
+  // 渲染级联下拉菜单
+  const renderCascadeSelects = () => {
+    const selects = []
+    
+    // 第一个下拉菜单：始终显示所有顶级分组
+    selects.push(
+      <div key={0} className="space-y-2">
+        <Label className="text-sm font-medium">
+          选择分组 1
+        </Label>
+        <Select
+          value={cascadeSelections[0] || ""}
+          onValueChange={(value) => {
+            const newSelections = [value]
+            setCascadeSelections(newSelections)
+            setSelectedTargetGroup(value)
+          }}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="选择第1级分组" />
+          </SelectTrigger>
+          <SelectContent>
+            {groups.map((group) => (
+              <SelectItem key={group.id} value={group.name}>
+                <div className="flex items-center space-x-2">
+                  <Folder className="h-4 w-4" />
+                  <span>{group.name}</span>
+                  <Badge variant="secondary" className="text-xs">
+                    {group.documentCount}
+                  </Badge>
+                </div>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    )
+    
+    // 第二个下拉菜单：当第一个有选择且该分组有子分类时显示
+    if (cascadeSelections[0]) {
+      const selectedGroup = groups.find(group => group.name === cascadeSelections[0])
+      if (selectedGroup && selectedGroup.children && selectedGroup.children.length > 0) {
+        // 如果第二个下拉菜单还没有选择，自动选择第一个选项
+        if (!cascadeSelections[1] && selectedGroup.children.length > 0) {
+          const firstChild = selectedGroup.children[0]
+          const newSelections = [cascadeSelections[0], firstChild.name]
+          setCascadeSelections(newSelections)
+          setSelectedTargetGroup(firstChild.name)
+        }
+        
+        selects.push(
+          <div key={1} className="space-y-2">
+            <Label className="text-sm font-medium">
+              选择分组 2
+            </Label>
+            <Select
+              value={cascadeSelections[1] || ""}
+              onValueChange={(value) => {
+                const newSelections = [cascadeSelections[0], value]
+                setCascadeSelections(newSelections)
+                setSelectedTargetGroup(value)
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="选择第2级分组" />
+              </SelectTrigger>
+              <SelectContent>
+                {selectedGroup.children.map((group) => (
+                  <SelectItem key={group.id} value={group.name}>
+                    <div className="flex items-center space-x-2">
+                      <Folder className="h-4 w-4" />
+                      <span>{group.name}</span>
+                      <Badge variant="secondary" className="text-xs">
+                        {group.documentCount}
+                      </Badge>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )
+      }
+    }
+    
+    return selects
+  }
+
+  // 上传文档页面的级联下拉菜单渲染函数
+  const renderUploadCascadeSelects = () => {
+    const selects = []
+    
+    // 第一个下拉菜单：始终显示所有顶级分组
+    selects.push(
+      <div key={0} className="space-y-2">
+        <Label className="text-sm font-medium">
+          选择分组 1
+        </Label>
+        <Select
+          value={uploadCascadeSelections[0] || ""}
+          onValueChange={(value) => {
+            const newSelections = [value]
+            setUploadCascadeSelections(newSelections)
+            setSelectedGroup(value)
+          }}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="选择第1级分组" />
+          </SelectTrigger>
+          <SelectContent>
+            {groups.map((group) => (
+              <SelectItem key={group.id} value={group.name}>
+                <div className="flex items-center space-x-2">
+                  <Folder className="h-4 w-4" />
+                  <span>{group.name}</span>
+                  <Badge variant="secondary" className="text-xs">
+                    {group.documentCount}
+                  </Badge>
+                </div>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    )
+    
+    // 第二个下拉菜单：当第一个有选择且该分组有子分类时显示
+    if (uploadCascadeSelections[0]) {
+      let selectedGroup = null
+      if (uploadCascadeSelections[0] === "待分组") {
+        // 待分组没有子分类
+        return selects
+      } else {
+        selectedGroup = groups.find(group => group.name === uploadCascadeSelections[0])
+      }
+      
+      if (selectedGroup && selectedGroup.children && selectedGroup.children.length > 0) {
+        // 如果第二个下拉菜单还没有选择，自动选择第一个选项
+        if (!uploadCascadeSelections[1] && selectedGroup.children.length > 0) {
+          const firstChild = selectedGroup.children[0]
+          const newSelections = [uploadCascadeSelections[0], firstChild.name]
+          setUploadCascadeSelections(newSelections)
+          setSelectedGroup(firstChild.name)
+        }
+        
+        selects.push(
+          <div key={1} className="space-y-2">
+            <Label className="text-sm font-medium">
+              选择分组 2
+            </Label>
+            <Select
+              value={uploadCascadeSelections[1] || ""}
+              onValueChange={(value) => {
+                const newSelections = [uploadCascadeSelections[0], value]
+                setUploadCascadeSelections(newSelections)
+                setSelectedGroup(value)
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="选择第2级分组" />
+              </SelectTrigger>
+              <SelectContent>
+                {selectedGroup.children.map((group) => (
+                  <SelectItem key={group.id} value={group.name}>
+                    <div className="flex items-center space-x-2">
+                      <Folder className="h-4 w-4" />
+                      <span>{group.name}</span>
+                      <Badge variant="secondary" className="text-xs">
+                        {group.documentCount}
+                      </Badge>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )
+      }
+    }
+    
+    return selects
+  }
+
+  // 判断当前文件夹是否为叶子节点（只有文档，没有子文件夹）
+  const isCurrentFolderLeafNode = () => {
+    const currentSubFolders = getCurrentSubFolders()
+    return currentSubFolders.length === 0
+  }
+
+  const confirmRename = () => {
+    if (renamingItem) {
+      setGroups(prev => prev.map(group => 
+        group.id === renamingItem.id 
+          ? { ...group, name: renamingItem.name }
+          : group
+      ))
+      setRenamingItem(null)
+    }
+  }
+
+  const cancelRename = () => {
+    setRenamingItem(null)
+  }
+
+  // Folder selection functions
+  // 递归获取文件夹下的所有子项ID
+  const getAllSubItemIds = (folderId: number): number[] => {
+    const folder = findFolderById(groups, folderId)
+    if (!folder) return []
+    
+    let allIds: number[] = []
+    
+    // 添加当前文件夹ID
+    allIds.push(folderId)
+    
+    // 递归添加所有子文件夹ID
+    if (folder.children) {
+      for (const child of folder.children) {
+        allIds.push(...getAllSubItemIds(child.id))
+      }
+    }
+    
+    return allIds
+  }
+
+  const handleSelectFolder = (folderId: number, checked: boolean) => {
+    if (checked) {
+      // 获取该文件夹及其所有子项的ID
+      const allSubItemIds = getAllSubItemIds(folderId)
+      setSelectedFolders(prev => {
+        const newSelection = [...prev]
+        allSubItemIds.forEach(id => {
+          if (!newSelection.includes(id)) {
+            newSelection.push(id)
+          }
+        })
+        return newSelection
+      })
+    } else {
+      // 取消选择时，只取消当前文件夹，子项保持原状态
+      setSelectedFolders(prev => prev.filter(id => id !== folderId))
+    }
+  }
+
+  const handleSelectAllFolders = (checked: boolean) => {
+    if (checked) {
+      // 递归获取所有文件夹ID
+      const allFolderIds: number[] = []
+      const getAllFolderIds = (folderList: any[]) => {
+        folderList.forEach(folder => {
+          allFolderIds.push(folder.id)
+          if (folder.children) {
+            getAllFolderIds(folder.children)
+          }
+        })
+      }
+      getAllFolderIds(groups)
+      setSelectedFolders(allFolderIds)
+    } else {
+      setSelectedFolders([])
+    }
+  }
+
+  const isAllFoldersSelected = () => {
+    // 递归获取所有文件夹ID
+    const allFolderIds: number[] = []
+    const getAllFolderIds = (folderList: any[]) => {
+      folderList.forEach(folder => {
+        allFolderIds.push(folder.id)
+        if (folder.children) {
+          getAllFolderIds(folder.children)
+        }
+      })
+    }
+    getAllFolderIds(groups)
+    return allFolderIds.length > 0 && allFolderIds.every(id => selectedFolders.includes(id))
+  }
+
+  // 进入文件夹
+  const enterFolder = (folderId: number) => {
+    setCurrentPath(prev => [...prev, folderId])
+    setSelectedFolder(folderId)
+  }
+
+  // 返回上级目录
+  const goBack = () => {
+    if (currentPath.length > 0) {
+      const newPath = [...currentPath]
+      newPath.pop()
+      setCurrentPath(newPath)
+      setSelectedFolder(newPath.length > 0 ? newPath[newPath.length - 1] : null)
+    }
+  }
+
+  // 递归查找文件夹
+  const findFolderById = (folders: any[], folderId: number): any => {
+    for (const folder of folders) {
+      if (folder.id === folderId) {
+        return folder
+      }
+      if (folder.children) {
+        const found = findFolderById(folder.children, folderId)
+        if (found) return found
+      }
+    }
+    return null
+  }
+
+  // 获取当前路径的文件夹
+  const getCurrentFolder = () => {
+    if (currentPath.length === 0) return null
+    const currentFolderId = currentPath[currentPath.length - 1]
+    return findFolderById(groups, currentFolderId)
+  }
+
+  // 获取文件夹的完整路径（从根目录到目标文件夹）
+  const getFolderPath = (folderId: number): string[] => {
+    const path: string[] = []
+    
+    const findPath = (folderList: any[], targetId: number, currentPath: string[]): boolean => {
+      for (const folder of folderList) {
+        const newPath = [...currentPath, folder.name]
+        if (folder.id === targetId) {
+          path.push(...newPath)
+          return true
+        }
+        if (folder.children && findPath(folder.children, targetId, newPath)) {
+          return true
+        }
+      }
+      return false
+    }
+    
+    findPath(groups, folderId, [])
+    return path
+  }
+
+  // 获取当前文件夹的子文件夹
+  const getCurrentSubFolders = () => {
+    const currentFolder = getCurrentFolder()
+    if (currentFolder) {
+      return currentFolder.children || []
+    }
+    // 在根目录时，显示所有顶级分组
+    return groups
+  }
+
+  // 获取当前路径下的文档
+  const getCurrentDocuments = () => {
+    const currentFolder = getCurrentFolder()
+    if (currentFolder) {
+      // 只有在没有子文件夹的叶子节点才显示文档
+      const hasSubFolders = currentFolder.children && currentFolder.children.length > 0
+      if (!hasSubFolders) {
+        // 对于子文件夹，需要根据父文件夹的category来过滤文档
+        if (currentFolder.parentId) {
+          const parentFolder = findFolderById(groups, currentFolder.parentId)
+          if (parentFolder) {
+            return mockDocuments.filter(doc => doc.category === parentFolder.name)
+          }
+        } else {
+          // 顶级文件夹直接按名称过滤
+          return mockDocuments.filter(doc => doc.category === currentFolder.name)
+        }
+      }
+    }
+    // 在根目录或有子文件夹的文件夹中，不显示文档
+    return []
   }
 
   // Document action handlers
@@ -643,6 +2072,129 @@ export default function DocumentsPage() {
   const handleImportDocument = (docId: number) => {
     console.log(`开始导入文档 ${docId}`)
     // TODO: 实现导入逻辑
+  }
+
+  // Drag and drop handlers
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event
+    setActiveId(active.id as string)
+    
+    // Find the dragged item
+    const item = getCurrentSubFolders().find(f => f.id.toString() === active.id) || 
+                 getCurrentDocuments().find(d => d.id.toString() === active.id)
+    setDraggedItem(item)
+  }
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+    
+    // Clear all drag states first
+    setActiveId(null)
+    setDraggedItem(null)
+    setDragOverId(null)
+    setShowHoverHint(false)
+    
+    // Clear any pending hover timeout
+    if (hoverTimeout) {
+      clearTimeout(hoverTimeout)
+      setHoverTimeout(null)
+    }
+    
+    if (!over) {
+      return
+    }
+
+    // Handle document to folder drop
+    const draggedDoc = getCurrentDocuments().find(d => d.id.toString() === active.id)
+    const targetFolder = getCurrentSubFolders().find(f => f.id.toString() === over.id)
+    
+    if (draggedDoc && targetFolder) {
+      // Update document category
+      const updatedDocuments = mockDocuments.map(doc => 
+        doc.id === draggedDoc.id 
+          ? { ...doc, category: targetFolder.name }
+          : doc
+      )
+      
+      // Update folder document count
+      setGroups(prev => prev.map(group => 
+        group.id === targetFolder.id 
+          ? { ...group, documentCount: group.documentCount + 1 }
+          : group
+      ))
+      console.log(`文档 "${draggedDoc.name}" 已移动到分组 "${targetFolder.name}"`)
+    }
+    // Handle folder reordering
+    else if (active.id !== over.id) {
+      const oldIndex = getCurrentSubFolders().findIndex(f => f.id.toString() === active.id)
+      const newIndex = getCurrentSubFolders().findIndex(f => f.id.toString() === over.id)
+      
+      if (oldIndex !== -1 && newIndex !== -1) {
+        const newGroups = [...groups]
+        const currentFolder = getCurrentFolder()
+        
+        if (currentFolder) {
+          // Reorder within subfolder
+          const updatedChildren = arrayMove(currentFolder.children || [], oldIndex, newIndex)
+          const updatedFolder = { ...currentFolder, children: updatedChildren }
+          setGroups(prev => prev.map(g => g.id === currentFolder.id ? updatedFolder : g))
+        } else {
+          // Reorder top-level folders
+          const reorderedGroups = arrayMove(newGroups, oldIndex, newIndex)
+          setGroups(reorderedGroups)
+        }
+      }
+    }
+  }
+
+  const handleDragOver = (event: DragOverEvent) => {
+    const { active, over } = event
+    
+    if (!over) {
+      setDragOverId(null)
+      // Clear any existing timeout
+      if (hoverTimeout) {
+        clearTimeout(hoverTimeout)
+        setHoverTimeout(null)
+      }
+      setShowHoverHint(false)
+      return
+    }
+
+    // Set visual feedback for drop target
+    setDragOverId(over.id as string)
+    
+    // Check if dragging a document over a folder
+    const draggedDoc = getCurrentDocuments().find(d => d.id.toString() === active.id)
+    const targetFolder = getCurrentSubFolders().find(f => f.id.toString() === over.id)
+    
+    if (draggedDoc && targetFolder) {
+      // Clear any existing timeout
+      if (hoverTimeout) {
+        clearTimeout(hoverTimeout)
+      }
+      
+      // Show hover hint immediately
+      setShowHoverHint(true)
+      
+      // Set a timeout to navigate to the folder after 1 second of hovering
+      const timeout = setTimeout(() => {
+        console.log(`自动跳转到分组: ${targetFolder.name}`)
+        enterFolder(targetFolder.id)
+        setHoverTimeout(null)
+        setShowHoverHint(false)
+        setDragOverId(null)
+      }, 1000)
+      
+      setHoverTimeout(timeout)
+    } else {
+      // Clear timeout if not hovering over a valid target
+      if (hoverTimeout) {
+        clearTimeout(hoverTimeout)
+        setHoverTimeout(null)
+      }
+      setShowHoverHint(false)
+    }
   }
 
   // Get action buttons based on document status
@@ -706,6 +2258,8 @@ export default function DocumentsPage() {
           </Button>
         )
         break
+      default:
+        break
     }
     
     return buttons
@@ -721,307 +2275,43 @@ export default function DocumentsPage() {
         <main className="flex-1 overflow-auto p-6">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <div className="flex items-center justify-between">
-              <TabsList>
-                <TabsTrigger value="documents">所有文档</TabsTrigger>
-                <TabsTrigger value="upload">上传文档</TabsTrigger>
-                <TabsTrigger value="groups">分组管理</TabsTrigger>
-                <TabsTrigger value="analytics">数据分析</TabsTrigger>
-              </TabsList>
-              {activeTab === "groups" && (
-                <Button onClick={() => setIsGroupDialogOpen(true)}>
-                  <FolderPlus className="mr-2 h-4 w-4" />
-                  新建分组
-                </Button>
-              )}
+              <div></div>
             </div>
 
-            <TabsContent value="documents" className="space-y-6">
-              {/* Filters and Actions */}
-              <Card>
-                <CardContent>
-                  <div className="flex items-center space-x-4 mb-6">
-                    {/* Search */}
-                    <div className="relative flex-1">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        placeholder="搜索文档..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10"
-                      />
-                    </div>
-
-                    {/* Status Filter */}
-                    <Select value={statusFilter} onValueChange={setStatusFilter}>
-                      <SelectTrigger className="w-40">
-                        <SelectValue placeholder="状态" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">所有状态</SelectItem>
-                        <SelectItem value="未解析">未解析</SelectItem>
-                        <SelectItem value="已解析未审核">已解析未审核</SelectItem>
-                        <SelectItem value="已解析已审核">已解析已审核</SelectItem>
-                        <SelectItem value="已导入未审核">已导入未审核</SelectItem>
-                        <SelectItem value="已导入已审核">已导入已审核</SelectItem>
-                      </SelectContent>
-                    </Select>
-
-                    {/* Category Filter */}
-                    <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                      <SelectTrigger className="w-40">
-                        <SelectValue placeholder="分组" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">所有分组</SelectItem>
-                        {groups.map((group) => (
-                          <SelectItem key={group.id} value={group.name}>
-                            {group.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-
-                  </div>
-
-                  {/* Batch Actions */}
-                  {selectedDocuments.length > 0 && (
-                    <div className="flex items-center justify-between p-3 bg-muted rounded-lg mb-4">
-                      <span className="text-sm font-medium">{selectedDocuments.length} 个文档已选择</span>
-                      <div className="flex items-center space-x-2">
-                        <Button variant="outline" size="sm">
-                          <Download className="mr-2 h-4 w-4" />
-                          下载
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={() => selectedDocuments.length && setShowGroupChangeDialog(true)} disabled={selectedDocuments.length === 0}>
-                          <Edit className="mr-2 h-4 w-4" />
-                          修改分组
-                        </Button>
-                        
-                        <Button variant="destructive" size="sm">
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          删除
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Documents Table */}
-                  <div className="border rounded-lg">
-                    <div className="grid grid-cols-16 gap-4 p-4 border-b bg-muted/50 font-medium text-sm">
-                      <div className="col-span-1">
-                        <Checkbox
-                          checked={
-                            selectedDocuments.length === filteredDocuments.length && filteredDocuments.length > 0
-                          }
-                          onCheckedChange={handleSelectAll}
-                        />
-                      </div>
-                      <div className="col-span-2">文档编号</div>
-                      <div className="col-span-4 flex items-center">
-                        文档名称
-                        <ArrowUpDown className="ml-2 h-4 w-4" />
-                      </div>
-                      <div className="col-span-2">分组</div>
-                      <div className="col-span-1">类型</div>
-                      <div className="col-span-1">大小</div>
-                      <div className="col-span-2">状态</div>
-                      <div className="col-span-2">上传日期</div>
-                      <div className="col-span-1">操作</div>
-                    </div>
-
-                     {currentDocuments.map((doc) => (
-                      <div
-                        key={doc.id}
-                        className="grid grid-cols-16 gap-4 p-4 border-b hover:bg-muted/30 transition-colors"
-                      >
-                        <div className="col-span-1">
-                          <Checkbox
-                            checked={selectedDocuments.includes(doc.id)}
-                            onCheckedChange={(checked) => handleSelectDocument(doc.id, checked as boolean)}
-                          />
-                        </div>
-                        <div className="col-span-2">
-                          <p className="text-sm font-mono text-muted-foreground">{getDocumentNumber(doc.id)}</p>
-                        </div>
-                        <div className="col-span-4">
-                          <div className="flex items-center space-x-3">
-                            <FileText className="h-5 w-5 text-muted-foreground" />
-                            <div>
-                              <p className="font-medium text-sm">{doc.name}</p>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="col-span-2">
-                          <Badge variant="secondary" className="text-xs px-2 py-1">
-                            {doc.category}
-                          </Badge>
-                        </div>
-                        <div className="col-span-1">
-                          <Badge variant="outline" className="text-xs">
-                            {doc.type}
-                          </Badge>
-                        </div>
-                        <div className="col-span-1 text-sm text-muted-foreground">{doc.size}</div>
-                        <div className="col-span-2">
-                          <div className="flex items-center space-x-2">
-                            {getStatusIcon(doc.status)}
-                            {getStatusBadge(doc.status)}
-                          </div>
-                        </div>
-                        <div className="col-span-2 text-sm text-muted-foreground">
-                          <div className="flex items-center space-x-1">
-                            <Calendar className="h-3 w-3" />
-                            <span>{doc.uploadDate}</span>
-                          </div>
-                          <div className="flex items-center space-x-1 mt-1">
-                            <User className="h-3 w-3" />
-                            <span>{doc.uploadedBy}</span>
-                          </div>
-                        </div>
-                        <div className="col-span-1">
-                          <div className="flex items-center justify-end gap-1">
-                            {getActionButtons(doc)}
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 shrink-0">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem>
-                                  <Eye className="mr-2 h-4 w-4" />
-                                  预览
-                                </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                  <Download className="mr-2 h-4 w-4" />
-                                  下载
-                                </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                  <Edit className="mr-2 h-4 w-4" />
-                                  编辑详情
-                                </DropdownMenuItem>
-                                <DropdownMenuItem className="text-destructive">
-                                  <Trash2 className="mr-2 h-4 w-4" />
-                                  删除
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {filteredDocuments.length === 0 && (
-                    <div className="text-center py-12">
-                      <FileText className="mx-auto h-12 w-12 text-muted-foreground" />
-                      <h3 className="mt-4 text-lg font-medium">未找到文档</h3>
-                      <p className="mt-2 text-muted-foreground">请尝试调整搜索或筛选条件</p>
-                    </div>
-                  )}
-
-                  {/* 分页组件 */}
-                  {filteredDocuments.length > 0 && (
-                    <div className="flex items-center justify-between px-6 py-4 border-t">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-sm text-muted-foreground">
-                          显示 {startIndex + 1} - {Math.min(endIndex, filteredDocuments.length)} 条，共 {filteredDocuments.length} 条
-                        </span>
-                        <Select value={pageSize.toString()} onValueChange={(value) => {
-                          setPageSize(Number(value))
-                          setCurrentPage(1)
-                        }}>
-                          <SelectTrigger className="w-24">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="10">10条/页</SelectItem>
-                            <SelectItem value="20">20条/页</SelectItem>
-                            <SelectItem value="50">50条/页</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                          disabled={currentPage === 1}
-                        >
-                          上一页
-                        </Button>
-                        
-                        <div className="flex items-center space-x-1">
-                          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                            const pageNum = i + 1
-                            return (
-                              <Button
-                                key={pageNum}
-                                variant={currentPage === pageNum ? "default" : "outline"}
-                                size="sm"
-                                onClick={() => setCurrentPage(pageNum)}
-                                className="w-8 h-8 p-0"
-                              >
-                                {pageNum}
-                              </Button>
-                            )
-                          })}
-                          {totalPages > 5 && (
-                            <>
-                              <span className="text-sm text-muted-foreground">...</span>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setCurrentPage(totalPages)}
-                                className="w-8 h-8 p-0"
-                              >
-                                {totalPages}
-                              </Button>
-                            </>
-                          )}
-                        </div>
-                        
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                          disabled={currentPage === totalPages}
-                        >
-                          下一页
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
             <TabsContent value="upload" className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setActiveTab("groups")}
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    返回文档管理
+                  </Button>
+                </div>
+              </div>
               <Card>
                 <CardHeader>
                   <CardTitle className="font-serif">上传文档</CardTitle>
-                  <CardDescription>向知识平台上传新文档，支持批量上传和分组选择</CardDescription>
+                  <CardDescription>
+                    向知识平台上传新文档，支持批量上传和分组选择
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {/* Group Selection */}
-                  <div>
-                    <Label htmlFor="groupSelect" className="text-sm font-medium mb-2 block">
+                  {/* Group Selection - 级联下拉菜单 */}
+                  <div className="space-y-4">
+                    <Label className="text-sm font-medium mb-2 block">
                       选择文档分组
                     </Label>
-                    <Select value={selectedGroup} onValueChange={setSelectedGroup}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="选择文档分组" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="待分组">待分组</SelectItem>
-                        {groups.map((group) => (
-                          <SelectItem key={group.id} value={group.name}>
-                            {group.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <div className="flex flex-wrap gap-4">
+                      {renderUploadCascadeSelects()}
+                    </div>
+                    {uploadCascadeSelections.length > 0 && (
+                      <div className="text-sm text-muted-foreground">
+                        目标分组: {uploadCascadeSelections[uploadCascadeSelections.length - 1]}
+                      </div>
+                    )}
                   </div>
 
                   {/* Selected Files */}
@@ -1125,122 +2415,412 @@ export default function DocumentsPage() {
 
             <TabsContent value="groups" className="space-y-6">
               <Card>
-                <CardHeader>
-                  <div>
-                    <CardTitle className="font-serif">文档分组管理</CardTitle>
-                    <CardDescription>管理文档分组，创建、编辑和删除分组</CardDescription>
-                  </div>
-                </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {groups.map((group) => (
-                      <div key={group.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex items-center space-x-2">
-                            <Folder className="h-5 w-5 text-muted-foreground" />
-                            <h3 className="font-medium">{group.name}</h3>
-                          </div>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => handleEditGroup(group)}>
-                                <FolderEdit className="mr-2 h-4 w-4" />
-                                编辑
-                              </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                className="text-destructive"
-                                onClick={() => handleDeleteGroup(group.id)}
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                删除
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                        <p className="text-sm text-muted-foreground mb-3">{group.description}</p>
-                        <div className="flex items-center justify-between">
-                          <Badge className={`${getColorClasses(group.color)} text-xs`}>
-                            {group.documentCount} 个文档
-                          </Badge>
-                          <div className="flex items-center space-x-1">
-                            <div className={`w-3 h-3 rounded-full ${
-                              group.color === 'blue' ? 'bg-blue-500' :
-                              group.color === 'green' ? 'bg-green-500' :
-                              group.color === 'orange' ? 'bg-orange-500' :
-                              group.color === 'purple' ? 'bg-purple-500' :
-                              group.color === 'red' ? 'bg-red-500' :
-                              group.color === 'yellow' ? 'bg-yellow-500' :
-                              group.color === 'indigo' ? 'bg-indigo-500' :
-                              group.color === 'pink' ? 'bg-pink-500' : 'bg-blue-500'
-                            }`}></div>
-                          </div>
+
+                  <div className="min-h-96 max-h-[800px] overflow-y-auto">
+                    {/* 面包屑导航和操作按钮 */}
+                    <div className="flex items-center justify-between mb-4">
+                      {/* 面包屑导航 */}
+                      <div className="flex items-center space-x-2 p-3 bg-muted rounded-lg">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={goBack}
+                          disabled={currentPath.length === 0}
+                          className="h-8 px-3"
+                        >
+                          <ChevronLeft className="h-4 w-4 mr-1" />
+                          返回
+                        </Button>
+                        <div className="flex items-center space-x-1 text-sm">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setCurrentPath([])
+                              setSelectedFolder(null)
+                            }}
+                            className="h-6 px-2 text-sm font-medium"
+                          >
+                            <Folder className="h-4 w-4 mr-1" />
+                            根目录
+                          </Button>
+                          {currentPath.length > 0 && (
+                            <>
+                              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                              {currentPath.map((folderId, index) => {
+                                const folder = findFolderById(groups, folderId)
+                                return (
+                                  <div key={folderId} className="flex items-center space-x-1">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => {
+                                        const newPath = currentPath.slice(0, index + 1)
+                                        setCurrentPath(newPath)
+                                        setSelectedFolder(folderId)
+                                      }}
+                                      className="h-6 px-2 text-sm"
+                                    >
+                                      <Folder className="h-4 w-4 mr-1" />
+                                      {folder?.name}
+                                    </Button>
+                                    {index < currentPath.length - 1 && (
+                                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                                    )}
+                                  </div>
+                                )
+                              })}
+                            </>
+                          )}
                         </div>
                       </div>
-                    ))}
+                      
+                      {/* 操作按钮 */}
+                      <div className="flex items-center space-x-2">
+                        {/* 只有在非叶子节点（多级分组目录）才显示新建分组按钮 */}
+                        {!isCurrentFolderLeafNode() && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setIsGroupDialogOpen(true)}
+                          >
+                            <FolderPlus className="h-4 w-4 mr-2" />
+                            新建分组
+                          </Button>
+                        )}
+                        {/* 在叶子节点（纯文档文件夹）或根目录显示上传文档按钮 */}
+                        {(isCurrentFolderLeafNode() || currentPath.length === 0) && (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              // 获取当前文件夹名称作为上传上下文
+                              const currentFolder = getCurrentFolder()
+                              const contextGroup = currentFolder ? currentFolder.name : "待分组"
+                              setUploadContextGroup(contextGroup)
+                              setSelectedGroup(contextGroup)
+                              // 设置级联选择状态
+                              if (currentFolder) {
+                                // 如果有当前文件夹，需要找到其完整路径
+                                const path = getFolderPath(currentFolder.id)
+                                setUploadCascadeSelections(path)
+                              } else {
+                                // 根目录默认到待分组
+                                setUploadCascadeSelections(["待分组"])
+                              }
+                              setActiveTab("upload")
+                            }}
+                          >
+                            <Upload className="h-4 w-4 mr-2" />
+                            上传文档
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* 拖拽上下文和文件夹文档网格 */}
+                    <DndContext
+                      sensors={sensors}
+                      collisionDetection={closestCenter}
+                      onDragStart={handleDragStart}
+                      onDragEnd={handleDragEnd}
+                      onDragOver={handleDragOver}
+                    >
+                      <SortableContext
+                        items={[...getCurrentSubFolders().map(f => f.id.toString()), ...getCurrentDocuments().map(d => d.id.toString())]}
+                        strategy={rectSortingStrategy}
+                      >
+                        {/* 当有子文件夹时显示网格布局 */}
+                        {getCurrentSubFolders().length > 0 && (
+                          <div className="grid grid-cols-4 gap-4">
+                            {/* 显示子文件夹 */}
+                            {getCurrentSubFolders().map((folder) => (
+                              <DraggableFolder
+                                key={folder.id}
+                                folder={folder}
+                                isSelected={selectedFolders.includes(folder.id)}
+                                isRenaming={renamingItem?.id === folder.id ? renamingItem : null}
+                                onRename={setRenamingItem}
+                                onConfirmRename={confirmRename}
+                                onCancelRename={cancelRename}
+                                onSelect={(checked) => handleSelectFolder(folder.id, checked as boolean)}
+                                onDoubleClick={() => enterFolder(folder.id)}
+                                onContextMenu={(e) => handleContextMenu(e, folder)}
+                                isDragOver={dragOverId === folder.id.toString()}
+                              />
+                            ))}
+                          </div>
+                        )}
+
+                        {/* 当有文档时显示列表布局 */}
+                        {getCurrentDocuments().length > 0 && (
+                          <div className="space-y-4">
+
+                            {/* 文档搜索和筛选 */}
+                            <div className="flex items-center space-x-4 p-4 border rounded-lg bg-background">
+                              <div className="relative flex-1">
+                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                  placeholder="在文件夹内搜索文档..."
+                                  value={searchQuery}
+                                  onChange={(e) => setSearchQuery(e.target.value)}
+                                  className="pl-10"
+                                />
+                              </div>
+                              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                                <SelectTrigger className="w-40">
+                                  <SelectValue placeholder="状态筛选" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="all">所有状态</SelectItem>
+                                  <SelectItem value="未解析">未解析</SelectItem>
+                                  <SelectItem value="已解析未审核">已解析未审核</SelectItem>
+                                  <SelectItem value="已解析已审核">已解析已审核</SelectItem>
+                                  <SelectItem value="已导入未审核">已导入未审核</SelectItem>
+                                  <SelectItem value="已导入已审核">已导入已审核</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            {/* 批量操作栏 */}
+                            {selectedDocuments.length > 0 && (
+                              <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                <span className="text-sm font-medium text-blue-900">
+                                  已选择 {selectedDocuments.length} 个文档
+                                </span>
+                                <div className="flex items-center space-x-2">
+                                  <Button variant="outline" size="sm" className="h-8">
+                                    <Download className="mr-2 h-4 w-4" />
+                                    批量下载
+                                  </Button>
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    className="h-8"
+                                    onClick={() => setShowModifyGroupDialog(true)}
+                                  >
+                                    <Edit className="mr-2 h-4 w-4" />
+                                    修改分组
+                                  </Button>
+                                  <Button variant="outline" size="sm" className="h-8">
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    批量删除
+                                  </Button>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="h-8"
+                                    onClick={() => setSelectedDocuments([])}
+                                  >
+                                    <X className="mr-2 h-4 w-4" />
+                                    取消选择
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* 文档列表表格 */}
+                            <div className="border rounded-lg">
+                              <div className="grid grid-cols-12 gap-4 p-4 border-b bg-muted/50 font-medium text-sm">
+                                <div className="col-span-1">
+                                  <Checkbox
+                                    checked={
+                                      selectedDocuments.length === getCurrentDocuments().length && getCurrentDocuments().length > 0
+                                    }
+                                    onCheckedChange={(checked) => {
+                                      if (checked) {
+                                        setSelectedDocuments(getCurrentDocuments().map(doc => doc.id))
+                                      } else {
+                                        setSelectedDocuments([])
+                                      }
+                                    }}
+                                  />
+                                </div>
+                                <div className="col-span-1">文档编号</div>
+                                <div className="col-span-3 flex items-center">
+                                  文档名称
+                                  <ArrowUpDown className="ml-2 h-4 w-4" />
+                                </div>
+                                <div className="col-span-1">分组</div>
+                                <div className="col-span-1">类型</div>
+                                <div className="col-span-1">大小</div>
+                                <div className="col-span-1">状态</div>
+                                <div className="col-span-2">操作</div>
+                              </div>
+
+                              {getCurrentDocuments()
+                                .filter((doc) => {
+                                  const query = searchQuery.toLowerCase().trim()
+                                  const nameMatch = doc.name.toLowerCase().includes(query)
+                                  const numberMatch = getDocumentNumber(doc.id).toLowerCase().includes(query)
+                                  const matchesSearch = query === "" || nameMatch || numberMatch
+                                  const matchesStatus = statusFilter === "all" || doc.status === statusFilter
+                                  return matchesSearch && matchesStatus
+                                })
+                                .map((doc) => (
+                                <div
+                                  key={doc.id}
+                                  className="grid grid-cols-12 gap-4 p-4 border-b hover:bg-muted/30 transition-colors"
+                                  onContextMenu={(e) => handleContextMenu(e, doc)}
+                                >
+                                  <div className="col-span-1">
+                                    <Checkbox
+                                      checked={selectedDocuments.includes(doc.id)}
+                                      onCheckedChange={(checked) => handleSelectDocument(doc.id, checked as boolean)}
+                                    />
+                                  </div>
+                                  <div className="col-span-1">
+                                    <p className="text-sm font-mono text-muted-foreground">{getDocumentNumber(doc.id)}</p>
+                                  </div>
+                                  <div className="col-span-3">
+                                    <div className="flex items-center space-x-3">
+                                      <FileText className="h-5 w-5 text-muted-foreground" />
+                                      <div>
+                                        <p className="font-medium text-sm">{doc.name}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                          上传日期: {doc.uploadDate} | 上传者: {doc.uploadedBy}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="col-span-1">
+                                    <Badge variant="secondary" className="text-xs">
+                                      {doc.category}
+                                    </Badge>
+                                  </div>
+                                  <div className="col-span-1">
+                                    <Badge variant="outline" className="text-xs">
+                                      {doc.type}
+                                    </Badge>
+                                  </div>
+                                  <div className="col-span-1 text-sm text-muted-foreground">{doc.size}</div>
+                                  <div className="col-span-1">
+                                    <div className="flex items-center space-x-2">
+                                      {getStatusIcon(doc.status)}
+                                      {getStatusBadge(doc.status)}
+                                    </div>
+                                  </div>
+                                  <div className="col-span-2">
+                                    <div className="flex items-center justify-end gap-1">
+                                      {getActionButtons(doc)}
+                                      <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 shrink-0">
+                                            <MoreHorizontal className="h-4 w-4" />
+                                          </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                          <DropdownMenuItem>
+                                            <Eye className="mr-2 h-4 w-4" />
+                                            预览
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem>
+                                            <Download className="mr-2 h-4 w-4" />
+                                            下载
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem>
+                                            <Edit className="mr-2 h-4 w-4" />
+                                            编辑详情
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem className="text-destructive">
+                                            <Trash2 className="mr-2 h-4 w-4" />
+                                            删除
+                                          </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                      </DropdownMenu>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                      </SortableContext>
+
+                      {/* 拖拽覆盖层 */}
+                      <DragOverlay>
+                        {activeId && draggedItem ? (
+                          <div className="relative flex flex-col items-center p-3 border rounded-lg bg-background shadow-lg">
+                            {draggedItem.documentCount !== undefined ? (
+                              // 文件夹
+                              <>
+                                <div className="mt-2">
+                                  <Folder className="h-8 w-8 text-blue-500" />
+                                </div>
+                                <div className="mt-2 text-center">
+                                  <p className="text-sm font-medium truncate w-full">{draggedItem.name}</p>
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    {draggedItem.documentCount} 个文档
+                                  </p>
+                                </div>
+                              </>
+                            ) : (
+                              // 文档
+                              <>
+                                <div className="mt-2">
+                                  <FileText className="h-8 w-8 text-muted-foreground" />
+                                </div>
+                                <div className="mt-2 text-center">
+                                  <p className="text-sm font-medium truncate w-full">{draggedItem.name}</p>
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    {draggedItem.size}
+                                  </p>
+                                </div>
+                              </>
+                            )}
+                            {/* 悬停提示 */}
+                            {showHoverHint && draggedItem && !draggedItem.documentCount && (
+                              <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white text-xs px-3 py-2 rounded-lg shadow-lg whitespace-nowrap z-50">
+                                <div className="flex items-center space-x-1">
+                                  <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                                  <span>悬停1秒自动跳转到文件夹</span>
+                                </div>
+                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-blue-600"></div>
+                              </div>
+                            )}
+                          </div>
+                        ) : null}
+                      </DragOverlay>
+                    </DndContext>
+                    
+                    {/* 空文件夹提示 */}
+                    {getCurrentSubFolders().length === 0 && getCurrentDocuments().length === 0 && (
+                      <div className="text-center py-12">
+                        <Folder className="mx-auto h-12 w-12 text-muted-foreground" />
+                        <h3 className="mt-4 text-lg font-medium">此文件夹为空</h3>
+                        <p className="mt-2 text-muted-foreground">
+                          {currentPath.length === 0 ? '创建新分组或上传文档开始使用' : '双击文件夹进入或上传文档'}
+                        </p>
+                        {currentPath.length === 0 && (
+                          <div className="mt-4 flex justify-center space-x-2">
+                            <Button onClick={() => setIsGroupDialogOpen(true)}>
+                              <FolderPlus className="mr-2 h-4 w-4" />
+                              新建分组
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              onClick={() => {
+                                // 根目录上传文档默认到待分组
+                                setUploadContextGroup("待分组")
+                                setSelectedGroup("待分组")
+                                setUploadCascadeSelections(["待分组"])
+                                setActiveTab("upload")
+                              }}
+                            >
+                              <Upload className="mr-2 h-4 w-4" />
+                              上传文档
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
             </TabsContent>
 
-            <TabsContent value="analytics" className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">文档总数</CardTitle>
-                    <FileText className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">2,847</div>
-                    <p className="text-xs text-muted-foreground">
-                      <span className="text-primary">+12%</span> 较上月
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">待审批</CardTitle>
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">23</div>
-                    <p className="text-xs text-muted-foreground">
-                      <span className="text-yellow-600">+3</span> 较昨日
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">存储使用</CardTitle>
-                    <FileType className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">847 GB</div>
-                    <p className="text-xs text-muted-foreground">
-                      <span className="text-primary">+5.2%</span> 较上月
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">活跃用户</CardTitle>
-                    <User className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">89</div>
-                    <p className="text-xs text-muted-foreground">
-                      <span className="text-primary">+5</span> 较上周
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
           </Tabs>
         </main>
       </div>
@@ -1281,6 +2861,7 @@ export default function DocumentsPage() {
                     <SelectValue placeholder="选择颜色" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="gray">灰色</SelectItem>
                     <SelectItem value="blue">蓝色</SelectItem>
                     <SelectItem value="green">绿色</SelectItem>
                     <SelectItem value="orange">橙色</SelectItem>
@@ -1407,6 +2988,134 @@ export default function DocumentsPage() {
         </DialogContent>
       </Dialog>
 
+      {/* 移动文件对话框 */}
+      <Dialog open={showMoveDialog} onOpenChange={setShowMoveDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Move className="h-5 w-5" />
+              移动文件
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {fileToMove && (
+              <div className="flex items-center space-x-3 p-3 bg-muted rounded-lg">
+                <FileText className="h-5 w-5 text-muted-foreground" />
+                <div>
+                  <p className="text-sm font-medium">{fileToMove.name}</p>
+                  <p className="text-xs text-muted-foreground">当前分组: {fileToMove.category}</p>
+                </div>
+              </div>
+            )}
+            <div>
+              <Label className="text-sm font-medium mb-2 block">选择目标分组</Label>
+              <Select value={targetGroupForMove} onValueChange={setTargetGroupForMove}>
+                <SelectTrigger>
+                  <SelectValue placeholder="请选择目标分组" />
+                </SelectTrigger>
+                <SelectContent>
+                  {groups.filter(g => g.name !== fileToMove?.category).map((g) => (
+                    <SelectItem key={g.id} value={g.name}>{g.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => {
+              setShowMoveDialog(false)
+              setFileToMove(null)
+              setTargetGroupForMove("")
+            }}>取消</Button>
+            <Button onClick={confirmMove} disabled={!targetGroupForMove}>确认移动</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* 修改分组对话框 */}
+      <Dialog open={showModifyGroupDialog} onOpenChange={setShowModifyGroupDialog}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Edit className="h-5 w-5" />
+              修改文档分组
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              已选择 {selectedDocuments.length} 个文档，请选择目标分组：
+            </p>
+            
+            {/* 级联分组选择区域 */}
+            <div className="flex flex-wrap gap-4">
+              {renderCascadeSelects()}
+            </div>
+            
+            {selectedTargetGroup && (
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-900">
+                  目标分组: <span className="font-medium">{selectedTargetGroup}</span>
+                </p>
+              </div>
+            )}
+          </div>
+          
+          <div className="flex justify-end space-x-2">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowModifyGroupDialog(false)
+                setSelectedTargetGroup("")
+                setCascadeSelections([])
+              }}
+            >
+              取消
+            </Button>
+            <Button 
+              onClick={handleModifyGroup} 
+              disabled={!selectedTargetGroup}
+            >
+              确认修改
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* 右键菜单 */}
+      {contextMenu && (
+        <div
+          className="fixed z-50 bg-background border rounded-md shadow-lg py-1 min-w-[160px]"
+          style={{ left: contextMenu.x, top: contextMenu.y }}
+          onMouseLeave={closeContextMenu}
+        >
+          <div className="w-48">
+            <div 
+              className="flex items-center px-2 py-1.5 text-sm cursor-pointer hover:bg-accent hover:text-accent-foreground"
+              onClick={() => handleRename(contextMenu.item)}
+            >
+              <Edit3 className="mr-2 h-4 w-4" />
+              重命名
+            </div>
+            <div className="flex items-center px-2 py-1.5 text-sm cursor-pointer hover:bg-accent hover:text-accent-foreground">
+              <Copy className="mr-2 h-4 w-4" />
+              复制
+            </div>
+            <div 
+              className="flex items-center px-2 py-1.5 text-sm cursor-pointer hover:bg-accent hover:text-accent-foreground"
+              onClick={() => handleMove(contextMenu.item)}
+            >
+              <Move className="mr-2 h-4 w-4" />
+              移动
+            </div>
+            <div className="flex items-center px-2 py-1.5 text-sm cursor-pointer hover:bg-accent hover:text-accent-foreground text-destructive">
+              <Trash2 className="mr-2 h-4 w-4" />
+              删除
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }
+

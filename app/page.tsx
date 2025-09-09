@@ -541,7 +541,7 @@ export default function QAPage() {
             {activeTab === "intelligent-dialogue" && (
               <>
                 {/* Chat Messages Area */}
-                <div className="flex-1 p-6 bg-gray-50 min-h-0">
+                <div className="flex-1 p-1 bg-gray-50 min-h-0">
                   <div className="w-full h-full relative">
                     
                     {/* Chat Messages */}
@@ -549,12 +549,12 @@ export default function QAPage() {
                       {/* 推荐问题 - 只在没有用户消息时显示 */}
                       {!hasUserMessages && (
                         <div className="flex flex-col items-center justify-center h-full">
-                          <div className="text-center mb-8">
-                            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <div className="text-center mb-2">
+                            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-2">
                               <Bot className="w-8 h-8 text-primary" />
                             </div>
-                            <h2 className="text-xl font-semibold text-gray-900 mb-2">您好！我是东方电气集团的智能助手</h2>
-                            <p className="text-gray-600 mb-6">我可以帮您解答关于锅炉技术、安全规范、维护流程等方面的问题</p>
+                            <h2 className="text-xl font-semibold text-gray-900 mb-1">您好！我是东方电气集团的智能助手</h2>
+                            <p className="text-gray-600 mb-3">我可以帮您解答关于锅炉技术、安全规范、维护流程等方面的问题</p>
                           </div>
                           
                           <div className="w-full max-w-2xl">
@@ -582,11 +582,11 @@ export default function QAPage() {
                                     key={index}
                                     onClick={() => !isLoading && handleRecommendedQuestion(item.question)}
                                     disabled={isLoading}
-                                    className="flex items-center justify-between text-left p-3 bg-white border border-gray-200 rounded-lg hover:border-primary hover:bg-primary/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-200 disabled:hover:bg-white"
+                                    className="flex items-center text-left p-3 bg-white border border-gray-200 rounded-lg hover:border-primary hover:bg-primary/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-200 disabled:hover:bg-white"
                                   >
-                                    <div className="flex-1">
-                                      <div className="text-sm text-gray-700 mb-2">{item.question}</div>
-                                      <div className="flex items-center gap-2">
+                                    <div className="flex items-center justify-between w-full gap-3">
+                                      <span className="text-sm text-gray-700 truncate">{item.question}</span>
+                                      <div className="flex items-center gap-2 flex-shrink-0">
                                         <Badge variant="secondary" className="text-xs">
                                           {item.category}
                                         </Badge>
