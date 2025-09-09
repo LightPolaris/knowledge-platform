@@ -73,6 +73,7 @@ import {
   Move,
 } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { useToast } from "@/hooks/use-toast"
 
 // Mock data for documents
 const mockDocuments = [
@@ -378,7 +379,7 @@ const mockDocuments = [
   },
   // 待分组文档
   {
-    id: 21,
+    id: 68,
     name: "临时技术方案.docx",
     type: "Word",
     size: "1.2 MB",
@@ -390,7 +391,7 @@ const mockDocuments = [
     version: "v1.0",
   },
   {
-    id: 22,
+    id: 69,
     name: "会议纪要 2024-01-19.pdf",
     type: "PDF",
     size: "856 KB",
@@ -402,7 +403,7 @@ const mockDocuments = [
     version: "v1.0",
   },
   {
-    id: 23,
+    id: 70,
     name: "设备故障报告.xlsx",
     type: "Excel",
     size: "1.5 MB",
@@ -414,7 +415,7 @@ const mockDocuments = [
     version: "v1.0",
   },
   {
-    id: 24,
+    id: 71,
     name: "新员工培训资料.pptx",
     type: "PowerPoint",
     size: "3.2 MB",
@@ -426,7 +427,7 @@ const mockDocuments = [
     version: "v1.0",
   },
   {
-    id: 25,
+    id: 72,
     name: "供应商评估表.pdf",
     type: "PDF",
     size: "2.1 MB",
@@ -974,31 +975,31 @@ const mockGroups = [
     id: 1, 
     name: "安全标准", 
     description: "安全相关的标准和规范文档", 
-    documentCount: 4, 
+    documentCount: 7, 
     color: "blue",
     parentId: null,
     children: [
-      { id: 11, name: "电气安全", description: "电气安全相关文档", documentCount: 2, color: "blue", parentId: 1, children: [] },
-      { id: 12, name: "机械安全", description: "机械安全相关文档", documentCount: 2, color: "blue", parentId: 1, children: [] }
+      { id: 11, name: "电气安全", description: "电气安全相关文档", documentCount: 3, color: "blue", parentId: 1, children: [] },
+      { id: 12, name: "机械安全", description: "机械安全相关文档", documentCount: 4, color: "blue", parentId: 1, children: [] }
     ]
   },
   { 
     id: 2, 
     name: "技术文档", 
     description: "技术规格和说明文档", 
-    documentCount: 4, 
+    documentCount: 6, 
     color: "green",
     parentId: null,
     children: [
-      { id: 21, name: "设备规格", description: "设备技术规格文档", documentCount: 2, color: "green", parentId: 2, children: [] },
-      { id: 22, name: "操作手册", description: "设备操作手册", documentCount: 2, color: "green", parentId: 2, children: [] }
+      { id: 21, name: "设备规格", description: "设备技术规格文档", documentCount: 3, color: "green", parentId: 2, children: [] },
+      { id: 22, name: "操作手册", description: "设备操作手册", documentCount: 3, color: "green", parentId: 2, children: [] }
     ]
   },
   { 
     id: 3, 
     name: "维护保养", 
     description: "设备维护和保养相关文档", 
-    documentCount: 4, 
+    documentCount: 6, 
     color: "orange",
     parentId: null,
     children: []
@@ -1007,7 +1008,7 @@ const mockGroups = [
     id: 4, 
     name: "质量控制", 
     description: "质量管理和控制文档", 
-    documentCount: 4, 
+    documentCount: 5, 
     color: "purple",
     parentId: null,
     children: []
@@ -1043,7 +1044,7 @@ const mockGroups = [
     id: 8, 
     name: "工艺标准", 
     description: "工艺流程和标准文档", 
-    documentCount: 11, 
+    documentCount: 10, 
     color: "pink",
     parentId: null,
     children: []
@@ -1232,6 +1233,7 @@ const DraggableDocument = ({ document, onContextMenu }: any) => {
 }
 
 export default function DocumentsPage() {
+  const { toast } = useToast()
   const [selectedDocuments, setSelectedDocuments] = useState<number[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
@@ -1404,8 +1406,36 @@ export default function DocumentsPage() {
   }
 
   // Group management functions
+  // 检查分组名称是否唯一
+  const isGroupNameUnique = (name: string, excludeId?: number): boolean => {
+    const checkInGroups = (groupList: any[]): boolean => {
+      for (const group of groupList) {
+        if (group.name === name && group.id !== excludeId) {
+          return false
+        }
+        if (group.children && group.children.length > 0) {
+          if (!checkInGroups(group.children)) {
+            return false
+          }
+        }
+      }
+      return true
+    }
+    return checkInGroups(groups)
+  }
+
   const handleCreateGroup = () => {
     if (newGroupName.trim()) {
+      // 检查分组名称是否唯一
+      if (!isGroupNameUnique(newGroupName.trim())) {
+        toast({
+          title: "分组名称重复",
+          description: "该分组名称已存在，请使用其他名称",
+          variant: "destructive",
+        })
+        return
+      }
+
       const newGroup = {
         id: groups.length + 1,
         name: newGroupName.trim(),
@@ -1462,6 +1492,16 @@ export default function DocumentsPage() {
 
   const handleUpdateGroup = () => {
     if (editingGroup && newGroupName.trim()) {
+      // 检查分组名称是否唯一（排除当前编辑的分组）
+      if (!isGroupNameUnique(newGroupName.trim(), editingGroup.id)) {
+        toast({
+          title: "分组名称重复",
+          description: "该分组名称已存在，请使用其他名称",
+          variant: "destructive",
+        })
+        return
+      }
+
       setGroups(groups.map(group => 
         group.id === editingGroup.id 
           ? { ...group, name: newGroupName.trim(), description: newGroupDescription.trim(), color: newGroupColor }
@@ -2301,9 +2341,6 @@ export default function DocumentsPage() {
                 <CardContent className="space-y-6">
                   {/* Group Selection - 级联下拉菜单 */}
                   <div className="space-y-4">
-                    <Label className="text-sm font-medium mb-2 block">
-                      选择文档分组
-                    </Label>
                     <div className="flex flex-wrap gap-4">
                       {renderUploadCascadeSelects()}
                     </div>
@@ -2519,6 +2556,70 @@ export default function DocumentsPage() {
                       </div>
                     </div>
 
+                    {/* 根目录状态筛选标签 */}
+                    {currentPath.length === 0 && (
+                      <div className="flex items-center space-x-2 mb-4">
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            variant={statusFilter === "all" ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setStatusFilter("all")}
+                            className="h-8"
+                          >
+                            全部
+                          </Button>
+                          <Button
+                            variant={statusFilter === "未解析" ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setStatusFilter("未解析")}
+                            className="h-8"
+                          >
+                            未解析
+                          </Button>
+                          <Button
+                            variant={statusFilter === "已解析未审核" ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setStatusFilter("已解析未审核")}
+                            className="h-8"
+                          >
+                            已解析未审核
+                          </Button>
+                          <Button
+                            variant={statusFilter === "已解析已审核" ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setStatusFilter("已解析已审核")}
+                            className="h-8"
+                          >
+                            已解析已审核
+                          </Button>
+                          <Button
+                            variant={statusFilter === "已导入未审核" ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setStatusFilter("已导入未审核")}
+                            className="h-8"
+                          >
+                            已导入未审核
+                          </Button>
+                          <Button
+                            variant={statusFilter === "已导入已审核" ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setStatusFilter("已导入已审核")}
+                            className="h-8"
+                          >
+                            已导入已审核
+                          </Button>
+                          <Button
+                            variant={statusFilter === "失败" ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setStatusFilter("失败")}
+                            className="h-8"
+                          >
+                            失败
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
                     {/* 拖拽上下文和文件夹文档网格 */}
                     <DndContext
                       sensors={sensors}
@@ -2579,6 +2680,7 @@ export default function DocumentsPage() {
                                   <SelectItem value="已解析已审核">已解析已审核</SelectItem>
                                   <SelectItem value="已导入未审核">已导入未审核</SelectItem>
                                   <SelectItem value="已导入已审核">已导入已审核</SelectItem>
+                                  <SelectItem value="失败">失败</SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>
@@ -2622,8 +2724,8 @@ export default function DocumentsPage() {
 
                             {/* 文档列表表格 */}
                             <div className="border rounded-lg">
-                              <div className="grid grid-cols-12 gap-4 p-4 border-b bg-muted/50 font-medium text-sm">
-                                <div className="col-span-1">
+                              <div className="grid grid-cols-21 gap-2 p-4 border-b bg-muted/50 font-medium text-sm">
+                                <div className="col-span-1 w-8">
                                   <Checkbox
                                     checked={
                                       selectedDocuments.length === getCurrentDocuments().length && getCurrentDocuments().length > 0
@@ -2637,16 +2739,17 @@ export default function DocumentsPage() {
                                     }}
                                   />
                                 </div>
-                                <div className="col-span-1">文档编号</div>
-                                <div className="col-span-3 flex items-center">
+                                <div className="col-span-2">文档编号</div>
+                                <div className="col-span-3 text-center">
                                   文档名称
-                                  <ArrowUpDown className="ml-2 h-4 w-4" />
                                 </div>
-                                <div className="col-span-1">分组</div>
-                                <div className="col-span-1">类型</div>
-                                <div className="col-span-1">大小</div>
-                                <div className="col-span-1">状态</div>
-                                <div className="col-span-2">操作</div>
+                                <div className="col-span-2">分组</div>
+                                <div className="col-span-2">类型</div>
+                                <div className="col-span-2">大小</div>
+                                <div className="col-span-2">状态</div>
+                                <div className="col-span-2">上传日期</div>
+                                <div className="col-span-2">上传者</div>
+                                <div className="col-span-3">操作</div>
                               </div>
 
                               {getCurrentDocuments()
@@ -2661,48 +2764,47 @@ export default function DocumentsPage() {
                                 .map((doc) => (
                                 <div
                                   key={doc.id}
-                                  className="grid grid-cols-12 gap-4 p-4 border-b hover:bg-muted/30 transition-colors"
+                                  className="grid grid-cols-21 gap-2 p-4 border-b hover:bg-muted/30 transition-colors"
                                   onContextMenu={(e) => handleContextMenu(e, doc)}
                                 >
-                                  <div className="col-span-1">
+                                  <div className="col-span-1 w-8">
                                     <Checkbox
                                       checked={selectedDocuments.includes(doc.id)}
                                       onCheckedChange={(checked) => handleSelectDocument(doc.id, checked as boolean)}
                                     />
                                   </div>
-                                  <div className="col-span-1">
-                                    <p className="text-sm font-mono text-muted-foreground">{getDocumentNumber(doc.id)}</p>
+                                  <div className="col-span-2">
+                                    <p className="text-xs font-mono text-muted-foreground whitespace-nowrap">{getDocumentNumber(doc.id)}</p>
                                   </div>
                                   <div className="col-span-3">
                                     <div className="flex items-center space-x-3">
                                       <FileText className="h-5 w-5 text-muted-foreground" />
                                       <div>
-                                        <p className="font-medium text-sm">{doc.name}</p>
-                                        <p className="text-xs text-muted-foreground">
-                                          上传日期: {doc.uploadDate} | 上传者: {doc.uploadedBy}
-                                        </p>
+                                        <p className="font-medium text-sm truncate">{doc.name}</p>
                                       </div>
                                     </div>
                                   </div>
-                                  <div className="col-span-1">
+                                  <div className="col-span-2">
                                     <Badge variant="secondary" className="text-xs">
                                       {doc.category}
                                     </Badge>
                                   </div>
-                                  <div className="col-span-1">
+                                  <div className="col-span-2">
                                     <Badge variant="outline" className="text-xs">
                                       {doc.type}
                                     </Badge>
                                   </div>
-                                  <div className="col-span-1 text-sm text-muted-foreground">{doc.size}</div>
-                                  <div className="col-span-1">
+                                  <div className="col-span-2 text-sm text-muted-foreground">{doc.size}</div>
+                                  <div className="col-span-2">
                                     <div className="flex items-center space-x-2">
                                       {getStatusIcon(doc.status)}
                                       {getStatusBadge(doc.status)}
                                     </div>
                                   </div>
-                                  <div className="col-span-2">
-                                    <div className="flex items-center justify-end gap-1">
+                                  <div className="col-span-2 text-sm text-muted-foreground">{doc.uploadDate}</div>
+                                  <div className="col-span-2 text-sm text-muted-foreground truncate">{doc.uploadedBy}</div>
+                                  <div className="col-span-3">
+                                    <div className="flex items-center justify-end gap-1 flex-wrap">
                                       {getActionButtons(doc)}
                                       <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
