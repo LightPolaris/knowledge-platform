@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState, useRef, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Sidebar } from "@/components/sidebar"
 import { Header } from "@/components/header"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -979,8 +980,8 @@ const mockGroups = [
     color: "blue",
     parentId: null,
     children: [
-      { id: 11, name: "电气安全", description: "电气安全相关文档", documentCount: 3, color: "blue", parentId: 1, children: [] },
-      { id: 12, name: "机械安全", description: "机械安全相关文档", documentCount: 4, color: "blue", parentId: 1, children: [] }
+      { id: 11, name: "电气安全", description: "电气安全相关文档", documentCount: 1, color: "blue", parentId: 1, children: [] },
+      { id: 12, name: "机械安全", description: "机械安全相关文档", documentCount: 6, color: "blue", parentId: 1, children: [] }
     ]
   },
   { 
@@ -991,8 +992,8 @@ const mockGroups = [
     color: "green",
     parentId: null,
     children: [
-      { id: 21, name: "设备规格", description: "设备技术规格文档", documentCount: 3, color: "green", parentId: 2, children: [] },
-      { id: 22, name: "操作手册", description: "设备操作手册", documentCount: 3, color: "green", parentId: 2, children: [] }
+      { id: 21, name: "设备规格", description: "设备技术规格文档", documentCount: 5, color: "green", parentId: 2, children: [] },
+      { id: 22, name: "操作手册", description: "设备操作手册", documentCount: 1, color: "green", parentId: 2, children: [] }
     ]
   },
   { 
@@ -1002,7 +1003,9 @@ const mockGroups = [
     documentCount: 6, 
     color: "orange",
     parentId: null,
-    children: []
+    children: [
+      { id: 31, name: "设备维护", description: "设备维护相关文档", documentCount: 4, color: "orange", parentId: 3, children: [] }
+    ]
   },
   { 
     id: 4, 
@@ -1011,7 +1014,9 @@ const mockGroups = [
     documentCount: 5, 
     color: "purple",
     parentId: null,
-    children: []
+    children: [
+      { id: 41, name: "质量检测", description: "质量检测相关文档", documentCount: 4, color: "purple", parentId: 4, children: [] }
+    ]
   },
   { 
     id: 5, 
@@ -1232,6 +1237,795 @@ const DraggableDocument = ({ document, onContextMenu }: any) => {
   )
 }
 
+// All Documents Content Component
+function AllDocumentsContent() {
+  const { toast } = useToast()
+  const router = useRouter()
+  const [selectedDocuments, setSelectedDocuments] = useState<number[]>([])
+  const [searchQuery, setSearchQuery] = useState("")
+  const [cascadeSelections, setCascadeSelections] = useState<string[]>([])
+  const [statusFilter, setStatusFilter] = useState("all")
+  const [sortBy, setSortBy] = useState("uploadDate")
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc")
+  const [viewMode, setViewMode] = useState<"grid" | "list">("list")
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage] = useState(10)
+
+  // Access groups from the parent component
+  const groups = mockGroups
+
+  // Use the same documents data as the groups tab
+  const allDocuments = mockDocuments.map(doc => {
+    // 根据文档的category和名称找到对应的分组层级
+    let groupName = doc.category
+    let depth = 1
+    
+    // 特殊映射规则：根据文档名称和内容确定二级分组
+    const documentGroupMapping: { [key: string]: string } = {
+      // 安全标准 -> 电气安全
+      "电气安全规范.pdf": "电气安全",
+      
+      // 安全标准 -> 机械安全
+      "锅炉安全标准 2024.pdf": "机械安全",
+      "安全培训材料.pptx": "机械安全", 
+      "安全培训记录.xlsx": "机械安全",
+      "安全防护指南.pdf": "机械安全",
+      "应急预案.pdf": "机械安全",
+      "环保排放标准.pdf": "机械安全",
+      
+      // 技术文档 -> 设备规格
+      "技术规格说明书.docx": "设备规格",
+      "工艺流程说明.pdf": "设备规格",
+      "技术参数表.xlsx": "设备规格",
+      "设备配置清单.xlsx": "设备规格",
+      "技术改进方案.docx": "设备规格",
+      
+      // 技术文档 -> 操作手册
+      "操作员手册.docx": "操作手册",
+      
+      // 维护保养 -> 设备维护
+      "维护保养计划.xlsx": "设备维护",
+      "设备维护手册.docx": "设备维护",
+      "设备故障诊断手册.pdf": "设备维护",
+      "维护记录表.xlsx": "设备维护",
+      
+      // 质量控制 -> 质量检测
+      "质量控制手册.pdf": "质量检测",
+      "检验测试报告.xlsx": "质量检测",
+      "质量检测标准.docx": "质量检测",
+      "质量审核报告.pdf": "质量检测",
+      
+      // 安装指南 -> 安装指南 (保持一级分组)
+      "安装指南.pdf": "安装指南",
+      
+      // 检验规程 -> 检验规程 (保持一级分组)
+      "检验规程手册.pdf": "检验规程",
+      "测试标准.docx": "检验规程"
+    }
+    
+    // 首先检查特殊映射
+    if (documentGroupMapping[doc.name]) {
+      groupName = documentGroupMapping[doc.name]
+      depth = 2
+    } else {
+      // 查找文档所属的分组层级
+      for (const topGroup of groups) {
+        if (topGroup.name === doc.category) {
+          groupName = doc.category
+          depth = 1
+          break
+        }
+        if (topGroup.children) {
+          for (const subGroup of topGroup.children) {
+            // 检查文档名称是否包含子分类关键词
+            if (subGroup.name === doc.category || 
+                doc.name.toLowerCase().includes(subGroup.name.toLowerCase()) ||
+                (topGroup.name === doc.category && doc.name.toLowerCase().includes(subGroup.name.toLowerCase()))) {
+              groupName = subGroup.name // 使用二级分类名称
+              depth = 2
+              break
+            }
+          }
+        }
+      }
+    }
+    
+    return {
+      ...doc,
+      group: groupName, // 使用正确的分组名称
+      depth: depth, // 使用正确的深度
+    }
+  })
+
+
+  // 级联选择器渲染函数
+  const renderCascadeSelects = () => {
+    const selects = []
+    
+    // 第一个下拉菜单：始终显示所有顶级分组
+    selects.push(
+      <div key={0} className="space-y-2">
+        <Label className="text-sm font-medium">
+          分组筛选 1
+        </Label>
+        <Select
+          value={cascadeSelections[0] || ""}
+          onValueChange={(value) => {
+            const newSelections = [value]
+            setCascadeSelections(newSelections)
+          }}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="选择第1级分组" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">全部分组</SelectItem>
+            {groups.map((group) => (
+              <SelectItem key={group.id} value={group.name}>
+                <div className="flex items-center space-x-2">
+                  <Folder className="h-4 w-4" />
+                  <span>{group.name}</span>
+                  <Badge variant="secondary" className="text-xs">
+                    {group.documentCount}
+                  </Badge>
+                </div>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    )
+    
+    // 第二个下拉菜单：当第一个有选择且该分组有子分类时显示
+    if (cascadeSelections[0] && cascadeSelections[0] !== "all") {
+      const selectedGroup = groups.find(group => group.name === cascadeSelections[0])
+      
+      if (selectedGroup && selectedGroup.children && selectedGroup.children.length > 0) {
+        // 如果第二个下拉菜单还没有选择，自动选择第一个选项
+        if (!cascadeSelections[1] && selectedGroup.children.length > 0) {
+          const firstChild = selectedGroup.children[0]
+          const newSelections = [cascadeSelections[0], firstChild.name]
+          setCascadeSelections(newSelections)
+        }
+        
+        selects.push(
+          <div key={1} className="space-y-2">
+            <Label className="text-sm font-medium">
+              分组筛选 2
+            </Label>
+            <Select
+              value={cascadeSelections[1] || ""}
+              onValueChange={(value) => {
+                const newSelections = [cascadeSelections[0], value]
+                setCascadeSelections(newSelections)
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="选择第2级分组" />
+              </SelectTrigger>
+              <SelectContent>
+                {selectedGroup.children.map((group) => (
+                  <SelectItem key={group.id} value={group.name}>
+                    <div className="flex items-center space-x-2">
+                      <Folder className="h-4 w-4" />
+                      <span>{group.name}</span>
+                      <Badge variant="secondary" className="text-xs">
+                        {group.documentCount}
+                      </Badge>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )
+      }
+    }
+    
+    return selects
+  }
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "已导入已审核":
+      case "已解析已审核":
+        return <CheckCircle className="h-4 w-4 text-green-500" />
+      case "已解析未审核":
+      case "已导入未审核":
+        return <Clock className="h-4 w-4 text-yellow-500" />
+      case "未解析":
+        return <XCircle className="h-4 w-4 text-red-500" />
+      default:
+        return <AlertCircle className="h-4 w-4 text-gray-500" />
+    }
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "已导入已审核":
+      case "已解析已审核":
+        return "bg-green-100 text-green-800"
+      case "已解析未审核":
+      case "已导入未审核":
+        return "bg-yellow-100 text-yellow-800"
+      case "未解析":
+        return "bg-red-100 text-red-800"
+      default:
+        return "bg-gray-100 text-gray-800"
+    }
+  }
+
+  const getFileTypeIcon = (type: string) => {
+    switch (type) {
+      case "PDF":
+        return <FileText className="h-4 w-4 text-red-500" />
+      case "Word":
+        return <FileText className="h-4 w-4 text-blue-500" />
+      case "Excel":
+        return <FileText className="h-4 w-4 text-green-500" />
+      default:
+        return <File className="h-4 w-4 text-gray-500" />
+    }
+  }
+
+  // Filter and sort documents
+  const filteredDocuments = allDocuments
+    .filter((doc) => {
+      const matchesSearch = doc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                           doc.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                           doc.uploadedBy.toLowerCase().includes(searchQuery.toLowerCase())
+      
+      // 级联分组筛选逻辑
+      let matchesGroup = true
+      if (cascadeSelections.length > 0) {
+        if (cascadeSelections[0] === "all") {
+          matchesGroup = true
+        } else if (cascadeSelections.length === 1) {
+          // 只选择了第一级分组，需要匹配该分组下的所有文档（包括子分组）
+          const selectedGroup = groups.find(g => g.name === cascadeSelections[0])
+          if (selectedGroup) {
+            // 匹配一级分组或该分组下的所有子分组
+            const allSubGroupNames = selectedGroup.children ? selectedGroup.children.map(child => child.name) : []
+            matchesGroup = doc.group === cascadeSelections[0] || allSubGroupNames.includes(doc.group)
+          } else {
+            matchesGroup = doc.group === cascadeSelections[0]
+          }
+        } else if (cascadeSelections.length === 2) {
+          // 选择了第二级分组
+          matchesGroup = doc.group === cascadeSelections[1]
+        }
+      }
+      
+      // 状态筛选逻辑
+      const matchesStatus = statusFilter === "all" || doc.status === statusFilter
+      
+      return matchesSearch && matchesGroup && matchesStatus
+    })
+    .sort((a, b) => {
+      let aValue = a[sortBy as keyof typeof a]
+      let bValue = b[sortBy as keyof typeof b]
+      
+      if (sortBy === "uploadDate" || sortBy === "lastModified") {
+        aValue = new Date(aValue as string).getTime()
+        bValue = new Date(bValue as string).getTime()
+      }
+      
+      if (sortOrder === "asc") {
+        return aValue > bValue ? 1 : -1
+      } else {
+        return aValue < bValue ? 1 : -1
+      }
+    })
+
+  // Pagination
+  const totalPages = Math.ceil(filteredDocuments.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const paginatedDocuments = filteredDocuments.slice(startIndex, endIndex)
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedDocuments(paginatedDocuments.map(doc => doc.id))
+    } else {
+      setSelectedDocuments([])
+    }
+  }
+
+  const handleSelectDocument = (docId: number, checked: boolean) => {
+    if (checked) {
+      setSelectedDocuments(prev => [...prev, docId])
+    } else {
+      setSelectedDocuments(prev => prev.filter(id => id !== docId))
+    }
+  }
+
+  const handleBulkAction = (action: string) => {
+    if (selectedDocuments.length === 0) {
+      toast({
+        title: "请选择文档",
+        description: "请先选择要操作的文档",
+      })
+      return
+    }
+
+    switch (action) {
+      case "download":
+        toast({
+          title: "下载文档",
+          description: `正在下载 ${selectedDocuments.length} 个文档`,
+        })
+        break
+      case "delete":
+        toast({
+          title: "删除文档",
+          description: `正在删除 ${selectedDocuments.length} 个文档`,
+        })
+        break
+      case "move":
+        toast({
+          title: "移动文档",
+          description: `正在移动 ${selectedDocuments.length} 个文档`,
+        })
+        break
+    }
+  }
+
+  const handleDocumentAction = (docId: number, action: string) => {
+    const doc = allDocuments.find(d => d.id === docId)
+    if (!doc) return
+
+    switch (action) {
+      case "view":
+        toast({
+          title: "查看文档",
+          description: `正在打开 ${doc.name}`,
+        })
+        break
+      case "edit":
+        toast({
+          title: "编辑文档",
+          description: `正在编辑 ${doc.name}`,
+        })
+        break
+      case "download":
+        toast({
+          title: "下载文档",
+          description: `正在下载 ${doc.name}`,
+        })
+        break
+      case "delete":
+        toast({
+          title: "删除文档",
+          description: `正在删除 ${doc.name}`,
+        })
+        break
+      case "parse":
+        toast({
+          title: "解析文档",
+          description: `正在解析 ${doc.name}`,
+        })
+        break
+      case "review":
+        // 跳转到审核页面
+        router.push(`/documents/review/${docId}`)
+        break
+      case "import":
+        toast({
+          title: "导入文档",
+          description: `正在导入 ${doc.name}`,
+        })
+        break
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+
+      {/* Filters and Search */}
+      <Card>
+        <CardContent>
+          <div className="flex flex-col lg:flex-row gap-4">
+            {/* Search */}
+            <div className="flex-1 space-y-2">
+              <Label htmlFor="search">搜索文档</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="search"
+                  placeholder="搜索文档名称、分类或上传者..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+
+            {/* Cascade Group Filters */}
+            <div className="flex-1 space-y-2">
+              <div className="flex flex-wrap gap-4">
+                {renderCascadeSelects()}
+              </div>
+              {cascadeSelections.length > 0 && cascadeSelections[0] !== "all" && (
+                <div className="text-sm text-muted-foreground">
+                  当前筛选: {cascadeSelections.join(" > ")}
+                </div>
+              )}
+            </div>
+
+            {/* Status Filter */}
+            <div className="flex-1 space-y-2">
+              <Label>状态筛选</Label>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="选择状态" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">所有状态</SelectItem>
+                  <SelectItem value="未解析">未解析</SelectItem>
+                  <SelectItem value="已解析未审核">已解析未审核</SelectItem>
+                  <SelectItem value="已解析已审核">已解析已审核</SelectItem>
+                  <SelectItem value="已导入未审核">已导入未审核</SelectItem>
+                  <SelectItem value="已导入已审核">已导入已审核</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+
+      {/* Documents List */}
+      <Card>
+        <CardContent className="p-0">
+          {viewMode === "list" ? (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="border-b">
+                  <tr>
+                    <th className="text-left p-4">
+                      <Checkbox
+                        checked={selectedDocuments.length === paginatedDocuments.length && paginatedDocuments.length > 0}
+                        onCheckedChange={handleSelectAll}
+                      />
+                    </th>
+                        <th className="text-left p-4">文档信息</th>
+                        <th className="text-left p-4">状态</th>
+                        <th className="text-left p-4">分组</th>
+                        <th className="text-left p-4">上传者</th>
+                        <th className="text-left p-4">上传时间</th>
+                        <th className="text-left p-4">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedDocuments.map((doc) => (
+                    <tr key={doc.id} className="border-b hover:bg-muted/50">
+                      <td className="p-4">
+                        <Checkbox
+                          checked={selectedDocuments.includes(doc.id)}
+                          onCheckedChange={(checked) => handleSelectDocument(doc.id, checked as boolean)}
+                        />
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center space-x-3">
+                          {getFileTypeIcon(doc.type)}
+                          <div>
+                            <div className="font-medium">{doc.name}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {doc.type} • {doc.size} • v{doc.version}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center space-x-2">
+                          {getStatusIcon(doc.status)}
+                          <Badge className={getStatusColor(doc.status)}>
+                            {doc.status}
+                          </Badge>
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center space-x-1">
+                          <Folder className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm">{doc.group}</span>
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center space-x-2">
+                          <User className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm">{doc.uploadedBy}</span>
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <div className="text-sm text-muted-foreground">
+                          {doc.uploadDate}
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-2">
+                          {/* 根据状态显示不同的操作按钮 */}
+                          {doc.status === "未解析" && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDocumentAction(doc.id, "parse")}
+                              className="h-8"
+                            >
+                              <Play className="mr-1 h-3 w-3" />
+                              解析
+                            </Button>
+                          )}
+                          {(doc.status === "已解析未审核" || doc.status === "已导入未审核") && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                handleDocumentAction(doc.id, "review")
+                              }}
+                              className="h-8"
+                            >
+                              <CheckCircle2 className="mr-1 h-3 w-3" />
+                              审核
+                            </Button>
+                          )}
+                          {doc.status === "已解析已审核" && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDocumentAction(doc.id, "import")}
+                              className="h-8"
+                            >
+                              <Import className="mr-1 h-3 w-3" />
+                              导入
+                            </Button>
+                          )}
+                          
+                          {/* 更多操作菜单 */}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleDocumentAction(doc.id, "view")}>
+                                <Eye className="h-4 w-4 mr-2" />
+                                查看
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleDocumentAction(doc.id, "edit")}>
+                                <Edit className="h-4 w-4 mr-2" />
+                                编辑
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleDocumentAction(doc.id, "download")}>
+                                <Download className="h-4 w-4 mr-2" />
+                                下载
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={() => handleDocumentAction(doc.id, "delete")}
+                                className="text-red-600"
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                删除
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
+              {paginatedDocuments.map((doc) => (
+                <Card key={doc.id} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <Checkbox
+                        checked={selectedDocuments.includes(doc.id)}
+                        onCheckedChange={(checked) => handleSelectDocument(doc.id, checked as boolean)}
+                      />
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleDocumentAction(doc.id, "view")}>
+                            <Eye className="h-4 w-4 mr-2" />
+                            查看
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDocumentAction(doc.id, "edit")}>
+                            <Edit className="h-4 w-4 mr-2" />
+                            编辑
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDocumentAction(doc.id, "download")}>
+                            <Download className="h-4 w-4 mr-2" />
+                            下载
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => handleDocumentAction(doc.id, "delete")}
+                            className="text-red-600"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            删除
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2 mb-3">
+                      {getFileTypeIcon(doc.type)}
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-sm truncate">{doc.name}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {doc.type} • {doc.size}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2">
+                        {getStatusIcon(doc.status)}
+                        <Badge className={`text-xs ${getStatusColor(doc.status)}`}>
+                          {doc.status}
+                        </Badge>
+                      </div>
+                      
+                      <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+                        <Folder className="h-3 w-3" />
+                        <span className="truncate">{doc.group}</span>
+                      </div>
+                      
+                      
+                      <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+                        <User className="h-3 w-3" />
+                        <span>{doc.uploadedBy}</span>
+                      </div>
+                      
+                      <div className="text-xs text-muted-foreground">
+                        {doc.uploadDate}
+                      </div>
+                      
+                      {/* 根据状态显示不同的操作按钮 */}
+                      <div className="flex gap-2 pt-2">
+                        {doc.status === "未解析" && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDocumentAction(doc.id, "parse")}
+                            className="h-7 text-xs flex-1"
+                          >
+                            <Play className="mr-1 h-3 w-3" />
+                            解析
+                          </Button>
+                        )}
+                        {(doc.status === "已解析未审核" || doc.status === "已导入未审核") && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              handleDocumentAction(doc.id, "review")
+                            }}
+                            className="h-7 text-xs flex-1"
+                          >
+                            <CheckCircle2 className="mr-1 h-3 w-3" />
+                            审核
+                          </Button>
+                        )}
+                        {doc.status === "已解析已审核" && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDocumentAction(doc.id, "import")}
+                            className="h-7 text-xs flex-1"
+                          >
+                            <Import className="mr-1 h-3 w-3" />
+                            导入
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-muted-foreground">
+            显示第 {startIndex + 1} - {Math.min(endIndex, filteredDocuments.length)} 条，
+            共 {filteredDocuments.length} 条
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
+            >
+              上一页
+            </Button>
+            <div className="flex items-center space-x-1">
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                const page = i + 1
+                return (
+                  <Button
+                    key={page}
+                    variant={currentPage === page ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setCurrentPage(page)}
+                  >
+                    {page}
+                  </Button>
+                )
+              })}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+              disabled={currentPage === totalPages}
+            >
+              下一页
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Actions */}
+      {selectedDocuments.length > 0 && (
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-muted-foreground">
+                已选择 {selectedDocuments.length} 个文档
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleBulkAction("download")}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  批量下载
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleBulkAction("move")}
+                >
+                  <Move className="h-4 w-4 mr-2" />
+                  批量移动
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleBulkAction("delete")}
+                  className="text-red-600 hover:text-red-700"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  批量删除
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  )
+}
+
 export default function DocumentsPage() {
   const { toast } = useToast()
   const [selectedDocuments, setSelectedDocuments] = useState<number[]>([])
@@ -1266,7 +2060,7 @@ export default function DocumentsPage() {
   // Document categorization states
   const [selectedDocumentsForGroup, setSelectedDocumentsForGroup] = useState<number[]>([])
   const [showDocumentSelection, setShowDocumentSelection] = useState(false)
-  const [activeTab, setActiveTab] = useState("groups")
+  const [activeTab, setActiveTab] = useState("all-documents")
   
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1)
@@ -2075,6 +2869,76 @@ export default function DocumentsPage() {
     return groups
   }
 
+  // 获取文档的实际分组名称（与AllDocumentsContent中的逻辑保持一致）
+  const getDocumentGroupName = (doc: any) => {
+    // 特殊映射规则：根据文档名称和内容确定二级分组
+    const documentGroupMapping: { [key: string]: string } = {
+      // 安全标准 -> 电气安全
+      "电气安全规范.pdf": "电气安全",
+      
+      // 安全标准 -> 机械安全
+      "锅炉安全标准 2024.pdf": "机械安全",
+      "安全培训材料.pptx": "机械安全", 
+      "安全培训记录.xlsx": "机械安全",
+      "安全防护指南.pdf": "机械安全",
+      "应急预案.pdf": "机械安全",
+      "环保排放标准.pdf": "机械安全",
+      
+      // 技术文档 -> 设备规格
+      "技术规格说明书.docx": "设备规格",
+      "工艺流程说明.pdf": "设备规格",
+      "技术参数表.xlsx": "设备规格",
+      "设备配置清单.xlsx": "设备规格",
+      "技术改进方案.docx": "设备规格",
+      
+      // 技术文档 -> 操作手册
+      "操作员手册.docx": "操作手册",
+      
+      // 维护保养 -> 设备维护
+      "维护保养计划.xlsx": "设备维护",
+      "设备维护手册.docx": "设备维护",
+      "设备故障诊断手册.pdf": "设备维护",
+      "维护记录表.xlsx": "设备维护",
+      
+      // 质量控制 -> 质量检测
+      "质量控制手册.pdf": "质量检测",
+      "检验测试报告.xlsx": "质量检测",
+      "质量检测标准.docx": "质量检测",
+      "质量审核报告.pdf": "质量检测",
+      
+      // 安装指南 -> 安装指南 (保持一级分组)
+      "安装指南.pdf": "安装指南",
+      
+      // 检验规程 -> 检验规程 (保持一级分组)
+      "检验规程手册.pdf": "检验规程",
+      "测试标准.docx": "检验规程"
+    }
+    
+    // 首先检查特殊映射
+    if (documentGroupMapping[doc.name]) {
+      return documentGroupMapping[doc.name]
+    }
+    
+    // 查找文档所属的分组层级
+    for (const topGroup of groups) {
+      if (topGroup.name === doc.category) {
+        return doc.category
+      }
+      if (topGroup.children) {
+        for (const subGroup of topGroup.children) {
+          // 检查文档名称是否包含子分类关键词
+          if (subGroup.name === doc.category || 
+              doc.name.toLowerCase().includes(subGroup.name.toLowerCase()) ||
+              (topGroup.name === doc.category && doc.name.toLowerCase().includes(subGroup.name.toLowerCase()))) {
+            return subGroup.name // 使用二级分类名称
+          }
+        }
+      }
+    }
+    
+    return doc.category
+  }
+
   // 获取当前路径下的文档
   const getCurrentDocuments = () => {
     const currentFolder = getCurrentFolder()
@@ -2082,12 +2946,13 @@ export default function DocumentsPage() {
       // 只有在没有子文件夹的叶子节点才显示文档
       const hasSubFolders = currentFolder.children && currentFolder.children.length > 0
       if (!hasSubFolders) {
-        // 对于子文件夹，需要根据父文件夹的category来过滤文档
+        // 对于子文件夹，需要根据子文件夹的名称来过滤文档
         if (currentFolder.parentId) {
-          const parentFolder = findFolderById(groups, currentFolder.parentId)
-          if (parentFolder) {
-            return mockDocuments.filter(doc => doc.category === parentFolder.name)
-          }
+          // 子文件夹：根据文档的实际分组来过滤
+          return mockDocuments.filter(doc => {
+            const groupName = getDocumentGroupName(doc)
+            return groupName === currentFolder.name
+          })
         } else {
           // 顶级文件夹直接按名称过滤
           return mockDocuments.filter(doc => doc.category === currentFolder.name)
@@ -2105,8 +2970,8 @@ export default function DocumentsPage() {
   }
 
   const handleReviewDocument = (docId: number) => {
-    console.log(`开始审核文档 ${docId}`)
-    // TODO: 实现审核逻辑
+    // 跳转到审核页面
+    router.push(`/documents/review/${docId}`)
   }
 
   const handleImportDocument = (docId: number) => {
@@ -2262,7 +3127,11 @@ export default function DocumentsPage() {
             key="review"
             variant="outline"
             size="sm"
-            onClick={() => handleReviewDocument(doc.id)}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              handleReviewDocument(doc.id)
+            }}
             className="h-8 shrink-0"
           >
             <CheckCircle2 className="mr-1 h-3 w-3" />
@@ -2290,13 +3159,20 @@ export default function DocumentsPage() {
             key="review"
             variant="outline"
             size="sm"
-            onClick={() => handleReviewDocument(doc.id)}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              handleReviewDocument(doc.id)
+            }}
             className="h-8 shrink-0"
           >
             <CheckCircle2 className="mr-1 h-3 w-3" />
             审核
           </Button>
         )
+        break
+      case "已导入已审核":
+        // 已导入已审核的文档不需要额外操作按钮
         break
       default:
         break
@@ -2313,10 +3189,17 @@ export default function DocumentsPage() {
         <Header title="文档管理" subtitle="上传、组织和管理您的技术文档" />
 
         <main className="flex-1 overflow-auto p-6">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div></div>
-            </div>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="all-documents">所有文档</TabsTrigger>
+            <TabsTrigger value="upload">上传文档</TabsTrigger>
+            <TabsTrigger value="groups">文档分组</TabsTrigger>
+          </TabsList>
+
+            <TabsContent value="all-documents" className="space-y-6">
+              <AllDocumentsContent />
+            </TabsContent>
 
             <TabsContent value="upload" className="space-y-6">
               <div className="flex items-center justify-between">
@@ -2556,69 +3439,6 @@ export default function DocumentsPage() {
                       </div>
                     </div>
 
-                    {/* 根目录状态筛选标签 */}
-                    {currentPath.length === 0 && (
-                      <div className="flex items-center space-x-2 mb-4">
-                        <div className="flex items-center space-x-2">
-                          <Button
-                            variant={statusFilter === "all" ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => setStatusFilter("all")}
-                            className="h-8"
-                          >
-                            全部
-                          </Button>
-                          <Button
-                            variant={statusFilter === "未解析" ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => setStatusFilter("未解析")}
-                            className="h-8"
-                          >
-                            未解析
-                          </Button>
-                          <Button
-                            variant={statusFilter === "已解析未审核" ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => setStatusFilter("已解析未审核")}
-                            className="h-8"
-                          >
-                            已解析未审核
-                          </Button>
-                          <Button
-                            variant={statusFilter === "已解析已审核" ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => setStatusFilter("已解析已审核")}
-                            className="h-8"
-                          >
-                            已解析已审核
-                          </Button>
-                          <Button
-                            variant={statusFilter === "已导入未审核" ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => setStatusFilter("已导入未审核")}
-                            className="h-8"
-                          >
-                            已导入未审核
-                          </Button>
-                          <Button
-                            variant={statusFilter === "已导入已审核" ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => setStatusFilter("已导入已审核")}
-                            className="h-8"
-                          >
-                            已导入已审核
-                          </Button>
-                          <Button
-                            variant={statusFilter === "失败" ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => setStatusFilter("失败")}
-                            className="h-8"
-                          >
-                            失败
-                          </Button>
-                        </div>
-                      </div>
-                    )}
 
                     {/* 拖拽上下文和文件夹文档网格 */}
                     <DndContext
