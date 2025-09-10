@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import React, { useState, useRef } from "react"
 import { Sidebar } from "@/components/sidebar"
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
@@ -29,28 +29,28 @@ import {
 
 // Mock data for knowledge graph
 const mockNodes = [
-  { id: "doc1", label: "Boiler Safety Standards", type: "document", category: "safety", connections: 8 },
-  { id: "doc2", label: "Technical Specifications", type: "document", category: "technical", connections: 12 },
-  { id: "doc3", label: "Maintenance Manual", type: "document", category: "maintenance", connections: 6 },
-  { id: "concept1", label: "Safety Protocols", type: "concept", category: "safety", connections: 15 },
-  { id: "concept2", label: "Temperature Control", type: "concept", category: "technical", connections: 9 },
-  { id: "concept3", label: "Pressure Systems", type: "concept", category: "technical", connections: 11 },
-  { id: "entity1", label: "Boiler Type A", type: "entity", category: "equipment", connections: 7 },
-  { id: "entity2", label: "Control System", type: "entity", category: "equipment", connections: 5 },
-  { id: "person1", label: "Zhang Wei", type: "person", category: "expert", connections: 4 },
-  { id: "person2", label: "Li Ming", type: "person", category: "expert", connections: 6 },
+  { id: "doc1", label: "锅炉安全标准", type: "document", category: "safety", connections: 8 },
+  { id: "doc2", label: "技术规范", type: "document", category: "technical", connections: 12 },
+  { id: "doc3", label: "维护手册", type: "document", category: "maintenance", connections: 6 },
+  { id: "concept1", label: "安全协议", type: "concept", category: "safety", connections: 15 },
+  { id: "concept2", label: "温度控制", type: "concept", category: "technical", connections: 9 },
+  { id: "concept3", label: "压力系统", type: "concept", category: "technical", connections: 11 },
+  { id: "entity1", label: "A型锅炉", type: "entity", category: "equipment", connections: 7 },
+  { id: "entity2", label: "控制系统", type: "entity", category: "equipment", connections: 5 },
+  { id: "person1", label: "张伟", type: "person", category: "expert", connections: 4 },
+  { id: "person2", label: "李明", type: "person", category: "expert", connections: 6 },
 ]
 
 const mockConnections = [
-  { from: "doc1", to: "concept1", strength: 0.9, type: "contains" },
-  { from: "doc2", to: "concept2", strength: 0.8, type: "describes" },
-  { from: "doc2", to: "concept3", strength: 0.7, type: "describes" },
-  { from: "concept1", to: "entity1", strength: 0.6, type: "applies_to" },
-  { from: "concept2", to: "entity1", strength: 0.8, type: "controls" },
-  { from: "concept3", to: "entity2", strength: 0.7, type: "manages" },
-  { from: "doc3", to: "person1", strength: 0.5, type: "authored_by" },
-  { from: "person1", to: "concept1", strength: 0.6, type: "expert_in" },
-  { from: "person2", to: "concept2", strength: 0.7, type: "expert_in" },
+  { from: "doc1", to: "concept1", strength: 0.9, type: "包含" },
+  { from: "doc2", to: "concept2", strength: 0.8, type: "描述" },
+  { from: "doc2", to: "concept3", strength: 0.7, type: "描述" },
+  { from: "concept1", to: "entity1", strength: 0.6, type: "适用于" },
+  { from: "concept2", to: "entity1", strength: 0.8, type: "控制" },
+  { from: "concept3", to: "entity2", strength: 0.7, type: "管理" },
+  { from: "doc3", to: "person1", strength: 0.5, type: "作者" },
+  { from: "person1", to: "concept1", strength: 0.6, type: "专家领域" },
+  { from: "person2", to: "concept2", strength: 0.7, type: "专家领域" },
 ]
 
 const getNodeColor = (type: string) => {
@@ -91,6 +91,9 @@ export default function KnowledgeGraphPage() {
   const [showLabels, setShowLabels] = useState(true)
   const [filterType, setFilterType] = useState("all")
   const [filterCategory, setFilterCategory] = useState("all")
+  const [nodePositions, setNodePositions] = useState<Record<string, { x: number; y: number }>>({})
+  const [draggedNode, setDraggedNode] = useState<string | null>(null)
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
   const graphRef = useRef<HTMLDivElement>(null)
 
   const filteredNodes = mockNodes.filter((node) => {
@@ -100,9 +103,135 @@ export default function KnowledgeGraphPage() {
     return matchesSearch && matchesType && matchesCategory
   })
 
+  // Calculate node positions based on layout type
+  const getNodePosition = (node: any, index: number) => {
+    // Check if node has a custom dragged position
+    if (nodePositions[node.id]) {
+      return nodePositions[node.id]
+    }
+
+    const totalNodes = filteredNodes.length
+    const centerX = 400
+    const centerY = 300
+    const radius = 200
+
+    let position
+    switch (layoutType) {
+      case "circular":
+        const angle = (2 * Math.PI * index) / totalNodes
+        position = {
+          x: centerX + radius * Math.cos(angle),
+          y: centerY + radius * Math.sin(angle)
+        }
+        break
+      case "hierarchical":
+        const level = Math.floor(index / 3)
+        const levelIndex = index % 3
+        position = {
+          x: 200 + levelIndex * 300,
+          y: 150 + level * 200
+        }
+        break
+      case "grid":
+        const cols = Math.ceil(Math.sqrt(totalNodes))
+        const row = Math.floor(index / cols)
+        const col = index % cols
+        position = {
+          x: 100 + col * 200,
+          y: 100 + row * 150
+        }
+        break
+      default: // force
+        // Improved force-directed positioning
+        const angleForce = (2 * Math.PI * index) / totalNodes + Math.random() * 0.5
+        const radiusForce = 150 + Math.random() * 100
+        position = {
+          x: centerX + radiusForce * Math.cos(angleForce),
+          y: centerY + radiusForce * Math.sin(angleForce)
+        }
+        break
+    }
+
+    // Store the calculated position
+    if (!nodePositions[node.id]) {
+      setNodePositions(prev => ({
+        ...prev,
+        [node.id]: position
+      }))
+    }
+
+    return position
+  }
+
   const handleNodeClick = (node: any) => {
     setSelectedNode(node)
   }
+
+  // Drag event handlers
+  const handleMouseDown = (e: React.MouseEvent, nodeId: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    const rect = e.currentTarget.getBoundingClientRect()
+    const offsetX = e.clientX - rect.left
+    const offsetY = e.clientY - rect.top
+    
+    setDraggedNode(nodeId)
+    setDragOffset({ x: offsetX, y: offsetY })
+  }
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!draggedNode) return
+
+    const graphRect = graphRef.current?.getBoundingClientRect()
+    if (!graphRect) return
+
+    const newX = e.clientX - graphRect.left - dragOffset.x
+    const newY = e.clientY - graphRect.top - dragOffset.y
+
+    setNodePositions(prev => ({
+      ...prev,
+      [draggedNode]: { x: newX, y: newY }
+    }))
+  }
+
+  const handleMouseUp = () => {
+    setDraggedNode(null)
+    setDragOffset({ x: 0, y: 0 })
+  }
+
+  // Add global mouse events
+  React.useEffect(() => {
+    const handleGlobalMouseMove = (e: MouseEvent) => {
+      if (!draggedNode) return
+
+      const graphRect = graphRef.current?.getBoundingClientRect()
+      if (!graphRect) return
+
+      const newX = e.clientX - graphRect.left - dragOffset.x
+      const newY = e.clientY - graphRect.top - dragOffset.y
+
+      setNodePositions(prev => ({
+        ...prev,
+        [draggedNode]: { x: newX, y: newY }
+      }))
+    }
+
+    const handleGlobalMouseUp = () => {
+      setDraggedNode(null)
+      setDragOffset({ x: 0, y: 0 })
+    }
+
+    if (draggedNode) {
+      document.addEventListener('mousemove', handleGlobalMouseMove)
+      document.addEventListener('mouseup', handleGlobalMouseUp)
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleGlobalMouseMove)
+      document.removeEventListener('mouseup', handleGlobalMouseUp)
+    }
+  }, [draggedNode, dragOffset])
 
   const handleZoomIn = () => {
     setZoomLevel([Math.min(zoomLevel[0] + 25, 200)])
@@ -115,6 +244,15 @@ export default function KnowledgeGraphPage() {
   const handleReset = () => {
     setZoomLevel([100])
     setSelectedNode(null)
+    setNodePositions({}) // Reset all node positions
+  }
+
+  // Recalculate positions when layout changes
+  const handleLayoutChange = (newLayout: string) => {
+    setLayoutType(newLayout)
+    setNodePositions({}) // Clear custom positions when changing layout
+    // Force re-render by updating a dummy state
+    setSelectedNode(selectedNode)
   }
 
   return (
@@ -144,9 +282,9 @@ export default function KnowledgeGraphPage() {
                     </div>
 
                     {/* Layout Type */}
-                    <Select value={layoutType} onValueChange={setLayoutType}>
+                    <Select value={layoutType} onValueChange={handleLayoutChange}>
                       <SelectTrigger className="w-32">
-                        <SelectValue />
+                        <SelectValue placeholder="选择布局" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="force">力导向</SelectItem>
@@ -190,74 +328,89 @@ export default function KnowledgeGraphPage() {
                     </Button>
                   </div>
                 </div>
+              </div>
 
-                {/* Graph Canvas */}
-                <div className="flex-1 relative bg-muted/20" ref={graphRef}>
-                  <div
-                    className="absolute inset-0 overflow-hidden"
-                    style={{ transform: `scale(${zoomLevel[0] / 100})`, transformOrigin: "center center" }}
-                  >
-                    {/* Mock Graph Visualization */}
-                    <svg className="w-full h-full">
-                      {/* Connections */}
-                      {mockConnections.map((connection, index) => {
-                        const fromNode = mockNodes.find((n) => n.id === connection.from)
-                        const toNode = mockNodes.find((n) => n.id === connection.to)
-                        if (!fromNode || !toNode) return null
+              {/* Graph Canvas */}
+              <div className="flex-1 relative bg-muted/20" ref={graphRef}>
+                <div
+                  className="absolute inset-0 overflow-hidden"
+                  style={{ transform: `scale(${zoomLevel[0] / 100})`, transformOrigin: "center center" }}
+                >
+                  {/* Mock Graph Visualization */}
+                  <svg className="w-full h-full absolute inset-0 z-0">
+                    {/* Connections */}
+                    {mockConnections.map((connection, index) => {
+                      const fromNode = filteredNodes.find((n) => n.id === connection.from)
+                      const toNode = filteredNodes.find((n) => n.id === connection.to)
+                      if (!fromNode || !toNode) return null
 
-                        // Mock positions for demonstration
-                        const fromX = 200 + ((index * 150) % 800)
-                        const fromY = 200 + ((index * 100) % 400)
-                        const toX = 300 + ((index * 120) % 800)
-                        const toY = 250 + ((index * 80) % 400)
+                      // Calculate positions based on filtered nodes
+                      const fromIndex = filteredNodes.findIndex((n) => n.id === connection.from)
+                      const toIndex = filteredNodes.findIndex((n) => n.id === connection.to)
+                      
+                      if (fromIndex === -1 || toIndex === -1) return null
+                      
+                      const fromPos = getNodePosition(fromNode, fromIndex)
+                      const toPos = getNodePosition(toNode, toIndex)
 
-                        return (
-                          <line
-                            key={`${connection.from}-${connection.to}`}
-                            x1={fromX}
-                            y1={fromY}
-                            x2={toX}
-                            y2={toY}
-                            stroke="hsl(var(--muted-foreground))"
-                            strokeWidth={connection.strength * 3}
-                            strokeOpacity={0.6}
-                          />
-                        )
-                      })}
-                    </svg>
+                      return (
+                        <line
+                          key={`${connection.from}-${connection.to}`}
+                          x1={fromPos.x}
+                          y1={fromPos.y}
+                          x2={toPos.x}
+                          y2={toPos.y}
+                          stroke="hsl(var(--muted-foreground))"
+                          strokeWidth={connection.strength * 3}
+                          strokeOpacity={0.6}
+                        />
+                      )
+                    })}
+                  </svg>
 
-                    {/* Nodes */}
-                    <div className="absolute inset-0">
-                      {filteredNodes.map((node, index) => {
-                        // Mock positions for demonstration
-                        const x = 200 + ((index * 150) % 800)
-                        const y = 200 + ((index * 100) % 400)
+                  {/* Nodes */}
+                  <div className="absolute inset-0 z-10">
+                    {filteredNodes.map((node, index) => {
+                      // Calculate positions using the new algorithm
+                      const position = getNodePosition(node, index)
+                      const x = position.x
+                      const y = position.y
+                      const isDragging = draggedNode === node.id
 
-                        return (
+                      return (
+                        <div
+                          key={node.id}
+                          data-node-id={node.id}
+                          className={`absolute transform -translate-x-1/2 -translate-y-1/2 cursor-move transition-all hover:scale-110 select-none ${
+                            selectedNode?.id === node.id ? "ring-2 ring-primary" : ""
+                          } ${isDragging ? "z-50 scale-110" : ""}`}
+                          style={{ 
+                            left: x, 
+                            top: y,
+                            pointerEvents: isDragging ? 'none' : 'auto'
+                          }}
+                          onMouseDown={(e) => handleMouseDown(e, node.id)}
+                          onClick={(e) => {
+                            if (!isDragging) {
+                              handleNodeClick(node)
+                            }
+                          }}
+                        >
                           <div
-                            key={node.id}
-                            className={`absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all hover:scale-110 ${
-                              selectedNode?.id === node.id ? "ring-2 ring-primary" : ""
-                            }`}
-                            style={{ left: x, top: y }}
-                            onClick={() => handleNodeClick(node)}
+                            className={`w-12 h-12 rounded-full flex items-center justify-center ${getNodeColor(
+                              node.type,
+                            )} shadow-lg ${isDragging ? "shadow-2xl" : ""}`}
                           >
-                            <div
-                              className={`w-12 h-12 rounded-full flex items-center justify-center ${getNodeColor(
-                                node.type,
-                              )} shadow-lg`}
-                            >
-                              {getNodeIcon(node.type)}
-                            </div>
-                            {showLabels && (
-                              <div className="absolute top-14 left-1/2 transform -translate-x-1/2 text-xs font-medium text-center whitespace-nowrap bg-background/80 px-2 py-1 rounded shadow">
-                                {node.label}
-                              </div>
-                            )}
+                            {getNodeIcon(node.type)}
                           </div>
-                        )
-                      })}
-                    </div>
+                          {showLabels && (
+                            <div className="absolute top-14 left-1/2 transform -translate-x-1/2 text-xs font-medium text-center whitespace-nowrap bg-background/80 px-2 py-1 rounded shadow">
+                              {node.label}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
                   </div>
 
                   {/* Graph Legend */}

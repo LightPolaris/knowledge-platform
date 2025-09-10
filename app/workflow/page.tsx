@@ -26,7 +26,9 @@ import {
   MoreHorizontal,
   Edit,
   Trash2,
-  Eye
+  Eye,
+  Plus,
+  GripVertical
 } from "lucide-react"
 import { useState } from "react"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -37,6 +39,10 @@ export default function WorkflowPage() {
   const [isBatchAssignDialogOpen, setIsBatchAssignDialogOpen] = useState(false)
   const [selectedAssignees, setSelectedAssignees] = useState<string[]>([])
   const [currentPage, setCurrentPage] = useState(1)
+  const [isConfigDialogOpen, setIsConfigDialogOpen] = useState(false)
+  const [isStepDialogOpen, setIsStepDialogOpen] = useState(false)
+  const [editingStep, setEditingStep] = useState<any>(null)
+  const [newStep, setNewStep] = useState({ name: "", description: "", status: "active" })
   const itemsPerPage = 5
   
   const [workflowConfig, setWorkflowConfig] = useState({
@@ -274,6 +280,65 @@ export default function WorkflowPage() {
     setSelectedTasks([]) // 切换页面时清空选择
   }
 
+  // 步骤管理函数
+  const handleAddStep = () => {
+    setNewStep({ name: "", description: "", status: "active" })
+    setEditingStep(null)
+    setIsStepDialogOpen(true)
+  }
+
+  const handleEditStep = (step: any) => {
+    setEditingStep(step)
+    setNewStep({ name: step.name, description: step.description, status: step.status })
+    setIsStepDialogOpen(true)
+  }
+
+  const handleDeleteStep = (stepId: number) => {
+    setWorkflowConfig(prev => ({
+      ...prev,
+      steps: prev.steps.filter(step => step.id !== stepId)
+    }))
+  }
+
+  const handleSaveStep = () => {
+    if (editingStep) {
+      // 编辑现有步骤
+      setWorkflowConfig(prev => ({
+        ...prev,
+        steps: prev.steps.map(step => 
+          step.id === editingStep.id 
+            ? { ...step, name: newStep.name, description: newStep.description, status: newStep.status }
+            : step
+        )
+      }))
+    } else {
+      // 添加新步骤
+      const newId = Math.max(...workflowConfig.steps.map(s => s.id)) + 1
+      setWorkflowConfig(prev => ({
+        ...prev,
+        steps: [...prev.steps, { id: newId, ...newStep }]
+      }))
+    }
+    setIsStepDialogOpen(false)
+    setEditingStep(null)
+    setNewStep({ name: "", description: "", status: "active" })
+  }
+
+  const handleMoveStep = (stepId: number, direction: 'up' | 'down') => {
+    setWorkflowConfig(prev => {
+      const steps = [...prev.steps]
+      const index = steps.findIndex(step => step.id === stepId)
+      
+      if (direction === 'up' && index > 0) {
+        [steps[index], steps[index - 1]] = [steps[index - 1], steps[index]]
+      } else if (direction === 'down' && index < steps.length - 1) {
+        [steps[index], steps[index + 1]] = [steps[index + 1], steps[index]]
+      }
+      
+      return { ...prev, steps }
+    })
+  }
+
   return (
     <div className="flex h-screen bg-background">
       <Sidebar />
@@ -365,7 +430,11 @@ export default function WorkflowPage() {
                       </div>
                       <div className="flex items-center space-x-2">
                         <Badge className="bg-green-100 text-green-800">运行中</Badge>
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => setIsConfigDialogOpen(true)}
+                        >
                           <Settings className="h-4 w-4 mr-2" />
                           配置
                         </Button>
@@ -404,6 +473,211 @@ export default function WorkflowPage() {
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* 配置对话框 */}
+                <Dialog open={isConfigDialogOpen} onOpenChange={setIsConfigDialogOpen}>
+                  <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>流程配置</DialogTitle>
+                      <DialogDescription>
+                        配置文档导入流程的基本信息和控制选项
+                      </DialogDescription>
+                    </DialogHeader>
+                    
+                    <div className="space-y-6">
+                      {/* 基本信息 */}
+                      <div className="space-y-4">
+                        <h4 className="font-medium">基本信息</h4>
+                        <div className="grid grid-cols-1 gap-4">
+                          <div>
+                            <label className="text-sm font-medium">流程名称</label>
+                            <input
+                              type="text"
+                              value={workflowConfig.name}
+                              onChange={(e) => setWorkflowConfig(prev => ({
+                                ...prev,
+                                name: e.target.value
+                              }))}
+                              className="w-full mt-1 px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium">流程描述</label>
+                            <textarea
+                              value={workflowConfig.description}
+                              onChange={(e) => setWorkflowConfig(prev => ({
+                                ...prev,
+                                description: e.target.value
+                              }))}
+                              rows={3}
+                              className="w-full mt-1 px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 流程控制 */}
+                      <div className="space-y-4">
+                        <h4 className="font-medium">流程控制</h4>
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <div className="space-y-1">
+                              <h5 className="font-medium">允许已解析未审核文件继续导入</h5>
+                              <p className="text-sm text-muted-foreground">
+                                控制已解析但未审核的文档是否可以直接进入导入阶段
+                              </p>
+                            </div>
+                            <Switch 
+                              checked={workflowConfig.controls.allowImportFromParsed}
+                              onCheckedChange={(checked) => {
+                                setWorkflowConfig(prev => ({
+                                  ...prev,
+                                  controls: {
+                                    ...prev.controls,
+                                    allowImportFromParsed: checked
+                                  }
+                                }))
+                              }}
+                            />
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <div className="space-y-1">
+                              <h5 className="font-medium">允许已导入未审核文件在知识图谱中使用</h5>
+                              <p className="text-sm text-muted-foreground">
+                                控制已导入但未最终审核的文档是否可以在知识图谱中搜索和使用
+                              </p>
+                            </div>
+                            <Switch 
+                              checked={workflowConfig.controls.allowKnowledgeGraphUse}
+                              onCheckedChange={(checked) => {
+                                setWorkflowConfig(prev => ({
+                                  ...prev,
+                                  controls: {
+                                    ...prev.controls,
+                                    allowKnowledgeGraphUse: checked
+                                  }
+                                }))
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 流程步骤配置 */}
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-medium">流程步骤</h4>
+                          <Button size="sm" onClick={handleAddStep}>
+                            <Plus className="h-4 w-4 mr-2" />
+                            添加步骤
+                          </Button>
+                        </div>
+                        <div className="space-y-2">
+                          {workflowConfig.steps.map((step, index) => (
+                            <div key={step.id} className="flex items-center space-x-3 p-3 border rounded-lg">
+                              <div className="flex items-center space-x-2">
+                                <GripVertical className="h-4 w-4 text-muted-foreground cursor-move" />
+                                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
+                                  step.status === "completed" 
+                                    ? "bg-green-100 text-green-800" 
+                                    : step.status === "active"
+                                    ? "bg-blue-100 text-blue-800"
+                                    : "bg-gray-100 text-gray-600"
+                                }`}>
+                                  {index + 1}
+                                </div>
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center space-x-2">
+                                  <h5 className="font-medium">{step.name}</h5>
+                                  <Badge variant="outline" className="text-xs">
+                                    {step.status === "completed" ? "已完成" : 
+                                     step.status === "active" ? "进行中" : "未开始"}
+                                  </Badge>
+                                </div>
+                                <p className="text-sm text-muted-foreground">{step.description}</p>
+                              </div>
+                              <div className="flex items-center space-x-1">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleMoveStep(step.id, 'up')}
+                                  disabled={index === 0}
+                                >
+                                  ↑
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleMoveStep(step.id, 'down')}
+                                  disabled={index === workflowConfig.steps.length - 1}
+                                >
+                                  ↓
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleEditStep(step)}
+                                >
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleDeleteStep(step.id)}
+                                  className="text-red-600 hover:text-red-700"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+
+                      {/* 流程状态 */}
+                      <div className="space-y-4">
+                        <h4 className="font-medium">流程状态</h4>
+                        <div className="flex items-center space-x-4">
+                          <div className="flex items-center space-x-2">
+                            <label className="text-sm font-medium">当前状态:</label>
+                            <Select
+                              value={workflowConfig.status}
+                              onValueChange={(value) => setWorkflowConfig(prev => ({
+                                ...prev,
+                                status: value
+                              }))}
+                            >
+                              <SelectTrigger className="w-32">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="running">运行中</SelectItem>
+                                <SelectItem value="paused">已暂停</SelectItem>
+                                <SelectItem value="stopped">已停止</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setIsConfigDialogOpen(false)}>
+                        取消
+                      </Button>
+                      <Button onClick={() => {
+                        // 这里可以添加保存配置的逻辑
+                        console.log('保存配置:', workflowConfig)
+                        setIsConfigDialogOpen(false)
+                      }}>
+                        保存配置
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </TabsContent>
 
               {/* 审核任务 */}

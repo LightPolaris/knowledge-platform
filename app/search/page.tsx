@@ -164,6 +164,7 @@ export default function SearchPage() {
     category: "all",
     subCategory: "all",
   })
+  const [searchScope, setSearchScope] = useState("all") // all, title, content
   const [hasSearched, setHasSearched] = useState(false)
 
   const handleSearch = (query?: string) => {
@@ -207,6 +208,16 @@ export default function SearchPage() {
               {/* Search Bar */}
               <div className="p-4 border-b border-border">
                 <div className="flex items-center space-x-4">
+                  <Select value={searchScope} onValueChange={setSearchScope}>
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">全部内容</SelectItem>
+                      <SelectItem value="title">仅标题</SelectItem>
+                      <SelectItem value="content">仅正文</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -295,6 +306,8 @@ export default function SearchPage() {
                     <div className="flex items-center justify-between">
                       <p className="text-sm text-muted-foreground">
                         找到 {filteredResults.length} 个结果 {searchQuery && `关于 "${searchQuery}"`}
+                        {searchScope === "title" && " (仅搜索标题)"}
+                        {searchScope === "content" && " (仅搜索正文)"}
                       </p>
                       <Select defaultValue="relevance">
                         <SelectTrigger className="w-32">

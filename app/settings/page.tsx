@@ -34,38 +34,38 @@ import {
 const mockAuditLogs = [
   {
     id: 1,
-    user: "Zhang Wei",
-    action: "Document Upload",
-    resource: "Boiler Safety Standards 2024.pdf",
+    user: "张伟",
+    action: "文档上传",
+    resource: "锅炉安全标准 2024.pdf",
     timestamp: "2024-01-15 14:30",
-    status: "success",
+    status: "成功",
     ip: "192.168.1.100",
   },
   {
     id: 2,
-    user: "Li Ming",
-    action: "User Permission Update",
-    resource: "Wang Fang",
+    user: "李明",
+    action: "用户权限更新",
+    resource: "王芳",
     timestamp: "2024-01-15 13:45",
-    status: "success",
+    status: "成功",
     ip: "192.168.1.101",
   },
   {
     id: 3,
-    user: "System",
-    action: "Knowledge Graph Sync",
-    resource: "Full Database",
+    user: "系统",
+    action: "知识图谱同步",
+    resource: "完整数据库",
     timestamp: "2024-01-15 12:00",
-    status: "success",
+    status: "成功",
     ip: "localhost",
   },
   {
     id: 4,
-    user: "Chen Lu",
-    action: "Failed Login Attempt",
-    resource: "Login System",
+    user: "陈璐",
+    action: "登录失败尝试",
+    resource: "登录系统",
     timestamp: "2024-01-15 11:30",
-    status: "failed",
+    status: "失败",
     ip: "192.168.1.105",
   },
 ]
@@ -74,13 +74,13 @@ const mockAuditLogs = [
 
 const getActionIcon = (action: string) => {
   switch (action) {
-    case "Document Upload":
+    case "文档上传":
       return <Upload className="h-4 w-4 text-blue-600" />
-    case "User Permission Update":
+    case "用户权限更新":
       return <Shield className="h-4 w-4 text-yellow-600" />
-    case "Knowledge Graph Sync":
+    case "知识图谱同步":
       return <RefreshCw className="h-4 w-4 text-green-600" />
-    case "Failed Login Attempt":
+    case "登录失败尝试":
       return <AlertTriangle className="h-4 w-4 text-red-600" />
     default:
       return <Activity className="h-4 w-4 text-gray-600" />
@@ -472,7 +472,7 @@ export default function SettingsPage() {
                             </td>
                             <td className="p-4 text-sm">{log.resource}</td>
                             <td className="p-4">
-                              <Badge variant={log.status === "success" ? "default" : "destructive"}>{log.status}</Badge>
+                              <Badge variant={log.status === "成功" ? "default" : "destructive"}>{log.status}</Badge>
                             </td>
                             <td className="p-4 text-sm text-muted-foreground">{log.ip}</td>
                           </tr>

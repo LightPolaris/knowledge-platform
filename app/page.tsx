@@ -2,6 +2,8 @@
 
 import React, { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
 import { Sidebar } from "@/components/sidebar"
 import { QAHeader } from "@/components/qa-header"
 import { Card, CardContent } from "@/components/ui/card"
@@ -222,6 +224,31 @@ export default function QAPage() {
   const [feedbackMessageId, setFeedbackMessageId] = useState<number | null>(null)
   const [showQuickFeedbackDialog, setShowQuickFeedbackDialog] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState("all")
+  const [searchQuery, setSearchQuery] = useState("")
+  const [searchResults, setSearchResults] = useState<string[]>([])
+  const [isSearching, setIsSearching] = useState(false)
+  const [showPdfViewer, setShowPdfViewer] = useState(false)
+  const [selectedPdfUrl, setSelectedPdfUrl] = useState("")
+  const [selectedPdfTitle, setSelectedPdfTitle] = useState("")
+
+  // 文档引用映射
+  const documentReferences = {
+    "GB/T 16507-2022 水管锅炉技术条件": {
+      title: "GB/T 16507-2022 水管锅炉技术条件",
+      url: "https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf",
+      docNumber: "GB/T 16507-2022"
+    },
+    "东方电气集团锅炉维修标准 Q/DF-2024-001": {
+      title: "东方电气集团锅炉维修标准",
+      url: "https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf",
+      docNumber: "Q/DF-2024-001"
+    },
+    "ASME BPVC.1 锅炉压力容器规范": {
+      title: "ASME BPVC.1 锅炉压力容器规范",
+      url: "https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf",
+      docNumber: "ASME BPVC.1"
+    }
+  }
 
   // 模拟系统中的文档数据
   const systemDocuments = [
@@ -287,6 +314,50 @@ export default function QAPage() {
   const handleEditRole = (role: string) => {
     console.log('编辑角色:', role)
     // 这里可以添加编辑角色的逻辑，比如打开编辑对话框
+  }
+
+  // 处理引用点击
+  const handleReferenceClick = (referenceText: string) => {
+    const docRef = documentReferences[referenceText as keyof typeof documentReferences]
+    if (docRef) {
+      setSelectedPdfUrl(docRef.url)
+      setSelectedPdfTitle(docRef.title)
+      setShowPdfViewer(true)
+    }
+  }
+
+  // 搜索功能
+  const handleSearch = (query: string) => {
+    if (!query.trim()) {
+      setSearchResults([])
+      setIsSearching(false)
+      return
+    }
+    
+    setIsSearching(true)
+    const results: string[] = []
+    
+    // 搜索知识领域
+    Object.keys(knowledgeHierarchy).forEach(level1 => {
+      if (level1.toLowerCase().includes(query.toLowerCase())) {
+        results.push(level1)
+      }
+      
+      Object.keys(knowledgeHierarchy[level1]).forEach(level2 => {
+        if (level2.toLowerCase().includes(query.toLowerCase())) {
+          results.push(`${level1} > ${level2}`)
+        }
+        
+        knowledgeHierarchy[level1][level2].forEach(level3 => {
+          if (level3.toLowerCase().includes(query.toLowerCase())) {
+            results.push(`${level1} > ${level2} > ${level3}`)
+          }
+        })
+      })
+    })
+    
+    setSearchResults(results)
+    setIsSearching(false)
   }
 
   // 处理知识领域选择
@@ -481,7 +552,7 @@ export default function QAPage() {
       const aiResponse = {
         id: messages.length + 2,
         type: "assistant",
-        content: `关于"${question}"的问题，我为您找到以下答案：\n\n根据东方电气集团的技术规范，关于这个问题的详细说明如下...\n\n建议您参考相关标准文件获取更详细的信息。`,
+        content: `关于"${question}"的问题，我为您找到以下答案：\n\n根据东方电气集团的技术规范，关于这个问题的详细说明如下...\n\n**引用来源：**\n\n- GB/T 16507-2022 水管锅炉技术条件\n- 东方电气集团锅炉维修标准 Q/DF-2024-001\n- ASME BPVC.1 锅炉压力容器规范\n\n建议您参考相关标准文件获取更详细的信息。`,
         timestamp: new Date().toLocaleTimeString(),
         feedback: null,
       }
@@ -541,8 +612,8 @@ export default function QAPage() {
             {activeTab === "intelligent-dialogue" && (
               <>
                 {/* Chat Messages Area */}
-                <div className="flex-1 p-1 bg-gray-50 min-h-0">
-                  <div className="w-full h-full relative">
+                <div className="flex-1 p-6 bg-gray-50 min-h-0 flex">
+                  <div className="w-full h-full relative flex-1">
                     
                     {/* Chat Messages */}
                     <div className="h-full space-y-6 overflow-y-auto pb-6">
@@ -619,7 +690,50 @@ export default function QAPage() {
                                 ? 'bg-primary text-white'
                                 : 'bg-white border border-primary/20 shadow-sm'
                             }`}>
-                              <p className="text-sm leading-relaxed">{message.content}</p>
+                              <div className={`text-sm leading-relaxed prose prose-sm max-w-none ${
+                                message.type === 'user' 
+                                  ? 'prose-invert' 
+                                  : 'prose-gray'
+                              }`}>
+                                <ReactMarkdown 
+                                  remarkPlugins={[remarkGfm]}
+                                  components={{
+                                    li: ({ children, ...props }) => {
+                                      // 提取文本内容，处理React元素数组
+                                      const extractText = (node: any): string => {
+                                        if (typeof node === 'string') {
+                                          return node
+                                        }
+                                        if (Array.isArray(node)) {
+                                          return node.map(extractText).join('')
+                                        }
+                                        if (node && typeof node === 'object' && node.props && node.props.children) {
+                                          return extractText(node.props.children)
+                                        }
+                                        return ''
+                                      }
+                                      
+                                      const text = extractText(children)
+                                      const isReference = text.includes('GB/T') || text.includes('Q/DF') || text.includes('ASME')
+                                      
+                                      if (isReference) {
+                                        return (
+                                          <li 
+                                            {...props}
+                                            className="cursor-pointer hover:text-blue-600 hover:underline transition-colors"
+                                            onClick={() => handleReferenceClick(text)}
+                                          >
+                                            {children}
+                                          </li>
+                                        )
+                                      }
+                                      return <li {...props}>{children}</li>
+                                    }
+                                  }}
+                                >
+                                  {message.content}
+                                </ReactMarkdown>
+                              </div>
 
                                     {/* Feedback buttons for assistant messages */}
                                     {message.type === 'assistant' && (
@@ -687,6 +801,30 @@ export default function QAPage() {
                             <div ref={messagesEndRef} />
                           </div>
                   </div>
+
+                  {/* PDF查看器 - 与对话并列显示 */}
+                  {showPdfViewer && (
+                    <div className="w-1/2 ml-6 bg-white rounded-lg border border-gray-200 shadow-sm">
+                      <div className="flex items-center justify-between p-4 border-b border-gray-200">
+                        <h3 className="text-lg font-semibold">{selectedPdfTitle}</h3>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowPdfViewer(false)}
+                          className="h-8 w-8 p-0"
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      <div className="h-[calc(100vh-200px)]">
+                        <iframe
+                          src={`${selectedPdfUrl}#toolbar=1&navpanes=1&scrollbar=1`}
+                          className="w-full h-full border-0 rounded-b-lg"
+                          title={selectedPdfTitle}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
 
 
@@ -731,7 +869,7 @@ export default function QAPage() {
                               onClick={() => setDomainOpen(true)}
                               className="h-8 px-3 text-sm font-medium text-foreground hover:bg-accent rounded-md"
                             >
-                              {selectedLevel1Categories.length > 0 ? `已选择 ${selectedLevel1Categories.length} 个领域` : "选择知识领域"}
+                              {selectedLevel1Categories.length > 0 ? `已选择 ${selectedLevel1Categories.length} 个领域` : "通用"}
                               <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                           </div>
@@ -1071,39 +1209,108 @@ export default function QAPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white rounded-lg shadow-xl w-[90vw] max-w-4xl h-[80vh] flex flex-col">
             {/* 弹窗头部 */}
-            <div className="p-4 border-b flex items-center justify-between">
-              <h2 className="text-lg font-semibold">知识领域选择</h2>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setDomainOpen(false)}
-              >
-                <X className="w-4 h-4" />
-              </Button>
+            <div className="p-4 border-b">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold">知识领域选择</h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setDomainOpen(false)
+                    setSearchQuery("")
+                    setSearchResults([])
+                  }}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+              
+              {/* 搜索框 */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="搜索分类和文档..."
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value)
+                    handleSearch(e.target.value)
+                  }}
+                  className="pl-10"
+                />
+              </div>
             </div>
             
             {/* 弹窗内容 */}
             <div className="flex-1 p-4 overflow-y-auto">
-              {/* 面包屑导航 */}
-              <div className="mb-4 flex items-center space-x-2 text-sm">
-                <button
-                  onClick={() => setCurrentPath([])}
-                  className="text-blue-600 hover:text-blue-800"
-                >
-                  知识领域
-                </button>
-                {currentPath.map((item, index) => (
-                  <div key={index} className="flex items-center space-x-2">
-                    <span className="text-gray-400">/</span>
-                    <button
-                      onClick={() => setCurrentPath(currentPath.slice(0, index + 1))}
-                      className="text-blue-600 hover:text-blue-800"
-                    >
-                      {item}
-                    </button>
+              {/* 搜索结果显示 */}
+              {searchQuery && (
+                <div className="mb-6">
+                  <h3 className="text-sm font-medium mb-3 text-gray-700">
+                    {isSearching ? "搜索中..." : `找到 ${searchResults.length} 个结果`}
+                  </h3>
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {searchResults.map((result, index) => {
+                      const parts = result.split(' > ')
+                      const isSelected = selectedDomains.includes(result) || 
+                        selectedLevel1Categories.includes(parts[0]) ||
+                        selectedLevel2Categories.includes(`${parts[0]} > ${parts[1]}`)
+                      
+                      return (
+                        <div 
+                          key={index}
+                          className="flex items-center space-x-3 p-2 rounded-lg border hover:bg-gray-50 cursor-pointer"
+                          onClick={() => {
+                            if (parts.length === 1) {
+                              handleLevel1Toggle(parts[0])
+                            } else if (parts.length === 2) {
+                              handleLevel2Toggle(parts[1])
+                            } else if (parts.length === 3) {
+                              handleLevel3Select(parts[2])
+                            }
+                          }}
+                        >
+                          <div className="w-4 h-4 border border-gray-400 rounded flex items-center justify-center">
+                            {isSelected && <Check className="w-3 h-3" />}
+                          </div>
+                          <div className="flex items-center space-x-2 flex-1">
+                            {parts.length === 1 ? (
+                              <FolderOpen className="w-4 h-4 text-blue-500" />
+                            ) : parts.length === 2 ? (
+                              <FolderOpen className="w-4 h-4 text-green-500" />
+                            ) : (
+                              <FileText className="w-4 h-4 text-orange-500" />
+                            )}
+                            <span className="text-sm">{result}</span>
+                          </div>
+                        </div>
+                      )
+                    })}
                   </div>
-                ))}
-              </div>
+                </div>
+              )}
+
+              {/* 面包屑导航 */}
+              {!searchQuery && (
+                <div className="mb-4 flex items-center space-x-2 text-sm">
+                  <button
+                    onClick={() => setCurrentPath([])}
+                    className="text-blue-600 hover:text-blue-800"
+                  >
+                    知识领域
+                  </button>
+                  {currentPath.map((item, index) => (
+                    <div key={index} className="flex items-center space-x-2">
+                      <span className="text-gray-400">/</span>
+                      <button
+                        onClick={() => setCurrentPath(currentPath.slice(0, index + 1))}
+                        className="text-blue-600 hover:text-blue-800"
+                      >
+                        {item}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* 返回按钮 */}
               {currentPath.length > 0 && (
@@ -1121,7 +1328,8 @@ export default function QAPage() {
               )}
 
               {/* 当前目录内容 */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {!searchQuery && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {currentPath.length === 0 ? (
                   // 显示一级分类
                   Object.keys(knowledgeHierarchy).filter(level1 => level1 !== '通用').map((level1) => {
@@ -1197,7 +1405,8 @@ export default function QAPage() {
                     )
                   })
                 ) : null}
-              </div>
+                </div>
+              )}
               
               {/* 选中的专业和文档 */}
               {!isGeneralSelected && selectedLevel1Categories.length > 0 && (
@@ -1241,7 +1450,7 @@ export default function QAPage() {
             {/* 弹窗底部 */}
             <div className="p-4 border-t flex items-center justify-between">
               <div className="text-sm text-muted-foreground">
-                {selectedLevel1Categories.length > 0 ? `已选择 ${selectedLevel1Categories.length} 个领域` : "未选择任何领域"}
+                {selectedLevel1Categories.length > 0 ? `已选择 ${selectedLevel1Categories.length} 个领域` : "通用"}
               </div>
               <div className="flex items-center gap-2">
                 <Button
@@ -1261,7 +1470,11 @@ export default function QAPage() {
                   清除
                 </Button>
                 <Button
-                  onClick={() => setDomainOpen(false)}
+                  onClick={() => {
+                    setDomainOpen(false)
+                    setSearchQuery("")
+                    setSearchResults([])
+                  }}
                 >
                   确定
                 </Button>
@@ -1270,6 +1483,7 @@ export default function QAPage() {
           </div>
         </div>
       )}
+
 
     </div>
   )

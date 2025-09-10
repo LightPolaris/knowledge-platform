@@ -30,7 +30,7 @@ const mockDocumentData: Record<number, any> = {
   1: {
     id: 1,
     name: "锅炉安全标准 2024.pdf",
-    originalPdfUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+    originalPdfUrl: "https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf",
     parsedMarkdown: `# 锅炉安全标准 2024
 
 ## 概述
@@ -55,7 +55,7 @@ const mockDocumentData: Record<number, any> = {
   2: {
     id: 2,
     name: "技术规格说明书.docx",
-    originalPdfUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+    originalPdfUrl: "https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf",
     parsedMarkdown: `# 技术规格说明书
 
 ## 设备概述
@@ -78,7 +78,7 @@ const mockDocumentData: Record<number, any> = {
   69: {
     id: 69,
     name: "会议纪要 2024-01-19.pdf",
-    originalPdfUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+    originalPdfUrl: "https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf",
     parsedMarkdown: `# 会议纪要
 
 ## 会议基本信息
@@ -128,7 +128,7 @@ const mockDocumentData: Record<number, any> = {
   70: {
     id: 70,
     name: "设备故障报告.xlsx",
-    originalPdfUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+    originalPdfUrl: "https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf",
     parsedMarkdown: `# 设备故障报告
 
 ## 故障概述
@@ -160,7 +160,7 @@ const mockDocumentData: Record<number, any> = {
   71: {
     id: 71,
     name: "新员工培训资料.pptx",
-    originalPdfUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+    originalPdfUrl: "https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf",
     parsedMarkdown: `# 新员工培训资料
 
 ## 培训目标
@@ -193,7 +193,7 @@ const mockDocumentData: Record<number, any> = {
   72: {
     id: 72,
     name: "供应商评估表.pdf",
-    originalPdfUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+    originalPdfUrl: "https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf",
     parsedMarkdown: `# 供应商评估表
 
 ## 供应商基本信息
@@ -236,7 +236,7 @@ const mockDocumentData: Record<number, any> = {
   27: {
     id: 27,
     name: "技术交流会议记录.docx",
-    originalPdfUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+    originalPdfUrl: "https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf",
     parsedMarkdown: `# 技术交流会议记录
 
 ## 会议信息
@@ -263,7 +263,7 @@ const mockDocumentData: Record<number, any> = {
   28: {
     id: 28,
     name: "设备运行数据.txt",
-    originalPdfUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+    originalPdfUrl: "https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf",
     parsedMarkdown: `# 设备运行数据
 
 ## 运行参数
@@ -301,6 +301,7 @@ export default function DocumentReviewPage() {
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [hasChanges, setHasChanges] = useState(false)
+  const [pdfError, setPdfError] = useState(false)
 
   useEffect(() => {
     // 模拟获取文档数据
@@ -448,7 +449,7 @@ export default function DocumentReviewPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => router.back()}
+                      onClick={() => router.push("/documents")}
                       className="h-8"
                     >
                       <ArrowLeft className="h-4 w-4 mr-2" />
@@ -518,11 +519,22 @@ export default function DocumentReviewPage() {
                   </CardHeader>
                   <CardContent className="flex-1 overflow-hidden p-4">
                   <div className="h-full border rounded-lg bg-muted/50">
-                    <iframe
-                      src={`${document.originalPdfUrl}#toolbar=1&navpanes=1&scrollbar=1`}
-                      className="w-full h-full border-0 rounded-lg"
-                      title="PDF文档预览"
-                    />
+                    {pdfError ? (
+                      <div className="h-full flex items-center justify-center text-center p-8">
+                        <div>
+                          <File className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                          <p className="text-muted-foreground mb-2">PDF加载失败</p>
+                          <p className="text-sm text-muted-foreground">无法加载PDF文档，请检查网络连接或文档链接</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <iframe
+                        src={`${document.originalPdfUrl}#toolbar=1&navpanes=1&scrollbar=1`}
+                        className="w-full h-full border-0 rounded-lg"
+                        title="PDF文档预览"
+                        onError={() => setPdfError(true)}
+                      />
+                    )}
                   </div>
                   </CardContent>
                 </Card>
@@ -594,11 +606,6 @@ export default function DocumentReviewPage() {
                           {isSaving ? "保存中..." : "保存"}
                         </Button>
                         <span className="text-sm text-muted-foreground">有未保存的更改</span>
-                      </div>
-                    )}
-                    {!hasChanges && (
-                      <div className="text-sm text-muted-foreground">
-                        快捷键: Ctrl+E 切换编辑模式, Ctrl+S 保存
                       </div>
                     )}
                   </div>

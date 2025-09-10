@@ -1709,7 +1709,12 @@ function AllDocumentsContent() {
                         <div className="flex items-center space-x-3">
                           {getFileTypeIcon(doc.type)}
                           <div>
-                            <div className="font-medium">{doc.name}</div>
+                            <div 
+                              className="font-medium cursor-pointer hover:text-primary hover:underline transition-colors"
+                              onClick={() => router.push(`/documents/review/${doc.id}`)}
+                            >
+                              {doc.name}
+                            </div>
                             <div className="text-sm text-muted-foreground">
                               {doc.type} • {doc.size} • v{doc.version}
                             </div>
@@ -2028,6 +2033,7 @@ function AllDocumentsContent() {
 
 export default function DocumentsPage() {
   const { toast } = useToast()
+  const router = useRouter()
   const [selectedDocuments, setSelectedDocuments] = useState<number[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
@@ -3202,18 +3208,6 @@ export default function DocumentsPage() {
             </TabsContent>
 
             <TabsContent value="upload" className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => setActiveTab("groups")}
-                  >
-                    <ArrowLeft className="h-4 w-4 mr-2" />
-                    返回文档管理
-                  </Button>
-                </div>
-              </div>
               <Card>
                 <CardHeader>
                   <CardTitle className="font-serif">上传文档</CardTitle>
