@@ -94,6 +94,8 @@ export default function KnowledgeGraphPage() {
   const [nodePositions, setNodePositions] = useState<Record<string, { x: number; y: number }>>({})
   const [draggedNode, setDraggedNode] = useState<string | null>(null)
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragStartTime, setDragStartTime] = useState(0)
   const graphRef = useRef<HTMLDivElement>(null)
 
   const filteredNodes = mockNodes.filter((node) => {
@@ -178,6 +180,8 @@ export default function KnowledgeGraphPage() {
     
     setDraggedNode(nodeId)
     setDragOffset({ x: offsetX, y: offsetY })
+    setIsDragging(true)
+    setDragStartTime(Date.now())
   }
 
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -198,6 +202,7 @@ export default function KnowledgeGraphPage() {
   const handleMouseUp = () => {
     setDraggedNode(null)
     setDragOffset({ x: 0, y: 0 })
+    setIsDragging(false)
   }
 
   // Add global mouse events
@@ -220,6 +225,7 @@ export default function KnowledgeGraphPage() {
     const handleGlobalMouseUp = () => {
       setDraggedNode(null)
       setDragOffset({ x: 0, y: 0 })
+      setIsDragging(false)
     }
 
     if (draggedNode) {
@@ -338,6 +344,24 @@ export default function KnowledgeGraphPage() {
                 >
                   {/* Mock Graph Visualization */}
                   <svg className="w-full h-full absolute inset-0 z-0">
+                    {/* Arrow marker definitions */}
+                    <defs>
+                      <marker
+                        id="arrowhead"
+                        markerWidth="10"
+                        markerHeight="7"
+                        refX="9"
+                        refY="3.5"
+                        orient="auto"
+                      >
+                        <polygon
+                          points="0 0, 10 3.5, 0 7"
+                          fill="#64748b"
+                          opacity="0.8"
+                        />
+                      </marker>
+                    </defs>
+                    
                     {/* Connections */}
                     {mockConnections.map((connection, index) => {
                       const fromNode = filteredNodes.find((n) => n.id === connection.from)
@@ -353,17 +377,33 @@ export default function KnowledgeGraphPage() {
                       const fromPos = getNodePosition(fromNode, fromIndex)
                       const toPos = getNodePosition(toNode, toIndex)
 
+                      const midX = (fromPos.x + toPos.x) / 2
+                      const midY = (fromPos.y + toPos.y) / 2
+                      
                       return (
-                        <line
-                          key={`${connection.from}-${connection.to}`}
-                          x1={fromPos.x}
-                          y1={fromPos.y}
-                          x2={toPos.x}
-                          y2={toPos.y}
-                          stroke="hsl(var(--muted-foreground))"
-                          strokeWidth={connection.strength * 3}
-                          strokeOpacity={0.6}
-                        />
+                        <g key={`${connection.from}-${connection.to}`}>
+                          <line
+                            x1={fromPos.x}
+                            y1={fromPos.y}
+                            x2={toPos.x}
+                            y2={toPos.y}
+                            stroke="#64748b"
+                            strokeWidth={Math.max(2, connection.strength * 4)}
+                            strokeOpacity={0.8}
+                            strokeDasharray={connection.type === "包含" ? "5,5" : "none"}
+                            markerEnd="url(#arrowhead)"
+                          />
+                          <text
+                            x={midX}
+                            y={midY - 5}
+                            textAnchor="middle"
+                            fontSize="10"
+                            fill="#64748b"
+                            className="pointer-events-none"
+                          >
+                            {connection.type}
+                          </text>
+                        </g>
                       )
                     })}
                   </svg>
@@ -375,7 +415,7 @@ export default function KnowledgeGraphPage() {
                       const position = getNodePosition(node, index)
                       const x = position.x
                       const y = position.y
-                      const isDragging = draggedNode === node.id
+                      const nodeIsDragging = draggedNode === node.id
 
                       return (
                         <div
@@ -383,15 +423,16 @@ export default function KnowledgeGraphPage() {
                           data-node-id={node.id}
                           className={`absolute transform -translate-x-1/2 -translate-y-1/2 cursor-move transition-all hover:scale-110 select-none ${
                             selectedNode?.id === node.id ? "ring-2 ring-primary" : ""
-                          } ${isDragging ? "z-50 scale-110" : ""}`}
+                          } ${nodeIsDragging ? "z-50 scale-110" : ""}`}
                           style={{ 
                             left: x, 
-                            top: y,
-                            pointerEvents: isDragging ? 'none' : 'auto'
+                            top: y
                           }}
                           onMouseDown={(e) => handleMouseDown(e, node.id)}
                           onClick={(e) => {
-                            if (!isDragging) {
+                            const clickTime = Date.now()
+                            const timeDiff = clickTime - dragStartTime
+                            if (!isDragging && !nodeIsDragging && timeDiff > 200) {
                               handleNodeClick(node)
                             }
                           }}
@@ -399,7 +440,7 @@ export default function KnowledgeGraphPage() {
                           <div
                             className={`w-12 h-12 rounded-full flex items-center justify-center ${getNodeColor(
                               node.type,
-                            )} shadow-lg ${isDragging ? "shadow-2xl" : ""}`}
+                            )} shadow-lg ${nodeIsDragging ? "shadow-2xl" : ""}`}
                           >
                             {getNodeIcon(node.type)}
                           </div>

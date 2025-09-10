@@ -12,6 +12,7 @@ interface QAHeaderProps {
   activeTab?: string
   onTabChange?: (tab: string) => void
   onFeedbackClick?: () => void
+  onNotificationClick?: () => void
 }
 
 const tabs = [
@@ -22,7 +23,8 @@ const tabs = [
 export function QAHeader({
   activeTab = "intelligent-dialogue",
   onTabChange,
-  onFeedbackClick
+  onFeedbackClick,
+  onNotificationClick
 }: QAHeaderProps) {
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = React.useState(false)
@@ -78,7 +80,12 @@ export function QAHeader({
             {/* 图标组 */}
             <div className="flex items-center space-x-1">
               {/* 通知 */}
-              <Button variant="ghost" size="sm" className="relative h-9 w-9 p-0 text-white hover:bg-white/20">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={onNotificationClick}
+                className="relative h-9 w-9 p-0 text-white hover:bg-white/20"
+              >
                 <Bell className="h-4 w-4" />
                 <Badge
                   variant="destructive"

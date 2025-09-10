@@ -33,7 +33,7 @@ const navigation = [
   { name: "知识图谱", href: "/knowledge-graph", icon: Network },
   { name: "文件对比", href: "/compare", icon: GitCompare },
   { name: "文档管理", href: "/documents", icon: FileText },
-  { name: "个人知识库", href: "/personal-library", icon: Cloud },
+  { name: "个人工作台", href: "/personal-library", icon: Cloud },
   { name: "个人中心", href: "/profile", icon: UserCircle },
   { name: "流程处理", href: "/workflow", icon: Workflow },
   { name: "权限管理", href: "/permissions", icon: Shield },

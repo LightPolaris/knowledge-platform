@@ -119,6 +119,7 @@ export default function QAPage() {
     "废水排放处理标准?"
   ]
 
+
   // 精选问题数据
   const featuredQuestions = [
     {
@@ -230,6 +231,7 @@ export default function QAPage() {
   const [showPdfViewer, setShowPdfViewer] = useState(false)
   const [selectedPdfUrl, setSelectedPdfUrl] = useState("")
   const [selectedPdfTitle, setSelectedPdfTitle] = useState("")
+  const [showNotifications, setShowNotifications] = useState(false)
 
   // 文档引用映射
   const documentReferences = {
@@ -268,18 +270,6 @@ export default function QAPage() {
   const categories = ['all', ...Array.from(new Set(systemDocuments.map(doc => doc.category)))]
 
 
-  const handleFeedback = (messageId: number, type: string) => {
-    if (type === 'thumbsDown') {
-      setFeedbackMessageId(messageId)
-      setShowFeedbackDialog(true)
-    } else {
-      setMessages(prev => prev.map(msg =>
-        msg.id === messageId
-          ? { ...msg, feedback: type }
-          : msg
-      ))
-    }
-  }
 
   const handleUploadImage = () => {
     // 创建文件输入元素
@@ -535,10 +525,11 @@ export default function QAPage() {
   const handleSendMessage = () => {
     if (!question.trim()) return
 
+    const currentQuestion = question.trim()
     const userMessage = {
-      id: messages.length + 1,
+      id: Date.now(),
       type: "user",
-      content: question,
+      content: currentQuestion,
       timestamp: new Date().toLocaleTimeString(),
       feedback: null,
     }
@@ -549,20 +540,53 @@ export default function QAPage() {
 
     // Simulate AI response
     setTimeout(() => {
-      const aiResponse = {
-        id: messages.length + 2,
-        type: "assistant",
-        content: `关于"${question}"的问题，我为您找到以下答案：\n\n根据东方电气集团的技术规范，关于这个问题的详细说明如下...\n\n**引用来源：**\n\n- GB/T 16507-2022 水管锅炉技术条件\n- 东方电气集团锅炉维修标准 Q/DF-2024-001\n- ASME BPVC.1 锅炉压力容器规范\n\n建议您参考相关标准文件获取更详细的信息。`,
-        timestamp: new Date().toLocaleTimeString(),
-        feedback: null,
+      try {
+        const aiResponse = {
+          id: Date.now() + 1,
+          type: "assistant",
+          content: `关于"${currentQuestion}"的问题，我为您找到以下答案：\n\n根据东方电气集团的技术规范，关于这个问题的详细说明如下：\n\n1. **技术标准要求**\n   - 符合GB/T 16507-2022水管锅炉技术条件\n   - 遵循ASME BPVC.1锅炉压力容器规范\n   - 满足东方电气集团内部标准Q/DF-2024-001\n\n2. **具体实施建议**\n   - 定期进行设备检查和维护\n   - 建立完善的安全监控体系\n   - 制定详细的应急预案\n\n**引用来源：**\n\n- GB/T 16507-2022 水管锅炉技术条件\n- 东方电气集团锅炉维修标准 Q/DF-2024-001\n- ASME BPVC.1 锅炉压力容器规范\n\n建议您参考相关标准文件获取更详细的信息。如有其他问题，请随时询问。`,
+          timestamp: new Date().toLocaleTimeString(),
+          feedback: null,
+        }
+        setMessages(prev => [...prev, aiResponse])
+      } catch (error) {
+        console.error('AI响应生成失败:', error)
+        const errorResponse = {
+          id: Date.now() + 1,
+          type: "assistant",
+          content: "抱歉，我暂时无法处理您的问题。请稍后重试或联系技术支持。",
+          timestamp: new Date().toLocaleTimeString(),
+          feedback: null,
+        }
+        setMessages(prev => [...prev, errorResponse])
+      } finally {
+        setIsLoading(false)
       }
-      setMessages(prev => [...prev, aiResponse])
-      setIsLoading(false)
     }, 2000)
   }
 
   const handleRecommendedQuestion = (question: string) => {
     setQuestion(question)
+  }
+
+  // 处理反馈
+  const handleFeedback = (messageId: number, feedbackType: 'thumbsUp' | 'thumbsDown') => {
+    if (feedbackType === 'thumbsDown') {
+      setFeedbackMessageId(messageId)
+      setShowFeedbackDialog(true)
+    } else {
+      setMessages(prev => prev.map(msg =>
+        msg.id === messageId
+          ? { ...msg, feedback: feedbackType }
+          : msg
+      ))
+    }
+  }
+
+  // 清空对话
+  const handleClearMessages = () => {
+    setMessages([])
+    setQuestion("")
   }
 
   // 检查是否有用户消息
@@ -604,6 +628,7 @@ export default function QAPage() {
             activeTab={activeTab} 
             onTabChange={setActiveTab}
             onFeedbackClick={() => setShowQuickFeedbackDialog(true)}
+            onNotificationClick={() => setShowNotifications(true)}
           />
 
         <main className="flex-1 overflow-hidden">
@@ -783,15 +808,21 @@ export default function QAPage() {
                             ))}
                             {isLoading && (
                               <div className="flex items-start space-x-3">
-                          <Avatar className="w-10 h-10 bg-primary/10">
-                            <AvatarFallback className="bg-primary text-white">
-                              <Bot className="w-5 h-5" />
+                                <Avatar className="w-10 h-10 bg-primary/10">
+                                  <AvatarFallback className="bg-primary text-white">
+                                    <Bot className="w-5 h-5" />
                                   </AvatarFallback>
                                 </Avatar>
-                          <div className="bg-white border border-gray-200 shadow-sm rounded-2xl p-4">
-                                  <div className="flex items-center space-x-2">
-                              <Sparkles className="w-4 h-4 animate-spin text-primary" />
-                                    <span className="text-sm">正在思考...</span>
+                                <div className="flex-1 max-w-[85%]">
+                                  <div className="bg-primary/5 border border-primary/20 shadow-sm rounded-2xl p-4">
+                                    <div className="flex items-center space-x-2">
+                                      <div className="flex space-x-1">
+                                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
+                                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                                      </div>
+                                      <span className="text-sm text-primary">AI正在分析您的问题，请稍候...</span>
+                                    </div>
                                   </div>
                                 </div>
                               </div>
@@ -850,13 +881,26 @@ export default function QAPage() {
                             rows={1}
                           />
                         </div>
-                        <Button 
-                          onClick={handleSendMessage} 
-                          disabled={!question.trim() || isLoading}
-                          className="h-12 w-12 rounded-xl bg-primary hover:bg-primary-hover shadow-sm transition-all duration-200"
-                        >
-                          <Send className="w-5 h-5 text-white" />
-                        </Button>
+                        <div className="flex items-center space-x-2">
+                          {hasUserMessages && (
+                            <Button 
+                              onClick={handleClearMessages}
+                              variant="outline"
+                              size="sm"
+                              className="h-12 px-4 rounded-xl"
+                            >
+                              <RotateCcw className="w-4 h-4 mr-2" />
+                              清空
+                            </Button>
+                          )}
+                          <Button 
+                            onClick={handleSendMessage} 
+                            disabled={!question.trim() || isLoading}
+                            className="h-12 w-12 rounded-xl bg-primary hover:bg-primary-hover shadow-sm transition-all duration-200"
+                          >
+                            <Send className="w-5 h-5 text-white" />
+                          </Button>
+                        </div>
                       </div>
 
                       {/* Bottom Controls Row */}
@@ -1173,6 +1217,12 @@ export default function QAPage() {
           </div>
         </main>
       </div>
+
+      {/* 通知对话框 */}
+      <NotificationDialog 
+        isOpen={showNotifications} 
+        onClose={() => setShowNotifications(false)} 
+      />
 
       {/* 新建角色对话框 */}
       <Dialog open={showNewRoleDialog} onOpenChange={setShowNewRoleDialog}>
@@ -1668,5 +1718,74 @@ function QuickFeedbackForm({ onSubmit, onCancel }: { onSubmit: (data: { type: st
         </Button>
       </div>
     </form>
+  )
+}
+
+// 通知对话框组件
+function NotificationDialog({ 
+  isOpen, 
+  onClose 
+}: { 
+  isOpen: boolean
+  onClose: () => void 
+}) {
+  const notifications = [
+    {
+      id: 1,
+      title: "新文档已上传",
+      message: "锅炉安全标准 2024.pdf 已成功上传到系统",
+      time: "2分钟前",
+      type: "success"
+    },
+    {
+      id: 2,
+      title: "审核任务提醒",
+      message: "您有3个文档等待审核，请及时处理",
+      time: "1小时前",
+      type: "warning"
+    },
+    {
+      id: 3,
+      title: "系统维护通知",
+      message: "系统将于今晚22:00-24:00进行维护，请提前保存工作",
+      time: "3小时前",
+      type: "info"
+    }
+  ]
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>通知中心</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 max-h-96 overflow-y-auto">
+          {notifications.map((notification) => (
+            <div key={notification.id} className="border rounded-lg p-3 hover:bg-muted/50">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <h4 className="font-medium text-sm">{notification.title}</h4>
+                  <p className="text-sm text-muted-foreground mt-1">{notification.message}</p>
+                  <p className="text-xs text-muted-foreground mt-2">{notification.time}</p>
+                </div>
+                <Badge 
+                  variant={notification.type === "success" ? "default" : 
+                          notification.type === "warning" ? "destructive" : "secondary"}
+                  className="ml-2"
+                >
+                  {notification.type === "success" ? "成功" : 
+                   notification.type === "warning" ? "警告" : "信息"}
+                </Badge>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="flex justify-end">
+          <Button variant="outline" onClick={onClose}>
+            关闭
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }
