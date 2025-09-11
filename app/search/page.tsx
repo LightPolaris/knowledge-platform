@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Sidebar } from "@/components/sidebar"
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
@@ -156,6 +157,7 @@ const getResultIcon = (type: string) => {
 }
 
 export default function SearchPage() {
+  const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
   const [searchResults, setSearchResults] = useState(mockSearchResults)
   const [isLoading, setIsLoading] = useState(false)
@@ -166,6 +168,21 @@ export default function SearchPage() {
   })
   const [searchScope, setSearchScope] = useState("all") // all, title, content
   const [hasSearched, setHasSearched] = useState(false)
+
+  // 处理搜索结果点击 - 直接查看内容
+  const handleResultClick = (result: any) => {
+    // 根据结果类型跳转到不同的查看页面
+    if (result.type === 'document') {
+      router.push(`/documents/${result.id}`)
+    } else if (result.type === 'standard') {
+      router.push(`/standards/${result.id}`)
+    } else if (result.type === 'manual') {
+      router.push(`/manuals/${result.id}`)
+    } else {
+      // 默认跳转到文档页面
+      router.push(`/documents/${result.id}`)
+    }
+  }
 
   const handleSearch = (query?: string) => {
     const searchTerm = query || searchQuery
@@ -322,7 +339,11 @@ export default function SearchPage() {
                     </div>
 
                     {filteredResults.map((result) => (
-                      <Card key={result.id} className="hover:shadow-md transition-shadow cursor-pointer">
+                      <Card 
+                        key={result.id} 
+                        className="hover:shadow-md transition-shadow cursor-pointer"
+                        onClick={() => handleResultClick(result)}
+                      >
                         <CardHeader className="pb-2">
                           <div className="flex items-start justify-between">
                             <div className="flex items-center space-x-2">
@@ -416,7 +437,11 @@ export default function SearchPage() {
                     </h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {mockSearchResults.slice(0, 6).map((result) => (
-                        <Card key={result.id} className="hover:shadow-md transition-shadow cursor-pointer">
+                        <Card 
+                          key={result.id} 
+                          className="hover:shadow-md transition-shadow cursor-pointer"
+                          onClick={() => handleResultClick(result)}
+                        >
                           <CardHeader className="pb-2">
                             <div className="flex items-start justify-between">
                               <div className="flex items-center space-x-2">
@@ -494,6 +519,7 @@ export default function SearchPage() {
           </div>
         </main>
       </div>
+
     </div>
   )
 }

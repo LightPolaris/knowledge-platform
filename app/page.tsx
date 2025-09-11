@@ -61,6 +61,14 @@ export default function QAPage() {
     timestamp: string;
     feedback: string | null;
   }>>([])
+  
+  // 对话恢复相关状态
+  const [restoredConversation, setRestoredConversation] = useState<any>(null)
+  const [isRestoring, setIsRestoring] = useState(false)
+  
+  // 对话历史分页状态
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage] = useState(3) // 每页显示3条对话
 
   // 模拟对话历史数据
   const mockChatHistory = [
@@ -71,7 +79,13 @@ export default function QAPage() {
       lastActive: "2小时前",
       messageCount: 8,
       role: "故障诊断助手",
-      model: "DeepSeek-V3"
+      model: "DeepSeek-V3",
+      messages: [
+        { id: 1, type: "user", content: "锅炉温度监控系统显示异常，温度读数不准确", timestamp: "14:30", feedback: null },
+        { id: 2, type: "assistant", content: "根据您提供的故障现象，我建议检查温度传感器的连接线路。首先检查传感器与PLC之间的接线是否牢固，然后使用万用表测量信号电压是否正常。", timestamp: "14:31", feedback: "helpful" },
+        { id: 3, type: "user", content: "已经检查了接线，电压正常，但温度显示还是不对", timestamp: "14:35", feedback: null },
+        { id: 4, type: "assistant", content: "如果接线和电压都正常，可能是传感器本身的问题。建议您：1. 检查传感器是否被污染或损坏 2. 尝试更换传感器进行测试 3. 检查PLC程序中的温度校准参数", timestamp: "14:36", feedback: "helpful" }
+      ]
     },
     {
       id: 2,
@@ -80,7 +94,11 @@ export default function QAPage() {
       lastActive: "5小时前",
       messageCount: 12,
       role: "标准查询助手",
-      model: "GPT-4"
+      model: "GPT-4",
+      messages: [
+        { id: 1, type: "user", content: "请问压力容器的设计压力如何确定？", timestamp: "10:15", feedback: null },
+        { id: 2, type: "assistant", content: "根据GB/T 150-2011标准，压力容器的设计压力应满足以下要求：1. 设计压力应不小于最高工作压力 2. 对于装有安全阀的容器，设计压力应不小于安全阀的开启压力 3. 对于装有爆破片的容器，设计压力应不小于爆破片的设计爆破压力", timestamp: "10:16", feedback: "helpful" }
+      ]
     },
     {
       id: 3,
@@ -89,7 +107,11 @@ export default function QAPage() {
       lastActive: "1天前",
       messageCount: 15,
       role: "维护专家",
-      model: "Claude-3"
+      model: "Claude-3",
+      messages: [
+        { id: 1, type: "user", content: "需要为锅炉设备制定维护计划", timestamp: "09:00", feedback: null },
+        { id: 2, type: "assistant", content: "基于设备运行数据，建议制定以下维护计划：1. 月度检查：检查水位计、压力表、安全阀等关键部件 2. 季度维护：清洗换热器、检查燃烧器 3. 年度大修：全面检查锅炉本体、更换易损件", timestamp: "09:01", feedback: "helpful" }
+      ]
     },
     {
       id: 4,
@@ -98,7 +120,11 @@ export default function QAPage() {
       lastActive: "2天前",
       messageCount: 6,
       role: "培训助手",
-      model: "DeepSeek-V3"
+      model: "DeepSeek-V3",
+      messages: [
+        { id: 1, type: "user", content: "需要整理新员工培训资料", timestamp: "16:20", feedback: null },
+        { id: 2, type: "assistant", content: "培训资料已整理完成，包括安全操作规程、设备操作手册、应急处理流程等。所有资料已按部门分类，并制作了培训计划表。", timestamp: "16:21", feedback: "helpful" }
+      ]
     },
     {
       id: 5,
@@ -107,7 +133,11 @@ export default function QAPage() {
       lastActive: "3天前",
       messageCount: 4,
       role: "翻译助手",
-      model: "GPT-4"
+      model: "GPT-4",
+      messages: [
+        { id: 1, type: "user", content: "需要翻译英文技术文档", timestamp: "11:30", feedback: null },
+        { id: 2, type: "assistant", content: "英文技术文档已翻译完成，专业术语已标注，请查收。翻译过程中特别注意了锅炉行业的专业术语准确性。", timestamp: "11:31", feedback: "helpful" }
+      ]
     }
   ]
 
@@ -619,6 +649,30 @@ export default function QAPage() {
     setShowQuickFeedbackDialog(false)
   }
 
+  // 恢复对话历史
+  const handleRestoreConversation = (conversation: any) => {
+    setIsRestoring(true)
+    setRestoredConversation(conversation)
+    
+    // 模拟恢复过程
+    setTimeout(() => {
+      setMessages(conversation.messages)
+      setActiveTab("intelligent-dialogue")
+      setIsRestoring(false)
+    }, 1000)
+  }
+
+  // 分页计算
+  const totalPages = Math.ceil(mockChatHistory.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const currentConversations = mockChatHistory.slice(startIndex, endIndex)
+
+  // 分页处理函数
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
+
   return (
       <div className="flex h-screen bg-background">
         <Sidebar />
@@ -636,6 +690,18 @@ export default function QAPage() {
           <div className="h-full flex flex-col">
             {activeTab === "intelligent-dialogue" && (
               <>
+                {/* 恢复对话提示 */}
+                {isRestoring && (
+                  <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mx-6 mt-4">
+                    <div className="flex items-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-3"></div>
+                      <p className="text-sm text-blue-700">
+                        正在恢复对话: {restoredConversation?.title}
+                      </p>
+                    </div>
+                  </div>
+                )}
+                
                 {/* Chat Messages Area */}
                 <div className="flex-1 p-6 bg-gray-50 min-h-0 flex">
                   <div className="w-full h-full relative flex-1">
@@ -1133,8 +1199,12 @@ export default function QAPage() {
 
                   {/* 对话历史列表 */}
                   <div className="space-y-4">
-                    {mockChatHistory.map((conversation) => (
-                      <div key={conversation.id} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                    {currentConversations.map((conversation) => (
+                      <div 
+                        key={conversation.id} 
+                        className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+                        onClick={() => handleRestoreConversation(conversation)}
+                      >
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <div className="flex items-center justify-between mb-2">
@@ -1150,14 +1220,24 @@ export default function QAPage() {
                                 </Badge>
                               </div>
                               <div className="flex items-center space-x-1">
-                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-500 hover:text-gray-700">
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="h-8 w-8 p-0 text-gray-500 hover:text-gray-700"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    // 这里可以添加收藏对话的逻辑
+                                    console.log('收藏对话:', conversation.id)
+                                  }}
+                                >
                                   <Star className="w-4 h-4" />
                                 </Button>
                                 <Button 
                                   variant="ghost" 
                                   size="sm" 
                                   className="h-8 w-8 p-0 text-gray-500 hover:text-red-600"
-                                  onClick={() => {
+                                  onClick={(e) => {
+                                    e.stopPropagation()
                                     // 这里可以添加删除对话的逻辑
                                     console.log('删除对话:', conversation.id)
                                   }}
@@ -1196,19 +1276,37 @@ export default function QAPage() {
                   {/* 分页 */}
                   <div className="flex items-center justify-between mt-8">
                     <div className="text-sm text-gray-500">
-                      显示 1-{mockChatHistory.length} 条，共 {mockChatHistory.length} 条对话
+                      显示 {startIndex + 1}-{Math.min(endIndex, mockChatHistory.length)} 条，共 {mockChatHistory.length} 条对话
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Button variant="outline" size="sm" disabled>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        disabled={currentPage === 1}
+                        onClick={() => handlePageChange(currentPage - 1)}
+                      >
                         上一页
                       </Button>
-                      <Button variant="outline" size="sm" className="bg-primary text-primary-foreground">
-                        1
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        2
-                      </Button>
-                      <Button variant="outline" size="sm">
+                      
+                      {/* 页码按钮 */}
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                        <Button
+                          key={page}
+                          variant="outline"
+                          size="sm"
+                          className={currentPage === page ? "bg-primary text-primary-foreground" : ""}
+                          onClick={() => handlePageChange(page)}
+                        >
+                          {page}
+                        </Button>
+                      ))}
+                      
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        disabled={currentPage === totalPages}
+                        onClick={() => handlePageChange(currentPage + 1)}
+                      >
                         下一页
                       </Button>
                     </div>
