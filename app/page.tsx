@@ -240,8 +240,8 @@ export default function QAPage() {
       url: "https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf",
       docNumber: "GB/T 16507-2022"
     },
-    "东方电气集团锅炉维修标准 Q/DF-2024-001": {
-      title: "东方电气集团锅炉维修标准",
+    "东方锅炉锅炉维修标准 Q/DF-2024-001": {
+      title: "东方锅炉锅炉维修标准",
       url: "https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf",
       docNumber: "Q/DF-2024-001"
     },
@@ -544,7 +544,7 @@ export default function QAPage() {
         const aiResponse = {
           id: Date.now() + 1,
           type: "assistant",
-          content: `关于"${currentQuestion}"的问题，我为您找到以下答案：\n\n根据东方电气集团的技术规范，关于这个问题的详细说明如下：\n\n1. **技术标准要求**\n   - 符合GB/T 16507-2022水管锅炉技术条件\n   - 遵循ASME BPVC.1锅炉压力容器规范\n   - 满足东方电气集团内部标准Q/DF-2024-001\n\n2. **具体实施建议**\n   - 定期进行设备检查和维护\n   - 建立完善的安全监控体系\n   - 制定详细的应急预案\n\n**引用来源：**\n\n- GB/T 16507-2022 水管锅炉技术条件\n- 东方电气集团锅炉维修标准 Q/DF-2024-001\n- ASME BPVC.1 锅炉压力容器规范\n\n建议您参考相关标准文件获取更详细的信息。如有其他问题，请随时询问。`,
+          content: `关于"${currentQuestion}"的问题，我为您找到以下答案：\n\n根据东方锅炉的技术规范，关于这个问题的详细说明如下：\n\n1. **技术标准要求**\n   - 符合GB/T 16507-2022水管锅炉技术条件\n   - 遵循ASME BPVC.1锅炉压力容器规范\n   - 满足东方锅炉内部标准Q/DF-2024-001\n\n2. **具体实施建议**\n   - 定期进行设备检查和维护\n   - 建立完善的安全监控体系\n   - 制定详细的应急预案\n\n**引用来源：**\n\n- GB/T 16507-2022 水管锅炉技术条件\n- 东方锅炉锅炉维修标准 Q/DF-2024-001\n- ASME BPVC.1 锅炉压力容器规范\n\n建议您参考相关标准文件获取更详细的信息。如有其他问题，请随时询问。`,
           timestamp: new Date().toLocaleTimeString(),
           feedback: null,
         }
@@ -649,7 +649,7 @@ export default function QAPage() {
                             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-2">
                               <Bot className="w-8 h-8 text-primary" />
                             </div>
-                            <h2 className="text-xl font-semibold text-gray-900 mb-1">您好！我是东方电气集团的智能助手</h2>
+                            <h2 className="text-xl font-semibold text-gray-900 mb-1">您好！我是东方锅炉的智能助手</h2>
                             <p className="text-gray-600 mb-3">我可以帮您解答关于锅炉技术、安全规范、维护流程等方面的问题</p>
                           </div>
                           
@@ -1098,7 +1098,7 @@ export default function QAPage() {
                             className="h-8 px-3 text-muted-foreground hover:bg-accent hover:text-foreground text-sm"
                           >
                             <Plus className="w-4 h-4 mr-1" />
-                            新开对话
+                            新对话
                           </Button>
 
                         </div>

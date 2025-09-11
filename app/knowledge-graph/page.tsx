@@ -96,6 +96,9 @@ export default function KnowledgeGraphPage() {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
   const [dragStartTime, setDragStartTime] = useState(0)
+  const [isCanvasDragging, setIsCanvasDragging] = useState(false)
+  const [canvasDragStart, setCanvasDragStart] = useState({ x: 0, y: 0 })
+  const [canvasOffset, setCanvasOffset] = useState({ x: 0, y: 0 })
   const graphRef = useRef<HTMLDivElement>(null)
 
   const filteredNodes = mockNodes.filter((node) => {
@@ -203,6 +206,28 @@ export default function KnowledgeGraphPage() {
     setDraggedNode(null)
     setDragOffset({ x: 0, y: 0 })
     setIsDragging(false)
+    setIsCanvasDragging(false)
+  }
+
+  // Canvas drag handlers
+  const handleCanvasMouseDown = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      e.preventDefault()
+      setIsCanvasDragging(true)
+      setCanvasDragStart({ x: e.clientX, y: e.clientY })
+    }
+  }
+
+  const handleCanvasMouseMove = (e: React.MouseEvent) => {
+    if (isCanvasDragging) {
+      const deltaX = e.clientX - canvasDragStart.x
+      const deltaY = e.clientY - canvasDragStart.y
+      setCanvasOffset(prev => ({
+        x: prev.x + deltaX,
+        y: prev.y + deltaY
+      }))
+      setCanvasDragStart({ x: e.clientX, y: e.clientY })
+    }
   }
 
   // Add global mouse events
@@ -251,6 +276,7 @@ export default function KnowledgeGraphPage() {
     setZoomLevel([100])
     setSelectedNode(null)
     setNodePositions({}) // Reset all node positions
+    setCanvasOffset({ x: 0, y: 0 }) // Reset canvas position
   }
 
   // Recalculate positions when layout changes
@@ -339,8 +365,14 @@ export default function KnowledgeGraphPage() {
               {/* Graph Canvas */}
               <div className="flex-1 relative bg-muted/20" ref={graphRef}>
                 <div
-                  className="absolute inset-0 overflow-hidden"
-                  style={{ transform: `scale(${zoomLevel[0] / 100})`, transformOrigin: "center center" }}
+                  className="absolute inset-0 overflow-hidden cursor-grab active:cursor-grabbing"
+                  style={{ 
+                    transform: `scale(${zoomLevel[0] / 100}) translate(${canvasOffset.x}px, ${canvasOffset.y}px)`, 
+                    transformOrigin: "center center" 
+                  }}
+                  onMouseDown={handleCanvasMouseDown}
+                  onMouseMove={handleCanvasMouseMove}
+                  onMouseUp={handleMouseUp}
                 >
                   {/* Mock Graph Visualization */}
                   <svg className="w-full h-full absolute inset-0 z-0">

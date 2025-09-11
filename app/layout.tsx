@@ -22,7 +22,7 @@ const sourceSans = Source_Sans_3({
 })
 
 export const metadata: Metadata = {
-  title: "知识平台 - 东方电气集团",
+  title: "知识平台 - 东方锅炉",
   description: "锅炉事业部智能知识管理平台",
   generator: "v0.app",
   manifest: "/manifest.json",

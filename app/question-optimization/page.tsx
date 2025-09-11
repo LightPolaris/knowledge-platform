@@ -38,7 +38,9 @@ import {
   Zap,
   Brain,
   Settings,
-  RefreshCw
+  RefreshCw,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react"
 
 export default function QuestionOptimizationPage() {
@@ -64,6 +66,8 @@ export default function QuestionOptimizationPage() {
   const [isScoring, setIsScoring] = useState(false)
   const [selectedFeedbackIds, setSelectedFeedbackIds] = useState([])
   const [selectedQuestionIds, setSelectedQuestionIds] = useState([])
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage] = useState(8)
 
   // 模拟数据 - 用户反馈（使用useState使其可编辑）
   const [feedbackData, setFeedbackData] = useState([
@@ -102,8 +106,142 @@ export default function QuestionOptimizationPage() {
       date: "2024-01-13",
       category: "错误纠正",
       processingSuggestion: "正在核实正确的维护周期标准"
+    },
+    {
+      id: 4,
+      question: "锅炉燃烧器故障如何排查？",
+      answer: "燃烧器故障排查需要检查点火系统...",
+      user: "陈技师",
+      feedback: "缺少具体的故障代码对应表",
+      rating: 2,
+      status: "待处理",
+      date: "2024-01-12",
+      category: "故障诊断",
+      processingSuggestion: ""
+    },
+    {
+      id: 5,
+      question: "锅炉水位计如何校准？",
+      answer: "水位计校准需要按照标准程序进行...",
+      user: "刘工程师",
+      feedback: "答案很好，建议增加视频演示",
+      rating: 4,
+      status: "已处理",
+      date: "2024-01-11",
+      category: "设备维护",
+      processingSuggestion: "已添加校准视频教程链接"
+    },
+    {
+      id: 6,
+      question: "锅炉烟道积灰如何处理？",
+      answer: "烟道积灰可以通过吹灰器清理...",
+      user: "赵技术员",
+      feedback: "没有提到安全防护措施",
+      rating: 2,
+      status: "待处理",
+      date: "2024-01-10",
+      category: "安全操作",
+      processingSuggestion: ""
+    },
+    {
+      id: 7,
+      question: "锅炉给水泵选型标准是什么？",
+      answer: "给水泵选型需要考虑流量和扬程...",
+      user: "孙主管",
+      feedback: "答案准确，建议增加选型计算示例",
+      rating: 3,
+      status: "已处理",
+      date: "2024-01-09",
+      category: "设备选型",
+      processingSuggestion: "已添加选型计算示例和公式"
+    },
+    {
+      id: 8,
+      question: "锅炉停炉保养的步骤有哪些？",
+      answer: "停炉保养包括排水、清洗、防腐等步骤...",
+      user: "周工程师",
+      feedback: "缺少保养周期和注意事项",
+      rating: 2,
+      status: "处理中",
+      date: "2024-01-08",
+      category: "维护保养",
+      processingSuggestion: "正在补充保养周期和注意事项"
+    },
+    {
+      id: 9,
+      question: "锅炉水质硬度超标如何处理？",
+      answer: "水质硬度超标需要调整水处理工艺...",
+      user: "吴技术员",
+      feedback: "答案正确，建议增加应急处理方案",
+      rating: 3,
+      status: "已处理",
+      date: "2024-01-07",
+      category: "水质管理",
+      processingSuggestion: "已添加应急处理方案和预防措施"
+    },
+    {
+      id: 10,
+      question: "锅炉压力表精度要求是多少？",
+      answer: "压力表精度等级应不低于1.6级...",
+      user: "郑技师",
+      feedback: "没有说明校验周期和标准",
+      rating: 2,
+      status: "待处理",
+      date: "2024-01-06",
+      category: "计量检测",
+      processingSuggestion: ""
+    },
+    {
+      id: 11,
+      question: "锅炉节能改造有哪些方案？",
+      answer: "节能改造包括余热回收、燃烧优化等...",
+      user: "马工程师",
+      feedback: "建议增加投资回报分析",
+      rating: 3,
+      status: "已处理",
+      date: "2024-01-05",
+      category: "节能技术",
+      processingSuggestion: "已添加投资回报分析计算工具"
+    },
+    {
+      id: 12,
+      question: "锅炉爆炸事故如何预防？",
+      answer: "预防爆炸需要严格控制压力和温度...",
+      user: "钱安全员",
+      feedback: "答案不够全面，缺少应急预案",
+      rating: 2,
+      status: "处理中",
+      date: "2024-01-04",
+      category: "安全管理",
+      processingSuggestion: "正在补充应急预案和预防措施"
+    },
+    {
+      id: 13,
+      question: "锅炉排污系统如何设计？",
+      answer: "排污系统设计需要考虑排污量和频率...",
+      user: "何设计师",
+      feedback: "缺少具体的设计参数和计算",
+      rating: 2,
+      status: "待处理",
+      date: "2024-01-03",
+      category: "系统设计",
+      processingSuggestion: ""
     }
   ])
+
+  // 分页计算
+  const filteredFeedback = feedbackData.filter((item) => {
+    const matchesSearch = item.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         item.user.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesStatus = statusFilter === "all" || item.status === statusFilter
+    const matchesCategory = categoryFilter === "all" || item.category === categoryFilter
+    return matchesSearch && matchesStatus && matchesCategory
+  })
+
+  const totalPages = Math.ceil(filteredFeedback.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const currentFeedback = filteredFeedback.slice(startIndex, endIndex)
 
   // 模拟数据 - 精选问题（使用useState使其可编辑）
   const [featuredQuestions, setFeaturedQuestions] = useState([
@@ -136,6 +274,76 @@ export default function QuestionOptimizationPage() {
       author: "工程师",
       date: "2024-01-05",
       tags: ["锅炉", "水处理", "标准"]
+    },
+    {
+      id: 4,
+      question: "锅炉燃烧器调试方法有哪些？",
+      likes: 35,
+      views: 88,
+      category: "设备调试",
+      author: "技术专家",
+      date: "2024-01-12",
+      tags: ["锅炉", "燃烧器", "调试"]
+    },
+    {
+      id: 5,
+      question: "锅炉压力容器检验周期是多久？",
+      likes: 28,
+      views: 75,
+      category: "安全检验",
+      author: "检验员",
+      date: "2024-01-11",
+      tags: ["锅炉", "压力容器", "检验"]
+    },
+    {
+      id: 6,
+      question: "锅炉烟气脱硫技术有哪些？",
+      likes: 41,
+      views: 95,
+      category: "环保技术",
+      author: "环保工程师",
+      date: "2024-01-10",
+      tags: ["锅炉", "烟气", "脱硫"]
+    },
+    {
+      id: 7,
+      question: "锅炉给水除氧器工作原理？",
+      likes: 33,
+      views: 82,
+      category: "设备原理",
+      author: "设备工程师",
+      date: "2024-01-09",
+      tags: ["锅炉", "除氧器", "原理"]
+    },
+    {
+      id: 8,
+      question: "锅炉过热器结垢如何处理？",
+      likes: 39,
+      views: 98,
+      category: "故障处理",
+      author: "维修技师",
+      date: "2024-01-08",
+      tags: ["锅炉", "过热器", "结垢"]
+    },
+    {
+      id: 9,
+      question: "锅炉汽包水位控制策略？",
+      likes: 36,
+      views: 89,
+      category: "自动控制",
+      author: "控制工程师",
+      date: "2024-01-07",
+      tags: ["锅炉", "汽包", "水位控制"]
+    },
+    {
+      id: 10,
+      question: "锅炉炉膛结焦原因及预防？",
+      likes: 44,
+      views: 105,
+      category: "故障预防",
+      author: "运行工程师",
+      date: "2024-01-06",
+      tags: ["锅炉", "炉膛", "结焦"]
     }
   ])
 
@@ -246,17 +454,6 @@ export default function QuestionOptimizationPage() {
   }
 
 
-  // 过滤反馈数据
-  const filteredFeedbackData = feedbackData.filter(feedback => {
-    const matchesSearch = searchQuery === "" || 
-      feedback.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      feedback.feedback.toLowerCase().includes(searchQuery.toLowerCase())
-    
-    const matchesStatus = statusFilter === "all" || feedback.status === statusFilter
-    const matchesCategory = categoryFilter === "all" || feedback.category === categoryFilter
-    
-    return matchesSearch && matchesStatus && matchesCategory
-  })
 
   // 过滤精选问题数据
   const filteredFeaturedQuestions = featuredQuestions.filter(question => {
@@ -294,7 +491,7 @@ export default function QuestionOptimizationPage() {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-2xl font-bold text-red-600">
-                            {filteredFeedbackData.filter(f => f.status === "待处理").length}
+                            {filteredFeedback.filter(f => f.status === "待处理").length}
                           </p>
                           <p className="text-sm text-muted-foreground">待处理</p>
                         </div>
@@ -307,7 +504,7 @@ export default function QuestionOptimizationPage() {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-2xl font-bold text-yellow-600">
-                            {filteredFeedbackData.filter(f => f.status === "处理中").length}
+                            {filteredFeedback.filter(f => f.status === "处理中").length}
                           </p>
                           <p className="text-sm text-muted-foreground">处理中</p>
                         </div>
@@ -320,7 +517,7 @@ export default function QuestionOptimizationPage() {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-2xl font-bold text-green-600">
-                            {filteredFeedbackData.filter(f => f.status === "已处理").length}
+                            {filteredFeedback.filter(f => f.status === "已处理").length}
                           </p>
                           <p className="text-sm text-muted-foreground">已处理</p>
                         </div>
@@ -333,7 +530,7 @@ export default function QuestionOptimizationPage() {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-2xl font-bold text-blue-600">
-                            {filteredFeedbackData.length}
+                            {filteredFeedback.length}
                           </p>
                           <p className="text-sm text-muted-foreground">总计</p>
                         </div>
@@ -354,12 +551,18 @@ export default function QuestionOptimizationPage() {
                             <Input
                               placeholder="搜索问题或反馈内容..."
                               value={searchQuery}
-                              onChange={(e) => setSearchQuery(e.target.value)}
+                              onChange={(e) => {
+                                setSearchQuery(e.target.value)
+                                setCurrentPage(1)
+                              }}
                               className="pl-10"
                             />
                           </div>
                         </div>
-                        <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <Select value={statusFilter} onValueChange={(value) => {
+                          setStatusFilter(value)
+                          setCurrentPage(1)
+                        }}>
                           <SelectTrigger className="w-40">
                             <SelectValue placeholder="状态筛选" />
                           </SelectTrigger>
@@ -370,7 +573,10 @@ export default function QuestionOptimizationPage() {
                             <SelectItem value="已处理">已处理</SelectItem>
                           </SelectContent>
                         </Select>
-                        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                        <Select value={categoryFilter} onValueChange={(value) => {
+                          setCategoryFilter(value)
+                          setCurrentPage(1)
+                        }}>
                           <SelectTrigger className="w-40">
                             <SelectValue placeholder="分类筛选" />
                           </SelectTrigger>
@@ -435,7 +641,7 @@ export default function QuestionOptimizationPage() {
                   </div>
                   
                   <div className="space-y-4">
-                    {filteredFeedbackData.map((feedback) => (
+                    {currentFeedback.map((feedback) => (
                       <Card key={feedback.id} className="hover:shadow-md transition-shadow">
                         <CardContent className="p-6">
                           <div className="flex items-start justify-between">
@@ -495,6 +701,48 @@ export default function QuestionOptimizationPage() {
                       </Card>
                     ))}
                   </div>
+                  
+                  {/* 分页组件 */}
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-between pt-4 border-t">
+                      <div className="text-sm text-muted-foreground">
+                        显示第 {startIndex + 1} - {Math.min(endIndex, filteredFeedback.length)} 条，共 {filteredFeedback.length} 条结果
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                          disabled={currentPage === 1}
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                          上一页
+                        </Button>
+                        <div className="flex items-center space-x-1">
+                          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                            <Button
+                              key={page}
+                              variant={currentPage === page ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => setCurrentPage(page)}
+                              className="w-8 h-8 p-0"
+                            >
+                              {page}
+                            </Button>
+                          ))}
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                          disabled={currentPage === totalPages}
+                        >
+                          下一页
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </TabsContent>
 

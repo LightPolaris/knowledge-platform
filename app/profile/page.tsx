@@ -48,7 +48,8 @@ import {
   Copy,
   ChevronRight,
   ChevronDown,
-  FolderOpen
+  FolderOpen,
+  Loader2
 } from "lucide-react"
 
 export default function PersonalWorkspacePage() {
@@ -57,7 +58,12 @@ export default function PersonalWorkspacePage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [showUploadDialog, setShowUploadDialog] = useState(false)
   const [showShareDialog, setShowShareDialog] = useState(false)
+  const [showPdfParserDialog, setShowPdfParserDialog] = useState(false)
   const [selectedDocument, setSelectedDocument] = useState(null)
+  const [pdfFile, setPdfFile] = useState(null)
+  const [parsingProgress, setParsingProgress] = useState(0)
+  const [isParsing, setIsParsing] = useState(false)
+  const [parsedContent, setParsedContent] = useState("")
 
   const [profile, setProfile] = useState({
     name: "张三",
@@ -264,6 +270,114 @@ export default function PersonalWorkspacePage() {
     console.log(`${action} file:`, fileId)
   }
 
+  const handlePdfParser = () => {
+    setShowPdfParserDialog(true)
+  }
+
+  const handleFileSelect = (event) => {
+    const file = event.target.files[0]
+    if (file && file.type === 'application/pdf') {
+      setPdfFile(file)
+    } else {
+      alert('请选择PDF文件')
+    }
+  }
+
+  const handleParsePdf = async () => {
+    if (!pdfFile) return
+    
+    setIsParsing(true)
+    setParsingProgress(0)
+    
+    // 模拟解析过程
+    const progressInterval = setInterval(() => {
+      setParsingProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(progressInterval)
+          setIsParsing(false)
+          // 模拟解析结果
+          setParsedContent(`
+# ${pdfFile.name.replace('.pdf', '')}
+
+## 第一章 概述
+
+本文档介绍了锅炉设备的基本原理和操作规范。锅炉作为重要的工业设备，在电力生产和工业供热中发挥着关键作用。
+
+## 第二章 技术参数
+
+### 2.1 基本参数
+- 额定蒸发量：50 t/h
+- 工作压力：1.6 MPa
+- 蒸汽温度：204°C
+- 热效率：≥85%
+
+### 2.2 安全要求
+1. 严格按照操作规程执行
+2. 定期检查设备状态
+3. 及时处理异常情况
+4. 保持工作环境清洁
+
+## 第三章 操作流程
+
+### 3.1 启动前检查
+1. 检查水位是否正常
+2. 确认燃料供应充足
+3. 检查安全阀状态
+4. 验证控制系统功能
+
+### 3.2 启动步骤
+1. 开启给水系统
+2. 点燃燃烧器
+3. 监控温度压力
+4. 调整运行参数
+
+## 第四章 维护保养
+
+定期维护是确保锅炉安全高效运行的重要措施。建议按照以下周期进行维护：
+
+- 日常检查：每日
+- 周检：每周
+- 月检：每月
+- 年检：每年
+
+## 第五章 故障处理
+
+常见故障及处理方法：
+
+1. **水位异常**
+   - 原因：给水系统故障
+   - 处理：检查给水泵和阀门
+
+2. **压力过高**
+   - 原因：安全阀故障
+   - 处理：检查并更换安全阀
+
+3. **燃烧不良**
+   - 原因：燃料质量或配风问题
+   - 处理：调整燃料配比和风量
+
+## 结论
+
+通过严格的操作规程和定期维护，可以确保锅炉设备的安全、高效运行，为企业生产提供可靠的动力保障。
+          `)
+          return 100
+        }
+        return prev + 10
+      })
+    }, 200)
+  }
+
+  const handleDownloadDoc = () => {
+    // 创建可下载的DOC文件
+    const element = document.createElement('a')
+    const file = new Blob([parsedContent], { type: 'text/plain' })
+    element.href = URL.createObjectURL(file)
+    element.download = `${pdfFile.name.replace('.pdf', '')}.doc`
+    document.body.appendChild(element)
+    element.click()
+    document.body.removeChild(element)
+  }
+
   return (
     <div className="flex h-screen bg-background">
       <Sidebar />
@@ -322,6 +436,10 @@ export default function PersonalWorkspacePage() {
                         <Upload className="h-6 w-6 mb-2" />
                         上传文档
                       </Button>
+                      <Button variant="outline" className="h-20 flex-col" onClick={handlePdfParser}>
+                        <FileText className="h-6 w-6 mb-2" />
+                        PDF解析
+                      </Button>
                       <Button variant="outline" className="h-20 flex-col">
                         <Folder className="h-6 w-6 mb-2" />
                         新建文件夹
@@ -329,10 +447,6 @@ export default function PersonalWorkspacePage() {
                       <Button variant="outline" className="h-20 flex-col">
                         <Share className="h-6 w-6 mb-2" />
                         分享文档
-                      </Button>
-                      <Button variant="outline" className="h-20 flex-col">
-                        <Settings className="h-6 w-6 mb-2" />
-                        设置
                       </Button>
                     </div>
                   </CardContent>
@@ -752,6 +866,113 @@ export default function PersonalWorkspacePage() {
               <Button onClick={() => setShowShareDialog(false)}>
                 分享
               </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* PDF解析对话框 */}
+      <Dialog open={showPdfParserDialog} onOpenChange={setShowPdfParserDialog}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>PDF解析工具</DialogTitle>
+            <p className="text-sm text-muted-foreground">
+              将PDF文件解析为可编辑的DOC格式文档
+            </p>
+          </DialogHeader>
+          <div className="space-y-6">
+            {/* 文件上传区域 */}
+            <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center">
+              <FileText className="mx-auto h-12 w-12 text-muted-foreground" />
+              <h3 className="mt-4 text-lg font-medium">选择PDF文件</h3>
+              <p className="mt-2 text-muted-foreground">支持PDF格式，最大文件大小50MB</p>
+              <div className="mt-4">
+                <input
+                  type="file"
+                  accept=".pdf"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                  id="pdf-upload"
+                />
+                <label htmlFor="pdf-upload">
+                  <Button asChild>
+                    <span>
+                      <Upload className="mr-2 h-4 w-4" />
+                      选择PDF文件
+                    </span>
+                  </Button>
+                </label>
+              </div>
+              {pdfFile && (
+                <div className="mt-4 p-3 bg-muted/50 rounded-lg">
+                  <p className="text-sm font-medium">已选择文件：{pdfFile.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    文件大小：{(pdfFile.size / 1024 / 1024).toFixed(2)} MB
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* 解析进度 */}
+            {isParsing && (
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="text-sm font-medium">正在解析PDF文件...</span>
+                </div>
+                <div className="w-full bg-muted rounded-full h-2">
+                  <div 
+                    className="bg-primary h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${parsingProgress}%` }}
+                  ></div>
+                </div>
+                <p className="text-sm text-muted-foreground text-center">
+                  {parsingProgress}% 完成
+                </p>
+              </div>
+            )}
+
+            {/* 解析结果 */}
+            {parsedContent && !isParsing && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium">解析结果</h3>
+                  <Button onClick={handleDownloadDoc}>
+                    <Download className="mr-2 h-4 w-4" />
+                    下载DOC文件
+                  </Button>
+                </div>
+                <div className="border rounded-lg p-4 max-h-96 overflow-y-auto">
+                  <pre className="whitespace-pre-wrap text-sm font-mono">
+                    {parsedContent}
+                  </pre>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  <p>✅ 解析完成！文档已转换为可编辑的DOC格式</p>
+                  <p>📄 共解析 {parsedContent.split('\n').length} 行内容</p>
+                </div>
+              </div>
+            )}
+
+            {/* 操作按钮 */}
+            <div className="flex justify-end space-x-2">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setShowPdfParserDialog(false)
+                  setPdfFile(null)
+                  setParsedContent("")
+                  setParsingProgress(0)
+                  setIsParsing(false)
+                }}
+              >
+                取消
+              </Button>
+              {pdfFile && !isParsing && !parsedContent && (
+                <Button onClick={handleParsePdf}>
+                  开始解析
+                </Button>
+              )}
             </div>
           </div>
         </DialogContent>

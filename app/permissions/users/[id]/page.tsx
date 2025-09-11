@@ -21,6 +21,7 @@ import {
   CheckCircle,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
 } from "lucide-react"
 
 export default function UserManagementPage() {
@@ -30,12 +31,11 @@ export default function UserManagementPage() {
 
   const [selectedRole, setSelectedRole] = useState<any>(null)
   const [searchQuery, setSearchQuery] = useState("")
-  const [currentPage, setCurrentPage] = useState(1)
-  const [roleCurrentPage, setRoleCurrentPage] = useState(1)
-  const [usersPerPage] = useState(5)
   const [moveDialogOpen, setMoveDialogOpen] = useState(false)
   const [userToMove, setUserToMove] = useState<any>(null)
   const [targetRoleId, setTargetRoleId] = useState("")
+  const [expandedDepartments, setExpandedDepartments] = useState<Set<string>>(new Set())
+  const [expandedAvailableDepartments, setExpandedAvailableDepartments] = useState<Set<string>>(new Set())
   const [availableUsers, setAvailableUsers] = useState([
     { id: 1, name: "张三", email: "zhangsan@example.com", department: "技术部门" },
     { id: 2, name: "李四", email: "lisi@example.com", department: "质量部门" },
@@ -67,10 +67,6 @@ export default function UserManagementPage() {
     }
   }, [])
 
-  // 搜索时重置到第一页
-  useEffect(() => {
-    setCurrentPage(1)
-  }, [searchQuery])
 
   const handleAddUser = (user: any) => {
     if (selectedRole) {
@@ -123,24 +119,38 @@ export default function UserManagementPage() {
     }
   }
 
+  const toggleDepartment = (department: string) => {
+    setExpandedDepartments(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(department)) {
+        newSet.delete(department)
+      } else {
+        newSet.add(department)
+      }
+      return newSet
+    })
+  }
+
+  const toggleAvailableDepartment = (department: string) => {
+    setExpandedAvailableDepartments(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(department)) {
+        newSet.delete(department)
+      } else {
+        newSet.add(department)
+      }
+      return newSet
+    })
+  }
+
 
   const filteredAvailableUsers = availableUsers.filter(user =>
     user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.email.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
-  // 分页计算
-  const totalPages = Math.ceil(filteredAvailableUsers.length / usersPerPage)
-  const startIndex = (currentPage - 1) * usersPerPage
-  const endIndex = startIndex + usersPerPage
-  const currentUsers = filteredAvailableUsers.slice(startIndex, endIndex)
-
-  // 当前角色成员分页
-  const roleUsers = selectedRole?.users || []
-  const roleTotalPages = Math.ceil(roleUsers.length / usersPerPage)
-  const roleStartIndex = (roleCurrentPage - 1) * usersPerPage
-  const roleEndIndex = roleStartIndex + usersPerPage
-  const currentRoleUsers = roleUsers.slice(roleStartIndex, roleEndIndex)
+  const currentUsers = filteredAvailableUsers
+  const currentRoleUsers = selectedRole?.users || []
 
   if (!selectedRole) {
     return (
@@ -159,14 +169,14 @@ export default function UserManagementPage() {
   return (
     <div className="flex h-screen bg-background">
       <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col min-h-0">
         <Header 
           title={`管理用户 - ${selectedRole.name}`} 
           subtitle={`管理 ${selectedRole.name} 角色的用户成员`} 
         />
         
         <main className="flex-1 overflow-auto p-6">
-          <div className="space-y-6">
+          <div className="space-y-6 h-full flex flex-col">
             {/* 返回按钮 */}
             <div className="flex items-center space-x-4">
               <Button 
@@ -188,39 +198,72 @@ export default function UserManagementPage() {
                   当前成员 ({selectedRole.users?.length || 0})
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {currentRoleUsers.map((user: any, index: number) => (
-                    <div key={index} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                          <User className="h-4 w-4 text-blue-600" />
+              <CardContent className="flex flex-col h-full">
+                <div className="space-y-4 flex-1 overflow-y-auto min-h-0">
+                  {(() => {
+                    // 按部门分组当前成员
+                    const usersByDepartment = currentRoleUsers.reduce((acc: any, user) => {
+                      if (!acc[user.department]) {
+                        acc[user.department] = []
+                      }
+                      acc[user.department].push(user)
+                      return acc
+                    }, {})
+
+                    return Object.entries(usersByDepartment).map(([department, users]: [string, any]) => {
+                      const isExpanded = expandedDepartments.has(department)
+                      return (
+                        <div key={department} className="space-y-2">
+                          <div 
+                            className="flex items-center space-x-2 py-2 border-b cursor-pointer hover:bg-muted/30 rounded px-2"
+                            onClick={() => toggleDepartment(department)}
+                          >
+                            <ChevronDown 
+                              className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-0' : '-rotate-90'}`}
+                            />
+                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                            <h4 className="font-medium text-sm text-gray-700">{department}</h4>
+                            <span className="text-xs text-muted-foreground">({users.length}人)</span>
+                          </div>
+                          {isExpanded && (
+                            <div className="space-y-2 ml-6">
+                              {users.map((user: any, index: number) => (
+                                <div key={index} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50">
+                                  <div className="flex items-center space-x-3">
+                                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                      <User className="h-4 w-4 text-blue-600" />
+                                    </div>
+                                    <div>
+                                      <p className="font-medium">{user.name}</p>
+                                      <p className="text-sm text-muted-foreground">{user.email}</p>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => handleMoveUser(user)}
+                                    >
+                                      <Users className="mr-1 h-3 w-3" />
+                                      移动
+                                    </Button>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => handleRemoveUser(user.id)}
+                                    >
+                                      <X className="mr-1 h-3 w-3" />
+                                      移除
+                                    </Button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                        <div>
-                          <p className="font-medium">{user.name}</p>
-                          <p className="text-sm text-muted-foreground">{user.email} - {user.department}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => handleMoveUser(user)}
-                        >
-                          <Users className="mr-1 h-3 w-3" />
-                          移动
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => handleRemoveUser(user.id)}
-                        >
-                          <X className="mr-1 h-3 w-3" />
-                          移除
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+                      )
+                    })
+                  })()}
                   
                   {(!selectedRole.users || selectedRole.users.length === 0) && (
                     <div className="text-center py-8 text-muted-foreground">
@@ -228,55 +271,13 @@ export default function UserManagementPage() {
                     </div>
                   )}
                 </div>
-                
-                {/* 当前成员分页 */}
-                {roleTotalPages > 1 && (
-                  <div className="flex items-center justify-between pt-4 border-t">
-                    <div className="text-sm text-muted-foreground">
-                      显示第 {roleStartIndex + 1} - {Math.min(roleEndIndex, roleUsers.length)} 条，共 {roleUsers.length} 条成员
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setRoleCurrentPage(prev => Math.max(prev - 1, 1))}
-                        disabled={roleCurrentPage === 1}
-                      >
-                        <ChevronLeft className="h-4 w-4" />
-                        上一页
-                      </Button>
-                      <div className="flex items-center space-x-1">
-                        {Array.from({ length: roleTotalPages }, (_, i) => i + 1).map((page) => (
-                          <Button
-                            key={page}
-                            variant={roleCurrentPage === page ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => setRoleCurrentPage(page)}
-                            className="w-8 h-8 p-0"
-                          >
-                            {page}
-                          </Button>
-                        ))}
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setRoleCurrentPage(prev => Math.min(prev + 1, roleTotalPages))}
-                        disabled={roleCurrentPage === roleTotalPages}
-                      >
-                        下一页
-                        <ChevronRight className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                )}
               </CardContent>
             </Card>
 
             {/* 添加用户 */}
-            <Card>
-              <CardContent>
-                <div className="space-y-4">
+            <Card className="flex-1 flex flex-col">
+              <CardContent className="flex flex-col h-full">
+                <div className="space-y-4 flex-1 flex flex-col">
                   <div className="flex space-x-2">
                     <Input 
                       placeholder="搜索用户..." 
@@ -290,27 +291,60 @@ export default function UserManagementPage() {
                     </Button>
                   </div>
                   
-                  <div className="space-y-2 max-h-60 overflow-y-auto">
-                    {currentUsers.map((user) => (
-                      <div key={user.id} className="flex items-center justify-between p-2 border rounded hover:bg-muted/30">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center">
-                            <User className="h-3 w-3 text-gray-600" />
+                  <div className="space-y-4 flex-1 overflow-y-auto min-h-0">
+                    {(() => {
+                      // 按部门分组用户
+                      const usersByDepartment = currentUsers.reduce((acc: any, user) => {
+                        if (!acc[user.department]) {
+                          acc[user.department] = []
+                        }
+                        acc[user.department].push(user)
+                        return acc
+                      }, {})
+
+                      return Object.entries(usersByDepartment).map(([department, users]: [string, any]) => {
+                        const isExpanded = expandedAvailableDepartments.has(department)
+                        return (
+                          <div key={department} className="space-y-2">
+                            <div 
+                              className="flex items-center space-x-2 py-2 border-b cursor-pointer hover:bg-muted/30 rounded px-2"
+                              onClick={() => toggleAvailableDepartment(department)}
+                            >
+                              <ChevronDown 
+                                className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-0' : '-rotate-90'}`}
+                              />
+                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                              <h4 className="font-medium text-sm text-gray-700">{department}</h4>
+                              <span className="text-xs text-muted-foreground">({users.length}人)</span>
+                            </div>
+                            {isExpanded && (
+                              <div className="space-y-1 ml-6">
+                                {users.map((user: any) => (
+                                  <div key={user.id} className="flex items-center justify-between p-2 border rounded hover:bg-muted/30">
+                                    <div className="flex items-center space-x-3">
+                                      <div className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center">
+                                        <User className="h-3 w-3 text-gray-600" />
+                                      </div>
+                                      <div>
+                                        <p className="text-sm font-medium">{user.name}</p>
+                                        <p className="text-xs text-muted-foreground">{user.email}</p>
+                                      </div>
+                                    </div>
+                                    <Button 
+                                      size="sm"
+                                      onClick={() => handleAddUser(user)}
+                                    >
+                                      <Plus className="mr-1 h-3 w-3" />
+                                      添加
+                                    </Button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
-                          <div>
-                            <p className="text-sm font-medium">{user.name}</p>
-                            <p className="text-xs text-muted-foreground">{user.email} - {user.department}</p>
-                          </div>
-                        </div>
-                        <Button 
-                          size="sm"
-                          onClick={() => handleAddUser(user)}
-                        >
-                          <Plus className="mr-1 h-3 w-3" />
-                          添加
-                        </Button>
-                      </div>
-                    ))}
+                        )
+                      })
+                    })()}
                     
                     {currentUsers.length === 0 && (
                       <div className="text-center py-4 text-muted-foreground">
@@ -318,48 +352,6 @@ export default function UserManagementPage() {
                       </div>
                     )}
                   </div>
-                  
-                  {/* 可添加用户分页 */}
-                  {totalPages > 1 && (
-                    <div className="flex items-center justify-between pt-4 border-t">
-                      <div className="text-sm text-muted-foreground">
-                        显示第 {startIndex + 1} - {Math.min(endIndex, filteredAvailableUsers.length)} 条，共 {filteredAvailableUsers.length} 条结果
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                          disabled={currentPage === 1}
-                        >
-                          <ChevronLeft className="h-4 w-4" />
-                          上一页
-                        </Button>
-                        <div className="flex items-center space-x-1">
-                          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                            <Button
-                              key={page}
-                              variant={currentPage === page ? "default" : "outline"}
-                              size="sm"
-                              onClick={() => setCurrentPage(page)}
-                              className="w-8 h-8 p-0"
-                            >
-                              {page}
-                            </Button>
-                          ))}
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                          disabled={currentPage === totalPages}
-                        >
-                          下一页
-                          <ChevronRight className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  )}
                 </div>
               </CardContent>
             </Card>

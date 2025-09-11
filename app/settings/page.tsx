@@ -97,7 +97,7 @@ export default function SettingsPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [settings, setSettings] = useState({
     siteName: "知识平台",
-    siteDescription: "东方电气集团知识管理系统",
+    siteDescription: "东方锅炉知识管理系统",
     requireEmailVerification: true,
     enableTwoFactor: true,
     sessionTimeout: "8",
