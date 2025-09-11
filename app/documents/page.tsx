@@ -2044,6 +2044,9 @@ export default function DocumentsPage() {
   const [selectedGroup, setSelectedGroup] = useState("待分组")
   const [uploadProgress, setUploadProgress] = useState<{[key: string]: number}>({})
   const [uploadContextGroup, setUploadContextGroup] = useState<string | null>(null) // 上传上下文分组
+  const [uploadMode, setUploadMode] = useState<"file" | "link">("file") // 上传方式：文件上传或链接上传
+  const [uploadLinks, setUploadLinks] = useState<string[]>([]) // 链接上传的URL列表
+  const [currentLink, setCurrentLink] = useState("") // 当前输入的链接
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Group management states
@@ -2167,6 +2170,50 @@ export default function DocumentsPage() {
 
   const handleRemoveFile = (index: number) => {
     setUploadFiles(prev => prev.filter((_, i) => i !== index))
+  }
+
+  // Link upload functions
+  const handleAddLink = () => {
+    if (currentLink.trim() && !uploadLinks.includes(currentLink.trim())) {
+      setUploadLinks(prev => [...prev, currentLink.trim()])
+      setCurrentLink("")
+    }
+  }
+
+  const handleRemoveLink = (index: number) => {
+    setUploadLinks(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const handleLinkUpload = () => {
+    // Simulate link upload progress
+    uploadLinks.forEach((link, index) => {
+      const linkName = `链接文档_${index + 1}`
+      setUploadProgress(prev => ({ ...prev, [linkName]: 0 }))
+      
+      const interval = setInterval(() => {
+        setUploadProgress(prev => {
+          const current = prev[linkName] || 0
+          if (current >= 100) {
+            clearInterval(interval)
+            return prev
+          }
+          return { ...prev, [linkName]: current + 10 }
+        })
+      }, 200)
+    })
+
+    // 模拟将链接文档添加到正确的分组
+    if (uploadContextGroup) {
+      const targetGroup = uploadCascadeSelections[uploadCascadeSelections.length - 1] || "待分组"
+      // 这里可以添加实际的链接处理逻辑
+      console.log("上传链接到分组:", targetGroup, uploadLinks)
+    }
+
+    // 清空链接列表
+    setTimeout(() => {
+      setUploadLinks([])
+      setUploadProgress({})
+    }, 2000)
   }
 
   const handleUpload = () => {
@@ -3212,7 +3259,7 @@ export default function DocumentsPage() {
                 <CardHeader>
                   <CardTitle className="font-serif">上传文档</CardTitle>
                   <CardDescription>
-                    向知识平台上传新文档，支持批量上传和分组选择
+                    向知识平台上传新文档，支持文件上传、链接上传和分组选择
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -3228,8 +3275,28 @@ export default function DocumentsPage() {
                     )}
                   </div>
 
+                  {/* Upload Mode Toggle */}
+                  <div className="flex space-x-2">
+                    <Button
+                      variant={uploadMode === "file" ? "default" : "outline"}
+                      onClick={() => setUploadMode("file")}
+                      className="flex-1"
+                    >
+                      <Upload className="mr-2 h-4 w-4" />
+                      文件上传
+                    </Button>
+                    <Button
+                      variant={uploadMode === "link" ? "default" : "outline"}
+                      onClick={() => setUploadMode("link")}
+                      className="flex-1"
+                    >
+                      <Import className="mr-2 h-4 w-4" />
+                      链接上传
+                    </Button>
+                  </div>
+
                   {/* Selected Files */}
-                  {uploadFiles.length > 0 && (
+                  {uploadMode === "file" && uploadFiles.length > 0 && (
                     <div>
                       <Label className="text-sm font-medium mb-2 block">
                         已选择的文件 ({uploadFiles.length} 个)
@@ -3259,20 +3326,72 @@ export default function DocumentsPage() {
                     </div>
                   )}
 
+                  {/* Selected Links */}
+                  {uploadMode === "link" && uploadLinks.length > 0 && (
+                    <div>
+                      <Label className="text-sm font-medium mb-2 block">
+                        已添加的链接 ({uploadLinks.length} 个)
+                      </Label>
+                      <div className="max-h-60 overflow-y-auto space-y-2">
+                        {uploadLinks.map((link, index) => (
+                          <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                            <div className="flex items-center space-x-3">
+                              <File className="h-5 w-5 text-muted-foreground" />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium truncate">{link}</p>
+                                <p className="text-xs text-muted-foreground">链接文档</p>
+                              </div>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRemoveLink(index)}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Upload Area */}
-                  <div 
-                    className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-12 text-center hover:border-muted-foreground/50 transition-colors cursor-pointer"
-                    onClick={triggerFileInput}
-                  >
-                    <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
-                    <h3 className="mt-4 text-lg font-medium">批量上传文档</h3>
-                    <p className="mt-2 text-muted-foreground">拖拽文件到此处，或点击浏览</p>
-                    <p className="mt-1 text-sm text-muted-foreground">支持PDF、Word、Excel、PowerPoint和文本文件</p>
-                    <Button className="mt-4">
-                      <Plus className="mr-2 h-4 w-4" />
-                      选择文件
-                    </Button>
-                  </div>
+                  {uploadMode === "file" ? (
+                    <div 
+                      className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-12 text-center hover:border-muted-foreground/50 transition-colors cursor-pointer"
+                      onClick={triggerFileInput}
+                    >
+                      <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
+                      <h3 className="mt-4 text-lg font-medium">批量上传文档</h3>
+                      <p className="mt-2 text-muted-foreground">拖拽文件到此处，或点击浏览</p>
+                      <p className="mt-1 text-sm text-muted-foreground">支持PDF、Word、Excel、PowerPoint和文本文件</p>
+                      <Button className="mt-4">
+                        <Plus className="mr-2 h-4 w-4" />
+                        选择文件
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center">
+                        <Import className="mx-auto h-12 w-12 text-muted-foreground" />
+                        <h3 className="mt-4 text-lg font-medium">通过链接上传文档</h3>
+                        <p className="mt-2 text-muted-foreground">输入文档链接，系统将自动获取并处理文档内容</p>
+                      </div>
+                      
+                      <div className="flex space-x-2">
+                        <Input
+                          placeholder="请输入文档链接 (如: https://example.com/document.pdf)"
+                          value={currentLink}
+                          onChange={(e) => setCurrentLink(e.target.value)}
+                          onKeyPress={(e) => e.key === 'Enter' && handleAddLink()}
+                        />
+                        <Button onClick={handleAddLink} disabled={!currentLink.trim()}>
+                          <Plus className="mr-2 h-4 w-4" />
+                          添加链接
+                        </Button>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Hidden file input */}
                   <input
@@ -3285,17 +3404,35 @@ export default function DocumentsPage() {
                   />
 
                   {/* Upload Actions */}
-                  {uploadFiles.length > 0 && (
+                  {((uploadMode === "file" && uploadFiles.length > 0) || (uploadMode === "link" && uploadLinks.length > 0)) && (
                     <div className="flex justify-end space-x-2">
-                      <Button variant="outline" onClick={() => setUploadFiles([])}>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => {
+                          if (uploadMode === "file") {
+                            setUploadFiles([])
+                          } else {
+                            setUploadLinks([])
+                          }
+                        }}
+                      >
                         清空选择
                       </Button>
                       <Button 
-                        onClick={handleUpload}
-                        disabled={uploadFiles.length === 0}
+                        onClick={uploadMode === "file" ? handleUpload : handleLinkUpload}
+                        disabled={(uploadMode === "file" && uploadFiles.length === 0) || (uploadMode === "link" && uploadLinks.length === 0)}
                       >
-                        <Upload className="mr-2 h-4 w-4" />
-                        开始上传
+                        {uploadMode === "file" ? (
+                          <>
+                            <Upload className="mr-2 h-4 w-4" />
+                            开始上传
+                          </>
+                        ) : (
+                          <>
+                            <Import className="mr-2 h-4 w-4" />
+                            开始上传
+                          </>
+                        )}
                       </Button>
                     </div>
                   )}

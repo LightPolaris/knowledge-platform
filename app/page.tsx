@@ -146,8 +146,8 @@ export default function QAPage() {
 
   // 三级分类知识领域数据
   const knowledgeHierarchy = {
-    "通用": {
-      "通用文档": ["通用标准", "基础规范", "通用流程"]
+    "全部": {
+      "全部文档": ["全部标准", "基础规范", "全部流程"]
     },
     "技术导则": {
       "锅炉": ["锅炉设计", "锅炉制造", "锅炉安装", "锅炉调试"],
@@ -628,7 +628,7 @@ export default function QAPage() {
             activeTab={activeTab} 
             onTabChange={setActiveTab}
             onFeedbackClick={() => setShowQuickFeedbackDialog(true)}
-            onNotificationClick={() => setShowNotifications(true)}
+            onNotificationClick={() => router.push("/notifications")}
           />
 
         <main className="flex-1 overflow-hidden">
@@ -849,7 +849,7 @@ export default function QAPage() {
                       </div>
                       <div className="h-[calc(100vh-200px)]">
                         <iframe
-                          src={`${selectedPdfUrl}#toolbar=1&navpanes=1&scrollbar=1`}
+                          src={`${selectedPdfUrl}#toolbar=0&navpanes=1&scrollbar=1`}
                           className="w-full h-full border-0 rounded-b-lg"
                           title={selectedPdfTitle}
                         />
@@ -913,7 +913,7 @@ export default function QAPage() {
                               onClick={() => setDomainOpen(true)}
                               className="h-8 px-3 text-sm font-medium text-foreground hover:bg-accent rounded-md"
                             >
-                              {selectedLevel1Categories.length > 0 ? `已选择 ${selectedLevel1Categories.length} 个领域` : "通用"}
+                              {selectedLevel1Categories.length > 0 ? `已选择 ${selectedLevel1Categories.length} 个领域` : "全部"}
                               <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                           </div>
@@ -934,20 +934,22 @@ export default function QAPage() {
                             </Select>
                           </div>
 
-                          {/* Deep Thinking Toggle */}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setDeepThinkingEnabled(!deepThinkingEnabled)}
-                            className={`h-8 px-3 rounded-md text-sm transition-all duration-200 ${
-                              deepThinkingEnabled 
-                                ? 'bg-primary/10 text-primary border border-primary/20' 
-                                : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                            }`}
-                          >
-                            <Brain className="w-4 h-4 mr-1" />
-                            深度思考
-                          </Button>
+                          {/* Deep Thinking Toggle - Only show for models that support it */}
+                          {selectedModel === "r1" && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setDeepThinkingEnabled(!deepThinkingEnabled)}
+                              className={`h-8 px-3 rounded-md text-sm transition-all duration-200 ${
+                                deepThinkingEnabled 
+                                  ? 'bg-primary/10 text-primary border border-primary/20' 
+                                  : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                              }`}
+                            >
+                              <Brain className="w-4 h-4 mr-1" />
+                              深度思考
+                            </Button>
+                          )}
 
                           {/* Preset Role */}
                           <DropdownMenu>
@@ -1382,7 +1384,7 @@ export default function QAPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {currentPath.length === 0 ? (
                   // 显示一级分类
-                  Object.keys(knowledgeHierarchy).filter(level1 => level1 !== '通用').map((level1) => {
+                  Object.keys(knowledgeHierarchy).filter(level1 => level1 !== '全部').map((level1) => {
                     const isSelected = selectedLevel1Categories.includes(level1)
                     return (
                       <div 
@@ -1500,13 +1502,13 @@ export default function QAPage() {
             {/* 弹窗底部 */}
             <div className="p-4 border-t flex items-center justify-between">
               <div className="text-sm text-muted-foreground">
-                {selectedLevel1Categories.length > 0 ? `已选择 ${selectedLevel1Categories.length} 个领域` : "通用"}
+                {selectedLevel1Categories.length > 0 ? `已选择 ${selectedLevel1Categories.length} 个领域` : "全部"}
               </div>
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
                   onClick={() => {
-                    const allLevel1Categories = Object.keys(knowledgeHierarchy).filter(level1 => level1 !== '通用')
+                    const allLevel1Categories = Object.keys(knowledgeHierarchy).filter(level1 => level1 !== '全部')
                     setSelectedLevel1Categories(allLevel1Categories)
                     setIsGeneralSelected(false)
                   }}

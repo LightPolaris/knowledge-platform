@@ -26,6 +26,12 @@ import {
   AlertTriangle,
   Clock,
   User,
+  Monitor,
+  Cpu,
+  HardDrive,
+  Wifi,
+  Database,
+  Server,
 } from "lucide-react"
 
 
@@ -125,6 +131,7 @@ export default function SettingsPage() {
               <TabsTrigger value="system">系统设置</TabsTrigger>
               <TabsTrigger value="security">安全设置</TabsTrigger>
               <TabsTrigger value="integrations">集成服务</TabsTrigger>
+              <TabsTrigger value="monitoring">系统监控</TabsTrigger>
               <TabsTrigger value="audit">审计日志</TabsTrigger>
             </TabsList>
 
@@ -414,6 +421,229 @@ export default function SettingsPage() {
                     </CardContent>
                   </Card>
                 ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="monitoring" className="space-y-6">
+              {/* 系统状态概览 */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Monitor className="h-5 w-5" />
+                    系统状态概览
+                  </CardTitle>
+                  <CardDescription>实时监控系统运行状态和性能指标</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="flex items-center space-x-4">
+                      <div className="p-3 bg-green-100 rounded-lg">
+                        <Server className="h-6 w-6 text-green-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">系统状态</p>
+                        <p className="text-2xl font-bold text-green-600">正常</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-4">
+                      <div className="p-3 bg-blue-100 rounded-lg">
+                        <Cpu className="h-6 w-6 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">CPU 使用率</p>
+                        <p className="text-2xl font-bold">45%</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-4">
+                      <div className="p-3 bg-orange-100 rounded-lg">
+                        <HardDrive className="h-6 w-6 text-orange-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">内存使用率</p>
+                        <p className="text-2xl font-bold">68%</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-4">
+                      <div className="p-3 bg-purple-100 rounded-lg">
+                        <Database className="h-6 w-6 text-purple-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">磁盘使用率</p>
+                        <p className="text-2xl font-bold">32%</p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* 性能监控 */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Activity className="h-5 w-5" />
+                      CPU 使用率
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">当前使用率</span>
+                        <span className="text-lg font-semibold">45%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="bg-blue-600 h-2 rounded-full" style={{ width: '45%' }}></div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="text-muted-foreground">核心数:</span>
+                          <span className="ml-2 font-medium">8</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">频率:</span>
+                          <span className="ml-2 font-medium">2.4 GHz</span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <HardDrive className="h-5 w-5" />
+                      内存使用情况
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">已使用</span>
+                        <span className="text-lg font-semibold">5.4 GB / 8 GB</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="bg-orange-600 h-2 rounded-full" style={{ width: '68%' }}></div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="text-muted-foreground">可用:</span>
+                          <span className="ml-2 font-medium">2.6 GB</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">缓存:</span>
+                          <span className="ml-2 font-medium">1.2 GB</span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* 网络状态 */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Wifi className="h-5 w-5" />
+                    网络状态
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="text-center">
+                      <div className="p-3 bg-green-100 rounded-lg w-fit mx-auto mb-2">
+                        <Wifi className="h-6 w-6 text-green-600" />
+                      </div>
+                      <p className="text-sm text-muted-foreground">网络连接</p>
+                      <p className="text-lg font-semibold text-green-600">正常</p>
+                    </div>
+                    <div className="text-center">
+                      <div className="p-3 bg-blue-100 rounded-lg w-fit mx-auto mb-2">
+                        <Activity className="h-6 w-6 text-blue-600" />
+                      </div>
+                      <p className="text-sm text-muted-foreground">延迟</p>
+                      <p className="text-lg font-semibold">12ms</p>
+                    </div>
+                    <div className="text-center">
+                      <div className="p-3 bg-purple-100 rounded-lg w-fit mx-auto mb-2">
+                        <Database className="h-6 w-6 text-purple-600" />
+                      </div>
+                      <p className="text-sm text-muted-foreground">带宽</p>
+                      <p className="text-lg font-semibold">100 Mbps</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* 服务状态 */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>服务状态</CardTitle>
+                  <CardDescription>监控各个服务的运行状态</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                        <div>
+                          <p className="font-medium">Web 服务</p>
+                          <p className="text-sm text-muted-foreground">端口 3000</p>
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="text-green-600 border-green-600">
+                        运行中
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                        <div>
+                          <p className="font-medium">数据库服务</p>
+                          <p className="text-sm text-muted-foreground">PostgreSQL</p>
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="text-green-600 border-green-600">
+                        运行中
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                        <div>
+                          <p className="font-medium">缓存服务</p>
+                          <p className="text-sm text-muted-foreground">Redis</p>
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="text-yellow-600 border-yellow-600">
+                        警告
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                        <div>
+                          <p className="font-medium">文件存储</p>
+                          <p className="text-sm text-muted-foreground">本地存储</p>
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="text-green-600 border-green-600">
+                        运行中
+                      </Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* 操作按钮 */}
+              <div className="flex justify-end space-x-4">
+                <Button variant="outline" onClick={() => window.location.reload()}>
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  刷新数据
+                </Button>
+                <Button>
+                  <Download className="h-4 w-4 mr-2" />
+                  导出报告
+                </Button>
               </div>
             </TabsContent>
 
