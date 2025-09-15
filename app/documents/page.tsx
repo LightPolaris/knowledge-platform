@@ -1122,9 +1122,19 @@ const DraggableFolder = ({ folder, isSelected, isRenaming, onRename, onConfirmRe
       onDoubleClick={onDoubleClick}
       onContextMenu={onContextMenu}
     >
+      {/* 复选框 */}
+      <div className="absolute top-2 left-2 z-20">
+        <Checkbox
+          checked={isSelected}
+          onCheckedChange={onSelect}
+          onClick={(e) => e.stopPropagation()}
+        />
+      </div>
+      
       <div 
         {...listeners} 
         className="absolute inset-0 z-10"
+        style={{ top: '8px', left: '8px', right: '8px', bottom: '8px' }}
         onDoubleClick={(e) => {
           e.stopPropagation()
           onDoubleClick()
@@ -1154,14 +1164,6 @@ const DraggableFolder = ({ folder, isSelected, isRenaming, onRename, onConfirmRe
           }
         }}
       />
-      {/* 复选框 */}
-      <div className="absolute top-2 left-2">
-        <Checkbox
-          checked={isSelected}
-          onCheckedChange={onSelect}
-          onClick={(e) => e.stopPropagation()}
-        />
-      </div>
       
       {/* 文件夹图标 */}
       <div className="mt-2">
