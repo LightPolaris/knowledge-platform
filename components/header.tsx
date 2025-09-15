@@ -35,7 +35,7 @@ export function Header({ title = "仪表板", subtitle }: HeaderProps) {
       <div className="w-full flex items-center justify-between">
         {/* Title Section */}
         <div>
-          <h1 className="font-serif font-bold text-2xl text-white text-balance">{title}</h1>
+          <h1 className="font-serif font-bold text-lg text-white text-balance">{title}</h1>
           {subtitle && <p className="text-white/80 text-sm mt-1">{subtitle}</p>}
         </div>
 

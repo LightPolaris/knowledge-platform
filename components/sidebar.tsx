@@ -57,18 +57,17 @@ export function Sidebar({ className }: SidebarProps) {
       <div className="flex items-center justify-between p-4 border-b border-sidebar-border h-[69px] bg-[#0060DF]">
         {!collapsed && (
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden">
+            <div className="w-12 h-12 flex items-center justify-center overflow-hidden">
               <Image 
                 src="/logo.png" 
                 alt="知识平台" 
-                width={32} 
-                height={32}
+                width={48} 
+                height={48}
                 className="w-full h-full object-contain"
               />
             </div>
             <div>
-              <h1 className="font-serif font-bold text-white text-sm">知识平台</h1>
-              <p className="text-xs text-white/80">东方电气</p>
+              <h1 className="font-serif font-bold text-white text-base">知识平台</h1>
             </div>
           </div>
         )}

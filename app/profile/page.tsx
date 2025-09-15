@@ -97,7 +97,9 @@ export default function PersonalWorkspacePage() {
           type: "folder",
           children: [
             { id: 111, name: "个人技术笔记.pdf", type: "file", size: "2.4 MB", uploadDate: "2024-01-15" },
-            { id: 112, name: "锅炉操作手册.pdf", type: "file", size: "3.2 MB", uploadDate: "2024-01-14" }
+            { id: 112, name: "锅炉操作手册.pdf", type: "file", size: "3.2 MB", uploadDate: "2024-01-14" },
+            { id: 113, name: "锅炉维护指南.pdf", type: "file", size: "4.1 MB", uploadDate: "2024-01-16" },
+            { id: 114, name: "故障排除手册.pdf", type: "file", size: "2.8 MB", uploadDate: "2024-01-17" }
           ]
         },
         {
@@ -105,7 +107,18 @@ export default function PersonalWorkspacePage() {
           name: "安全标准",
           type: "folder",
           children: [
-            { id: 121, name: "安全规范2024.pdf", type: "file", size: "1.8 MB", uploadDate: "2024-01-13" }
+            { id: 121, name: "安全规范2024.pdf", type: "file", size: "1.8 MB", uploadDate: "2024-01-13" },
+            { id: 122, name: "应急预案.docx", type: "file", size: "1.2 MB", uploadDate: "2024-01-18" },
+            { id: 123, name: "安全检查表.xlsx", type: "file", size: "456 KB", uploadDate: "2024-01-19" }
+          ]
+        },
+        {
+          id: 13,
+          name: "设计图纸",
+          type: "folder",
+          children: [
+            { id: 131, name: "锅炉总装图.dwg", type: "file", size: "5.6 MB", uploadDate: "2024-01-20" },
+            { id: 132, name: "管道布置图.pdf", type: "file", size: "3.4 MB", uploadDate: "2024-01-21" }
           ]
         }
       ]
@@ -121,7 +134,18 @@ export default function PersonalWorkspacePage() {
           type: "folder",
           children: [
             { id: 211, name: "项目总结报告.docx", type: "file", size: "1.8 MB", uploadDate: "2024-01-14" },
-            { id: 212, name: "进度报告.xlsx", type: "file", size: "856 KB", uploadDate: "2024-01-13" }
+            { id: 212, name: "进度报告.xlsx", type: "file", size: "856 KB", uploadDate: "2024-01-13" },
+            { id: 213, name: "预算分析表.xlsx", type: "file", size: "1.1 MB", uploadDate: "2024-01-22" },
+            { id: 214, name: "风险评估报告.pdf", type: "file", size: "2.3 MB", uploadDate: "2024-01-23" }
+          ]
+        },
+        {
+          id: 22,
+          name: "2023项目",
+          type: "folder",
+          children: [
+            { id: 221, name: "项目结项报告.pdf", type: "file", size: "3.2 MB", uploadDate: "2023-12-15" },
+            { id: 222, name: "经验总结.docx", type: "file", size: "1.5 MB", uploadDate: "2023-12-20" }
           ]
         }
       ]
@@ -132,25 +156,39 @@ export default function PersonalWorkspacePage() {
       type: "folder",
       children: [
         { id: 31, name: "学习资料.xlsx", type: "file", size: "856 KB", uploadDate: "2024-01-13" },
-        { id: 32, name: "培训材料.pdf", type: "file", size: "2.1 MB", uploadDate: "2024-01-12" }
+        { id: 32, name: "培训材料.pdf", type: "file", size: "2.1 MB", uploadDate: "2024-01-12" },
+        { id: 33, name: "行业标准汇编.pdf", type: "file", size: "8.5 MB", uploadDate: "2024-01-24" },
+        { id: 34, name: "技术规范手册.pdf", type: "file", size: "6.2 MB", uploadDate: "2024-01-25" }
+      ]
+    },
+    {
+      id: 4,
+      name: "会议记录",
+      type: "folder",
+      children: [
+        { id: 41, name: "周例会记录.docx", type: "file", size: "234 KB", uploadDate: "2024-01-26" },
+        { id: 42, name: "技术评审会议.pdf", type: "file", size: "1.8 MB", uploadDate: "2024-01-25" },
+        { id: 43, name: "项目启动会议.docx", type: "file", size: "456 KB", uploadDate: "2024-01-24" }
+      ]
+    },
+    {
+      id: 5,
+      name: "质量文档",
+      type: "folder",
+      children: [
+        { id: 51, name: "质量检验报告.pdf", type: "file", size: "2.1 MB", uploadDate: "2024-01-27" },
+        { id: 52, name: "质量体系文件.docx", type: "file", size: "1.3 MB", uploadDate: "2024-01-26" },
+        { id: 53, name: "不合格品处理记录.xlsx", type: "file", size: "678 KB", uploadDate: "2024-01-25" }
       ]
     }
   ]
 
   // 当前选中的分类路径
   const [selectedPath, setSelectedPath] = useState<number[]>([])
-  const [expandedFolders, setExpandedFolders] = useState<Set<number>>(new Set([1, 2, 3]))
-  const [currentFolder, setCurrentFolder] = useState<number | null>(null)
 
   // 辅助函数
-  const toggleFolder = (folderId: number) => {
-    const newExpanded = new Set(expandedFolders)
-    if (newExpanded.has(folderId)) {
-      newExpanded.delete(folderId)
-    } else {
-      newExpanded.add(folderId)
-    }
-    setExpandedFolders(newExpanded)
+  const enterFolder = (folderId: number) => {
+    setSelectedPath([...selectedPath, folderId])
   }
 
   const getCurrentItems = () => {
@@ -202,7 +240,7 @@ export default function PersonalWorkspacePage() {
       title: "收藏了文档",
       description: "锅炉安全标准 2024.pdf",
       time: "1天前",
-      icon: Heart
+      icon: Star
     },
     {
       id: 3,
@@ -210,7 +248,11 @@ export default function PersonalWorkspacePage() {
       title: "分享了文档",
       description: "技术规格说明书.docx",
       time: "2天前",
-      icon: Share
+      icon: () => (
+        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 1 1 0-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 1 1 5.367-2.684 3 3 0 0 1-5.367 2.684zm0 9.316a3 3 0 1 1 5.367 2.684 3 3 0 0 1-5.367-2.684z"/>
+        </svg>
+      )
     },
     {
       id: 4,
@@ -263,7 +305,59 @@ export default function PersonalWorkspacePage() {
   }
 
   const handleFolderAction = (action: string, folderId: number) => {
-    console.log(`${action} folder:`, folderId)
+    switch (action) {
+      case 'share':
+        // 分享文件夹功能
+        const folder = findFolderById(folderId)
+        if (folder) {
+          const shareUrl = `${window.location.origin}/share/folder/${folderId}`
+          navigator.clipboard.writeText(shareUrl).then(() => {
+            alert(`文件夹 "${folder.name}" 的分享链接已复制到剪贴板`)
+          }).catch(() => {
+            alert(`分享链接: ${shareUrl}`)
+          })
+        }
+        break
+      case 'edit':
+        // 编辑文件夹功能
+        const editFolder = findFolderById(folderId)
+        if (editFolder) {
+          const newName = prompt('请输入新的文件夹名称:', editFolder.name)
+          if (newName && newName.trim() !== '') {
+            editFolder.name = newName.trim()
+            // 这里可以添加保存到后端的逻辑
+            alert(`文件夹已重命名为: ${newName}`)
+          }
+        }
+        break
+      case 'delete':
+        // 删除文件夹功能
+        const deleteFolder = findFolderById(folderId)
+        if (deleteFolder) {
+          if (confirm(`确定要删除文件夹 "${deleteFolder.name}" 吗？此操作不可撤销。`)) {
+            // 这里可以添加删除逻辑
+            alert(`文件夹 "${deleteFolder.name}" 已删除`)
+          }
+        }
+        break
+      default:
+        console.log(`${action} folder:`, folderId)
+    }
+  }
+
+  // 辅助函数：根据ID查找文件夹
+  const findFolderById = (id: number) => {
+    const searchInTree = (items: any[]): any => {
+      for (const item of items) {
+        if (item.id === id) return item
+        if (item.children) {
+          const found = searchInTree(item.children)
+          if (found) return found
+        }
+      }
+      return null
+    }
+    return searchInTree(categoryTree)
   }
 
   const handleFileAction = (action: string, fileId: number) => {
@@ -390,7 +484,7 @@ export default function PersonalWorkspacePage() {
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="overview">总览</TabsTrigger>
-                <TabsTrigger value="documents">我的文档</TabsTrigger>
+                <TabsTrigger value="documents">个人知识库</TabsTrigger>
                 <TabsTrigger value="profile">个人信息</TabsTrigger>
                 <TabsTrigger value="activity">活动记录</TabsTrigger>
               </TabsList>
@@ -445,7 +539,9 @@ export default function PersonalWorkspacePage() {
                         新建文件夹
                       </Button>
                       <Button variant="outline" className="h-20 flex-col">
-                        <Share className="h-6 w-6 mb-2" />
+                        <svg className="h-6 w-6 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 1 1 0-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 1 1 5.367-2.684 3 3 0 0 1-5.367 2.684zm0 9.316a3 3 0 1 1 5.367 2.684 3 3 0 0 1-5.367-2.684z"/>
+                        </svg>
                         分享文档
                       </Button>
                     </div>
@@ -560,45 +656,48 @@ export default function PersonalWorkspacePage() {
                             )
                           }
                           return items.map((item) => (
-                            <div key={item.id} className="flex items-center justify-between py-2 px-3 hover:bg-muted/50 rounded-md group">
-                              <div className="flex items-center space-x-3 flex-1">
-                                {item.type === 'folder' ? (
-                                  <button
-                                    onClick={() => toggleFolder(item.id)}
-                                    className="flex items-center space-x-2 flex-1 text-left"
-                                  >
-                                    {expandedFolders.has(item.id) ? (
-                                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                                    ) : (
-                                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                                    )}
-                                    <FolderOpen className="h-4 w-4 text-blue-600" />
-                                    <span className="font-medium">{item.name}</span>
-                                    {item.children && (
-                                      <span className="text-xs text-muted-foreground">
-                                        ({item.children.length})
+                            <div key={item.id}>
+                              <div className="flex items-center justify-between py-2 px-3 hover:bg-muted/50 rounded-md group">
+                                <div className="flex items-center space-x-3 flex-1">
+                                  {item.type === 'folder' ? (
+                                    <button
+                                      onClick={() => {
+                                        // 进入文件夹
+                                        enterFolder(item.id)
+                                      }}
+                                      className="flex items-center space-x-2 flex-1 text-left hover:bg-muted/50 rounded-md p-2"
+                                    >
+                                      <FolderOpen className="h-4 w-4 text-blue-600" />
+                                      <span className="font-medium">{item.name}</span>
+                                      {item.children && (
+                                        <span className="text-xs text-muted-foreground">
+                                          ({item.children.length})
+                                        </span>
+                                      )}
+                                      <ChevronRight className="h-4 w-4 text-muted-foreground ml-auto" />
+                                    </button>
+                                  ) : (
+                                    <div className="flex items-center space-x-2 flex-1">
+                                      <FileText className="h-4 w-4 text-muted-foreground" />
+                                      <span>{item.name}</span>
+                                      <span className="text-xs text-muted-foreground ml-auto">
+                                        {item.size}
                                       </span>
-                                    )}
-                                  </button>
-                                ) : (
-                                  <div className="flex items-center space-x-2 flex-1">
-                                    <FileText className="h-4 w-4 text-muted-foreground" />
-                                    <span>{item.name}</span>
-                                    <span className="text-xs text-muted-foreground ml-auto">
-                                      {item.size}
-                                    </span>
-                                  </div>
-                                )}
-                              </div>
+                                    </div>
+                                  )}
+                                </div>
                               
                               {item.type === 'folder' ? (
                                 <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    onClick={() => setSelectedPath([...selectedPath, item.id])}
+                                    onClick={() => handleFolderAction('share', item.id)}
+                                    className="hover:bg-blue-50 hover:text-blue-600"
                                   >
-                                    <Eye className="h-3 w-3" />
+                                    <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <path d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 1 1 0-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 1 1 5.367-2.684 3 3 0 0 1-5.367 2.684zm0 9.316a3 3 0 1 1 5.367 2.684 3 3 0 0 1-5.367-2.684z"/>
+                                    </svg>
                                   </Button>
                                   <Button variant="ghost" size="sm" onClick={() => handleFolderAction('edit', item.id)}>
                                     <Edit className="h-3 w-3" />
@@ -620,6 +719,8 @@ export default function PersonalWorkspacePage() {
                                   </Button>
                                 </div>
                               )}
+                              </div>
+                              {/* 删除子文件夹展开逻辑，改为点击进入文件夹 */}
                             </div>
                           ))
                         } catch (error) {

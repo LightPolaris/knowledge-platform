@@ -1250,6 +1250,15 @@ function AllDocumentsContent() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("list")
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(10)
+  
+  // 批量操作状态
+  const [isBulkProcessing, setIsBulkProcessing] = useState(false)
+  const [bulkProgress, setBulkProgress] = useState(0)
+  const [bulkOperation, setBulkOperation] = useState<string>("")
+  
+  // 批量修改分组状态
+  const [showBulkGroupDialog, setShowBulkGroupDialog] = useState(false)
+  const [selectedTargetGroup, setSelectedTargetGroup] = useState("")
 
   // Access groups from the parent component
   const groups = mockGroups
@@ -1549,6 +1558,56 @@ function AllDocumentsContent() {
     }
 
     switch (action) {
+      case "parse":
+        setIsBulkProcessing(true)
+        setBulkOperation("解析")
+        setBulkProgress(0)
+        toast({
+          title: "批量解析",
+          description: `正在解析 ${selectedDocuments.length} 个文档，请稍候...`,
+        })
+        // 模拟解析过程
+        const parseInterval = setInterval(() => {
+          setBulkProgress(prev => {
+            if (prev >= 100) {
+              clearInterval(parseInterval)
+              setIsBulkProcessing(false)
+              setBulkOperation("")
+              toast({
+                title: "解析完成",
+                description: `成功解析 ${selectedDocuments.length} 个文档`,
+              })
+              return 100
+            }
+            return prev + 10
+          })
+        }, 200)
+        break
+      case "import":
+        setIsBulkProcessing(true)
+        setBulkOperation("导入")
+        setBulkProgress(0)
+        toast({
+          title: "批量导入",
+          description: `正在导入 ${selectedDocuments.length} 个文档，请稍候...`,
+        })
+        // 模拟导入过程
+        const importInterval = setInterval(() => {
+          setBulkProgress(prev => {
+            if (prev >= 100) {
+              clearInterval(importInterval)
+              setIsBulkProcessing(false)
+              setBulkOperation("")
+              toast({
+                title: "导入完成",
+                description: `成功导入 ${selectedDocuments.length} 个文档`,
+              })
+              return 100
+            }
+            return prev + 8
+          })
+        }, 250)
+        break
       case "download":
         toast({
           title: "下载文档",
@@ -1562,11 +1621,20 @@ function AllDocumentsContent() {
         })
         break
       case "move":
-        toast({
-          title: "移动文档",
-          description: `正在移动 ${selectedDocuments.length} 个文档`,
-        })
+        setShowBulkGroupDialog(true)
         break
+    }
+  }
+
+  const handleBulkGroupChange = () => {
+    if (selectedTargetGroup && selectedDocuments.length > 0) {
+      toast({
+        title: "批量修改分组",
+        description: `已将 ${selectedDocuments.length} 个文档移动到分组: ${selectedTargetGroup}`,
+      })
+      setShowBulkGroupDialog(false)
+      setSelectedTargetGroup("")
+      setSelectedDocuments([])
     }
   }
 
@@ -1673,6 +1741,77 @@ function AllDocumentsContent() {
         </CardContent>
       </Card>
 
+      {/* Bulk Actions */}
+      {selectedDocuments.length > 0 && (
+        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div className="text-sm font-medium text-blue-900">
+              已选择 {selectedDocuments.length} 个文档
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleBulkAction("parse")}
+                disabled={isBulkProcessing}
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                批量解析
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleBulkAction("import")}
+                disabled={isBulkProcessing}
+              >
+                <Import className="h-4 w-4 mr-2" />
+                批量导入
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleBulkAction("download")}
+                disabled={isBulkProcessing}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                批量下载
+              </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleBulkAction("move")}
+                  disabled={isBulkProcessing}
+                >
+                  <Move className="h-4 w-4 mr-2" />
+                  批量分组
+                </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleBulkAction("delete")}
+                className="text-red-600 hover:text-red-700"
+                disabled={isBulkProcessing}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                批量删除
+              </Button>
+            </div>
+          </div>
+          
+          {/* 进度显示 */}
+          {isBulkProcessing && (
+            <div className="mt-4 space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">
+                  正在{bulkOperation} {selectedDocuments.length} 个文档...
+                </span>
+                <span className="text-muted-foreground">{bulkProgress}%</span>
+              </div>
+              <Progress value={bulkProgress} className="h-2" />
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Documents List */}
       <Card>
@@ -1988,45 +2127,43 @@ function AllDocumentsContent() {
         </div>
       )}
 
-      {/* Bulk Actions */}
-      {selectedDocuments.length > 0 && (
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-muted-foreground">
-                已选择 {selectedDocuments.length} 个文档
-              </div>
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleBulkAction("download")}
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  批量下载
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleBulkAction("move")}
-                >
-                  <Move className="h-4 w-4 mr-2" />
-                  批量移动
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleBulkAction("delete")}
-                  className="text-red-600 hover:text-red-700"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  批量删除
-                </Button>
-              </div>
+      {/* 批量修改分组对话框 */}
+      <Dialog open={showBulkGroupDialog} onOpenChange={setShowBulkGroupDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>修改文档分组</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="text-sm text-muted-foreground">
+              已选择 {selectedDocuments.length} 个文档，请选择目标分组：
             </div>
-          </CardContent>
-        </Card>
-      )}
+            <div className="space-y-2">
+              <Label>选择分组</Label>
+              <Select value={selectedTargetGroup} onValueChange={setSelectedTargetGroup}>
+                <SelectTrigger>
+                  <SelectValue placeholder="选择目标分组" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="机械安全">机械安全</SelectItem>
+                  <SelectItem value="电气安全">电气安全</SelectItem>
+                  <SelectItem value="工艺技术">工艺技术</SelectItem>
+                  <SelectItem value="质量管理">质量管理</SelectItem>
+                  <SelectItem value="待分组">待分组</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setShowBulkGroupDialog(false)}>
+                取消
+              </Button>
+              <Button onClick={handleBulkGroupChange} disabled={!selectedTargetGroup}>
+                确认修改
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
     </div>
   )
 }

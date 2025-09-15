@@ -22,6 +22,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronDown,
+  UserPlus,
 } from "lucide-react"
 
 export default function UserManagementPage() {
@@ -36,6 +37,10 @@ export default function UserManagementPage() {
   const [targetRoleId, setTargetRoleId] = useState("")
   const [expandedDepartments, setExpandedDepartments] = useState<Set<string>>(new Set())
   const [expandedAvailableDepartments, setExpandedAvailableDepartments] = useState<Set<string>>(new Set())
+  const [selectedUsers, setSelectedUsers] = useState<Set<number>>(new Set())
+  const [batchMode, setBatchMode] = useState(false)
+  const [selectedMembers, setSelectedMembers] = useState<Set<number>>(new Set())
+  const [batchDeleteMode, setBatchDeleteMode] = useState(false)
   const [availableUsers, setAvailableUsers] = useState([
     { id: 1, name: "张三", email: "zhangsan@example.com", department: "技术部门" },
     { id: 2, name: "李四", email: "lisi@example.com", department: "质量部门" },
@@ -77,6 +82,83 @@ export default function UserManagementPage() {
       setSelectedRole(updatedRole)
       // 从可用用户列表中移除
       setAvailableUsers(prev => prev.filter(u => u.id !== user.id))
+    }
+  }
+
+  const handleSelectUser = (userId: number) => {
+    setSelectedUsers(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(userId)) {
+        newSet.delete(userId)
+      } else {
+        newSet.add(userId)
+      }
+      return newSet
+    })
+  }
+
+  const handleBatchAddUsers = () => {
+    if (selectedRole && selectedUsers.size > 0) {
+      const usersToAdd = availableUsers.filter(user => selectedUsers.has(user.id))
+      const updatedRole = {
+        ...selectedRole,
+        users: [...(selectedRole.users || []), ...usersToAdd]
+      }
+      setSelectedRole(updatedRole)
+      // 从可用用户列表中移除
+      setAvailableUsers(prev => prev.filter(u => !selectedUsers.has(u.id)))
+      // 清空选择
+      setSelectedUsers(new Set())
+      setBatchMode(false)
+    }
+  }
+
+  const handleSelectAll = () => {
+    const currentUsers = availableUsers.filter(user => 
+      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.department.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    if (selectedUsers.size === currentUsers.length) {
+      setSelectedUsers(new Set())
+    } else {
+      setSelectedUsers(new Set(currentUsers.map(user => user.id)))
+    }
+  }
+
+  const handleSelectMember = (memberId: number) => {
+    setSelectedMembers(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(memberId)) {
+        newSet.delete(memberId)
+      } else {
+        newSet.add(memberId)
+      }
+      return newSet
+    })
+  }
+
+  const handleBatchDeleteMembers = () => {
+    if (selectedRole && selectedMembers.size > 0) {
+      const updatedRole = {
+        ...selectedRole,
+        users: selectedRole.users.filter((user: any) => !selectedMembers.has(user.id))
+      }
+      setSelectedRole(updatedRole)
+      // 将删除的用户重新添加到可用用户列表
+      const membersToRestore = selectedRole.users.filter((user: any) => selectedMembers.has(user.id))
+      setAvailableUsers(prev => [...prev, ...membersToRestore])
+      // 清空选择
+      setSelectedMembers(new Set())
+      setBatchDeleteMode(false)
+    }
+  }
+
+  const handleSelectAllMembers = () => {
+    if (selectedMembers.size === selectedRole?.users?.length) {
+      setSelectedMembers(new Set())
+    } else {
+      setSelectedMembers(new Set(selectedRole?.users?.map((user: any) => user.id) || []))
     }
   }
 
@@ -193,10 +275,55 @@ export default function UserManagementPage() {
             {/* 当前成员 */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  当前成员 ({selectedRole.users?.length || 0})
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    当前成员 ({selectedRole.users?.length || 0})
+                  </CardTitle>
+                  <Button 
+                    variant={batchDeleteMode ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      setBatchDeleteMode(!batchDeleteMode)
+                      setSelectedMembers(new Set())
+                    }}
+                  >
+                    <X className="mr-2 h-4 w-4" />
+                    {batchDeleteMode ? "取消批量" : "批量删除"}
+                  </Button>
+                </div>
+                {batchDeleteMode && (
+                  <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg border mt-4">
+                    <div className="flex items-center space-x-4">
+                      <Button variant="outline" size="sm" onClick={handleSelectAllMembers}>
+                        {selectedMembers.size === selectedRole?.users?.length ? "取消全选" : "全选"}
+                      </Button>
+                      <span className="text-sm text-muted-foreground">
+                        已选择 {selectedMembers.size} 个成员
+                      </span>
+                    </div>
+                    <div className="flex space-x-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          setBatchDeleteMode(false)
+                          setSelectedMembers(new Set())
+                        }}
+                      >
+                        取消
+                      </Button>
+                      <Button 
+                        variant="destructive"
+                        size="sm"
+                        onClick={handleBatchDeleteMembers}
+                        disabled={selectedMembers.size === 0}
+                      >
+                        批量删除 ({selectedMembers.size})
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </CardHeader>
               <CardContent className="flex flex-col h-full">
                 <div className="space-y-4 flex-1 overflow-y-auto min-h-0">
@@ -230,6 +357,14 @@ export default function UserManagementPage() {
                               {users.map((user: any, index: number) => (
                                 <div key={index} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50">
                                   <div className="flex items-center space-x-3">
+                                    {batchDeleteMode && (
+                                      <input
+                                        type="checkbox"
+                                        checked={selectedMembers.has(user.id)}
+                                        onChange={() => handleSelectMember(user.id)}
+                                        className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                                      />
+                                    )}
                                     <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                                       <User className="h-4 w-4 text-blue-600" />
                                     </div>
@@ -238,24 +373,26 @@ export default function UserManagementPage() {
                                       <p className="text-sm text-muted-foreground">{user.email}</p>
                                     </div>
                                   </div>
-                                  <div className="flex items-center space-x-2">
-                                    <Button 
-                                      variant="outline" 
-                                      size="sm"
-                                      onClick={() => handleMoveUser(user)}
-                                    >
-                                      <Users className="mr-1 h-3 w-3" />
-                                      移动
-                                    </Button>
-                                    <Button 
-                                      variant="outline" 
-                                      size="sm"
-                                      onClick={() => handleRemoveUser(user.id)}
-                                    >
-                                      <X className="mr-1 h-3 w-3" />
-                                      移除
-                                    </Button>
-                                  </div>
+                                  {!batchDeleteMode && (
+                                    <div className="flex items-center space-x-2">
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => handleMoveUser(user)}
+                                      >
+                                        <Users className="mr-1 h-3 w-3" />
+                                        移动
+                                      </Button>
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => handleRemoveUser(user.id)}
+                                      >
+                                        <X className="mr-1 h-3 w-3" />
+                                        移除
+                                      </Button>
+                                    </div>
+                                  )}
                                 </div>
                               ))}
                             </div>
@@ -289,7 +426,49 @@ export default function UserManagementPage() {
                       <Search className="mr-2 h-4 w-4" />
                       搜索
                     </Button>
+                    <Button 
+                      variant={batchMode ? "default" : "outline"}
+                      onClick={() => {
+                        setBatchMode(!batchMode)
+                        setSelectedUsers(new Set())
+                      }}
+                    >
+                      <UserPlus className="mr-2 h-4 w-4" />
+                      {batchMode ? "取消批量" : "批量添加"}
+                    </Button>
                   </div>
+                  
+                  {batchMode && (
+                    <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border">
+                      <div className="flex items-center space-x-4">
+                        <Button variant="outline" size="sm" onClick={handleSelectAll}>
+                          {selectedUsers.size === currentUsers.length ? "取消全选" : "全选"}
+                        </Button>
+                        <span className="text-sm text-muted-foreground">
+                          已选择 {selectedUsers.size} 个用户
+                        </span>
+                      </div>
+                      <div className="flex space-x-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            setBatchMode(false)
+                            setSelectedUsers(new Set())
+                          }}
+                        >
+                          取消
+                        </Button>
+                        <Button 
+                          size="sm"
+                          onClick={handleBatchAddUsers}
+                          disabled={selectedUsers.size === 0}
+                        >
+                          批量添加 ({selectedUsers.size})
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                   
                   <div className="space-y-4 flex-1 overflow-y-auto min-h-0">
                     {(() => {
@@ -322,6 +501,14 @@ export default function UserManagementPage() {
                                 {users.map((user: any) => (
                                   <div key={user.id} className="flex items-center justify-between p-2 border rounded hover:bg-muted/30">
                                     <div className="flex items-center space-x-3">
+                                      {batchMode && (
+                                        <input
+                                          type="checkbox"
+                                          checked={selectedUsers.has(user.id)}
+                                          onChange={() => handleSelectUser(user.id)}
+                                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                        />
+                                      )}
                                       <div className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center">
                                         <User className="h-3 w-3 text-gray-600" />
                                       </div>
@@ -330,13 +517,15 @@ export default function UserManagementPage() {
                                         <p className="text-xs text-muted-foreground">{user.email}</p>
                                       </div>
                                     </div>
-                                    <Button 
-                                      size="sm"
-                                      onClick={() => handleAddUser(user)}
-                                    >
-                                      <Plus className="mr-1 h-3 w-3" />
-                                      添加
-                                    </Button>
+                                    {!batchMode && (
+                                      <Button 
+                                        size="sm"
+                                        onClick={() => handleAddUser(user)}
+                                      >
+                                        <Plus className="mr-1 h-3 w-3" />
+                                        添加
+                                      </Button>
+                                    )}
                                   </div>
                                 ))}
                               </div>

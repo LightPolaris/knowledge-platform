@@ -233,6 +233,7 @@ export default function SearchPage() {
                       <SelectItem value="all">全部内容</SelectItem>
                       <SelectItem value="title">仅标题</SelectItem>
                       <SelectItem value="content">仅正文</SelectItem>
+                      <SelectItem value="documentNumber">文档编号</SelectItem>
                     </SelectContent>
                   </Select>
                   <div className="relative flex-1">
@@ -325,6 +326,7 @@ export default function SearchPage() {
                         找到 {filteredResults.length} 个结果 {searchQuery && `关于 "${searchQuery}"`}
                         {searchScope === "title" && " (仅搜索标题)"}
                         {searchScope === "content" && " (仅搜索正文)"}
+                        {searchScope === "documentNumber" && " (仅搜索文档编号)"}
                       </p>
                       <Select defaultValue="relevance">
                         <SelectTrigger className="w-32">
