@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Sidebar } from "@/components/sidebar"
 import { Header } from "@/components/header"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -63,6 +63,34 @@ export default function PersonalWorkspacePage() {
   const [parsingProgress, setParsingProgress] = useState(0)
   const [isParsing, setIsParsing] = useState(false)
   const [parsedContent, setParsedContent] = useState("")
+  const [uploadFiles, setUploadFiles] = useState<File[]>([])
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [showCategorySelect, setShowCategorySelect] = useState(false)
+  const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false)
+  const [newFolderName, setNewFolderName] = useState("")
+  const [selectedParentFolder, setSelectedParentFolder] = useState("")
+
+  // 级联选择状态 - 最多支持3级
+  const [cascadeSelection, setCascadeSelection] = useState({
+    level1: "", // 一级分类
+    level2: "", // 二级分类
+    level3: ""  // 三级分类（如果有）
+  })
+
+  // Load active tab from localStorage on component mount
+  useEffect(() => {
+    const savedTab = localStorage.getItem('profile-active-tab')
+    if (savedTab && ['overview', 'documents', 'profile', 'activity'].includes(savedTab)) {
+      setActiveTab(savedTab)
+    }
+  }, [])
+
+  // Save active tab to localStorage when it changes
+  const handleTabChange = (value: string) => {
+    setActiveTab(value)
+    localStorage.setItem('profile-active-tab', value)
+  }
 
   const [profile, setProfile] = useState({
     name: "张三",
@@ -201,6 +229,7 @@ export default function PersonalWorkspacePage() {
           return []
         }
       }
+
       return current || []
     } catch (error) {
       console.error('Error in getCurrentItems:', error)
@@ -296,11 +325,114 @@ export default function PersonalWorkspacePage() {
   }
 
   const handleCreateFolder = () => {
-    console.log('Create new folder')
+    if (!newFolderName.trim()) {
+      alert('请输入文件夹名称')
+      return
+    }
+
+    // 创建新文件夹对象
+    const newFolder = {
+      id: generateNewFolderId(),
+      name: newFolderName.trim(),
+      type: 'folder' as const,
+      children: []
+    }
+
+    // 查找要添加到的位置
+    if (!selectedParentFolder || selectedParentFolder === 'root') {
+      // 添加到根目录
+      categoryTree.push(newFolder)
+    } else {
+      // 添加到指定的父文件夹
+      const parentId = parseInt(selectedParentFolder)
+      const addToParent = (items: any[]): boolean => {
+        for (const item of items) {
+          if (item.id === parentId && item.type === 'folder') {
+            if (!item.children) {
+              item.children = []
+            }
+            item.children.push(newFolder)
+            return true
+          }
+          if (item.children && addToParent(item.children)) {
+            return true
+          }
+        }
+        return false
+      }
+
+      if (!addToParent(categoryTree)) {
+        alert('未找到指定的父文件夹')
+        return
+      }
+    }
+
+    // 显示成功消息
+    const parentName = selectedParentFolder && selectedParentFolder !== 'root' ?
+      getAllFolders().find(f => f.id.toString() === selectedParentFolder)?.fullPath || '未知文件夹' :
+      '根目录'
+
+    alert(`成功在 ${parentName} 中创建文件夹 "${newFolderName.trim()}"`)
+
+    // 重置状态并关闭对话框
+    setShowCreateFolderDialog(false)
+    setNewFolderName('')
+    setSelectedParentFolder('')
   }
 
   const handleUploadDocument = () => {
-    console.log('Upload document')
+    setShowUploadDialog(true)
+  }
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files
+    if (files) {
+      setUploadFiles(Array.from(files))
+    }
+  }
+
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    const files = event.dataTransfer.files
+    if (files) {
+      setUploadFiles(Array.from(files))
+    }
+  }
+
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
+  }
+
+  const handleUploadFiles = async () => {
+    if (uploadFiles.length === 0) return
+
+    setIsUploading(true)
+    setUploadProgress(0)
+
+    // Simulate upload progress
+    const progressInterval = setInterval(() => {
+      setUploadProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(progressInterval)
+          setIsUploading(false)
+          // Reset upload state
+          setUploadFiles([])
+          setShowUploadDialog(false)
+          setUploadProgress(0)
+          setCascadeSelection({ level1: "", level2: "", level3: "" })
+
+          // Show success message with cascade selection info
+          const finalPath = getFinalSelectedPath()
+          alert(`成功上传 ${uploadFiles.length} 个文件到 ${finalPath.path}`)
+          return 100
+        }
+        return prev + 10
+      })
+    }, 200)
+  }
+
+  const removeFile = (index: number) => {
+    setUploadFiles(files => files.filter((_, i) => i !== index))
   }
 
   const handleFolderAction = (action: string, folderId: number) => {
@@ -359,6 +491,162 @@ export default function PersonalWorkspacePage() {
     return searchInTree(categoryTree)
   }
 
+  // 获取所有可用的文件夹选项
+  const getAllFolders = () => {
+    const folders: { id: number; name: string; level: number; fullPath: string }[] = []
+
+    const traverse = (items: any[], level = 0, parentPath = '') => {
+      items.forEach(item => {
+        if (item.type === 'folder') {
+          const currentPath = parentPath ? `${parentPath} > ${item.name}` : item.name
+          folders.push({
+            id: item.id,
+            name: item.name,
+            level,
+            fullPath: currentPath
+          })
+          if (item.children) {
+            traverse(item.children, level + 1, currentPath)
+          }
+        }
+      })
+    }
+
+    traverse(categoryTree)
+    return folders
+  }
+
+  // 生成新的文件夹ID
+  const generateNewFolderId = () => {
+    const allIds: number[] = []
+
+    const collectIds = (items: any[]) => {
+      items.forEach(item => {
+        allIds.push(item.id)
+        if (item.children) {
+          collectIds(item.children)
+        }
+      })
+    }
+
+    collectIds(categoryTree)
+    return Math.max(...allIds) + 1
+  }
+
+  // 获取一级分类选项
+  const getLevel1Options = () => {
+    return categoryTree.filter(item => item.type === 'folder').map(item => ({
+      id: item.id.toString(),
+      name: item.name,
+      hasChildren: item.children && item.children.some(child => child.type === 'folder')
+    }))
+  }
+
+  // 获取二级分类选项
+  const getLevel2Options = (level1Id: string) => {
+    if (!level1Id) return []
+    const level1Item = categoryTree.find(item => item.id.toString() === level1Id)
+    if (!level1Item || !level1Item.children) return []
+
+    return level1Item.children.filter(item => item.type === 'folder').map(item => ({
+      id: item.id.toString(),
+      name: item.name,
+      hasChildren: item.children && item.children.some(child => child.type === 'folder')
+    }))
+  }
+
+  // 获取三级分类选项
+  const getLevel3Options = (level1Id: string, level2Id: string) => {
+    if (!level1Id || !level2Id) return []
+    const level1Item = categoryTree.find(item => item.id.toString() === level1Id)
+    if (!level1Item || !level1Item.children) return []
+
+    const level2Item = level1Item.children.find(item => item.id.toString() === level2Id)
+    if (!level2Item || !level2Item.children) return []
+
+    return level2Item.children.filter(item => item.type === 'folder').map(item => ({
+      id: item.id.toString(),
+      name: item.name,
+      hasChildren: false // 假设三级是最后一级
+    }))
+  }
+
+  // 级联选择变化处理
+  const handleCascadeChange = (level: 'level1' | 'level2' | 'level3', value: string) => {
+    setCascadeSelection(prev => {
+      const newSelection = { ...prev }
+
+      if (level === 'level1') {
+        newSelection.level1 = value
+        newSelection.level2 = "" // 重置下级
+        newSelection.level3 = "" // 重置下级
+      } else if (level === 'level2') {
+        newSelection.level2 = value
+        newSelection.level3 = "" // 重置下级
+      } else {
+        newSelection.level3 = value
+      }
+
+      return newSelection
+    })
+  }
+
+  // 获取级联选择的最终目标路径
+  const getFinalSelectedPath = () => {
+    if (cascadeSelection.level3) {
+      return {
+        id: cascadeSelection.level3,
+        path: getPathFromCascade(cascadeSelection.level1, cascadeSelection.level2, cascadeSelection.level3)
+      }
+    } else if (cascadeSelection.level2) {
+      return {
+        id: cascadeSelection.level2,
+        path: getPathFromCascade(cascadeSelection.level1, cascadeSelection.level2)
+      }
+    } else if (cascadeSelection.level1 && cascadeSelection.level1 !== 'root') {
+      return {
+        id: cascadeSelection.level1,
+        path: getPathFromCascade(cascadeSelection.level1)
+      }
+    } else {
+      return {
+        id: 'root',
+        path: '根目录'
+      }
+    }
+  }
+
+  // 根据级联选择构建路径字符串
+  const getPathFromCascade = (level1?: string, level2?: string, level3?: string) => {
+    const paths: string[] = []
+
+    if (level1 && level1 !== 'root') {
+      const level1Item = categoryTree.find(item => item.id.toString() === level1)
+      if (level1Item) paths.push(level1Item.name)
+    }
+
+    if (level2 && level1 && level1 !== 'root') {
+      const level1Item = categoryTree.find(item => item.id.toString() === level1)
+      if (level1Item?.children) {
+        const level2Item = level1Item.children.find(item => item.id.toString() === level2)
+        if (level2Item) paths.push(level2Item.name)
+      }
+    }
+
+    if (level3 && level2 && level1 && level1 !== 'root') {
+      const level1Item = categoryTree.find(item => item.id.toString() === level1)
+      if (level1Item?.children) {
+        const level2Item = level1Item.children.find(item => item.id.toString() === level2)
+        if (level2Item?.children) {
+          const level3Item = level2Item.children.find(item => item.id.toString() === level3)
+          if (level3Item) paths.push(level3Item.name)
+        }
+      }
+    }
+
+    return paths.length > 0 ? paths.join(' > ') : '根目录'
+  }
+
   const handleFileAction = (action: string, fileId: number) => {
     console.log(`${action} file:`, fileId)
   }
@@ -367,8 +655,8 @@ export default function PersonalWorkspacePage() {
     setShowPdfParserDialog(true)
   }
 
-  const handleFileSelect = (event) => {
-    const file = event.target.files[0]
+  const handlePdfFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
     if (file && file.type === 'application/pdf') {
       setPdfFile(file)
     } else {
@@ -461,6 +749,8 @@ export default function PersonalWorkspacePage() {
   }
 
   const handleDownloadDoc = () => {
+    if (!pdfFile || !parsedContent) return
+
     // 创建可下载的DOC文件
     const element = document.createElement('a')
     const file = new Blob([parsedContent], { type: 'text/plain' })
@@ -480,7 +770,7 @@ export default function PersonalWorkspacePage() {
 
         <main className="flex-1 overflow-auto p-6">
           <div className="max-w-6xl mx-auto">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="overview">总览</TabsTrigger>
                 <TabsTrigger value="documents">个人知识库</TabsTrigger>
@@ -517,35 +807,6 @@ export default function PersonalWorkspacePage() {
                   </CardContent>
                 </Card>
 
-                {/* 快速操作 */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>快速操作</CardTitle>
-                    <CardDescription>常用功能快速访问</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <Button variant="outline" className="h-20 flex-col" onClick={handleUpload}>
-                        <Upload className="h-6 w-6 mb-2" />
-                        上传文档
-                      </Button>
-                      <Button variant="outline" className="h-20 flex-col" onClick={handlePdfParser}>
-                        <FileText className="h-6 w-6 mb-2" />
-                        PDF解析
-                      </Button>
-                      <Button variant="outline" className="h-20 flex-col">
-                        <Folder className="h-6 w-6 mb-2" />
-                        新建文件夹
-                      </Button>
-                      <Button variant="outline" className="h-20 flex-col">
-                        <svg className="h-6 w-6 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 1 1 0-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 1 1 5.367-2.684 3 3 0 0 1-5.367 2.684zm0 9.316a3 3 0 1 1 5.367 2.684 3 3 0 0 1-5.367-2.684z"/>
-                        </svg>
-                        分享文档
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
 
                 {/* 统计信息 */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -607,7 +868,7 @@ export default function PersonalWorkspacePage() {
                       />
                     </div>
                   </div>
-                  <Button variant="outline" size="sm" onClick={handleCreateFolder}>
+                  <Button variant="outline" size="sm" onClick={() => setShowCreateFolderDialog(true)}>
                     <Folder className="mr-2 h-4 w-4" />
                     新建文件夹
                   </Button>
@@ -620,7 +881,7 @@ export default function PersonalWorkspacePage() {
                 {/* 面包屑导航 */}
                 {selectedPath.length > 0 && (
                   <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                    <button 
+                    <button
                       onClick={() => setSelectedPath([])}
                       className="hover:text-foreground"
                     >
@@ -629,7 +890,7 @@ export default function PersonalWorkspacePage() {
                     {getBreadcrumb().map((name, index) => (
                       <div key={index} className="flex items-center space-x-2">
                         <ChevronRight className="h-4 w-4" />
-                        <button 
+                        <button
                           onClick={() => setSelectedPath(selectedPath.slice(0, index + 1))}
                           className="hover:text-foreground"
                         >
@@ -905,19 +1166,182 @@ export default function PersonalWorkspacePage() {
 
       {/* 上传文档对话框 */}
       <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>上传文档</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center">
+            {/* 级联分类选择 */}
+            <div className="space-y-4">
+              <Label>选择分组</Label>
+
+              {/* 级联下拉菜单 - 一排显示 */}
+              <div className="flex items-center space-x-4">
+                {/* 一级分类 */}
+                <div className="flex-1">
+                  <Label className="text-sm text-muted-foreground mb-2 block">一级分类</Label>
+                  <Select value={cascadeSelection.level1} onValueChange={(value) => handleCascadeChange('level1', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="请选择一级分类" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="root">
+                        <div className="flex items-center space-x-2">
+                          <Folder className="h-4 w-4 text-blue-600" />
+                          <span>根目录</span>
+                        </div>
+                      </SelectItem>
+                      {getLevel1Options().map((option) => (
+                        <SelectItem key={option.id} value={option.id}>
+                          <div className="flex items-center space-x-2">
+                            <FolderOpen className="h-4 w-4 text-blue-600" />
+                            <span>{option.name}</span>
+                            {option.hasChildren && (
+                              <span className="text-xs text-muted-foreground">(有子分类)</span>
+                            )}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* 二级分类 - 只有选择了一级分类且有子分类时才显示 */}
+                {cascadeSelection.level1 && cascadeSelection.level1 !== 'root' && getLevel2Options(cascadeSelection.level1).length > 0 && (
+                  <div className="flex-1">
+                    <Label className="text-sm text-muted-foreground mb-2 block">二级分类</Label>
+                    <Select value={cascadeSelection.level2} onValueChange={(value) => handleCascadeChange('level2', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="请选择二级分类" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getLevel2Options(cascadeSelection.level1).map((option) => (
+                          <SelectItem key={option.id} value={option.id}>
+                            <div className="flex items-center space-x-2">
+                              <FolderOpen className="h-4 w-4 text-amber-600" />
+                              <span>{option.name}</span>
+                              {option.hasChildren && (
+                                <span className="text-xs text-muted-foreground">(有子分类)</span>
+                              )}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {/* 三级分类 - 只有选择了二级分类且有子分类时才显示 */}
+                {cascadeSelection.level2 && getLevel3Options(cascadeSelection.level1, cascadeSelection.level2).length > 0 && (
+                  <div className="flex-1">
+                    <Label className="text-sm text-muted-foreground mb-2 block">三级分类</Label>
+                    <Select value={cascadeSelection.level3} onValueChange={(value) => handleCascadeChange('level3', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="请选择三级分类" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getLevel3Options(cascadeSelection.level1, cascadeSelection.level2).map((option) => (
+                          <SelectItem key={option.id} value={option.id}>
+                            <div className="flex items-center space-x-2">
+                              <FolderOpen className="h-4 w-4 text-green-600" />
+                              <span>{option.name}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div
+              className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center"
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+            >
               <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
               <h3 className="mt-4 text-lg font-medium">上传文档到个人工作台</h3>
               <p className="mt-2 text-muted-foreground">拖拽文件到此处，或点击浏览</p>
-              <Button className="mt-4">
-                <Plus className="mr-2 h-4 w-4" />
-                选择文件
+              <input
+                type="file"
+                multiple
+                onChange={handleFileSelect}
+                className="hidden"
+                id="file-upload"
+                accept=".pdf,.doc,.docx,.txt,.xlsx,.xls,.ppt,.pptx"
+              />
+              <label htmlFor="file-upload">
+                <Button className="mt-4" asChild>
+                  <span>
+                    <Plus className="mr-2 h-4 w-4" />
+                    选择文件
+                  </span>
+                </Button>
+              </label>
+            </div>
+
+            {/* 文件列表 */}
+            {uploadFiles.length > 0 && (
+              <div className="space-y-2">
+                <h4 className="font-medium">选中的文件:</h4>
+                <div className="max-h-40 overflow-y-auto space-y-2">
+                  {uploadFiles.map((file, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <FileText className="h-8 w-8 text-blue-600" />
+                        <div>
+                          <p className="font-medium">{file.name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {(file.size / 1024 / 1024).toFixed(2)} MB
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeFile(index)}
+                        disabled={isUploading}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 上传进度 */}
+            {isUploading && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">上传进度</span>
+                  <span className="text-sm text-muted-foreground">{uploadProgress}%</span>
+                </div>
+                <Progress value={uploadProgress} className="h-2" />
+              </div>
+            )}
+
+            {/* 操作按钮 */}
+            <div className="flex justify-end space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowUploadDialog(false)
+                  setUploadFiles([])
+                  setUploadProgress(0)
+                  setCascadeSelection({ level1: "", level2: "", level3: "" })
+                }}
+                disabled={isUploading}
+              >
+                取消
               </Button>
+              {uploadFiles.length > 0 && !isUploading && (
+                <Button onClick={handleUploadFiles}>
+                  <Upload className="mr-2 h-4 w-4" />
+                  上传文件
+                </Button>
+              )}
             </div>
           </div>
         </DialogContent>
@@ -992,7 +1416,7 @@ export default function PersonalWorkspacePage() {
                 <input
                   type="file"
                   accept=".pdf"
-                  onChange={handleFileSelect}
+                  onChange={handlePdfFileSelect}
                   className="hidden"
                   id="pdf-upload"
                 />
@@ -1075,6 +1499,78 @@ export default function PersonalWorkspacePage() {
                   开始解析
                 </Button>
               )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* 新建文件夹对话框 */}
+      <Dialog open={showCreateFolderDialog} onOpenChange={setShowCreateFolderDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>新建文件夹</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="folderName">文件夹名称</Label>
+              <Input
+                id="folderName"
+                placeholder="请输入文件夹名称"
+                value={newFolderName}
+                onChange={(e) => setNewFolderName(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>选择父级文件夹</Label>
+              <Select value={selectedParentFolder} onValueChange={setSelectedParentFolder}>
+                <SelectTrigger>
+                  <SelectValue placeholder="选择父级文件夹（可选）" />
+                </SelectTrigger>
+                <SelectContent className="max-h-60 overflow-y-auto">
+                  <SelectItem value="root">
+                    <div className="flex items-center space-x-2">
+                      <Folder className="h-4 w-4 text-blue-600" />
+                      <span>根目录</span>
+                    </div>
+                  </SelectItem>
+                  {getAllFolders().map((folder) => (
+                    <SelectItem key={folder.id} value={folder.id.toString()}>
+                      <div className="flex items-center space-x-2" style={{ paddingLeft: `${folder.level * 16}px` }}>
+                        <FolderOpen className="h-4 w-4 text-blue-600" />
+                        <span>{folder.name}</span>
+                        {folder.level > 0 && (
+                          <span className="text-xs text-muted-foreground ml-1">
+                            ({folder.fullPath})
+                          </span>
+                        )}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                如果不选择父级文件夹，将在根目录下创建
+              </p>
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowCreateFolderDialog(false)
+                  setNewFolderName("")
+                  setSelectedParentFolder("")
+                }}
+              >
+                取消
+              </Button>
+              <Button
+                onClick={handleCreateFolder}
+                disabled={!newFolderName.trim()}
+              >
+                创建文件夹
+              </Button>
             </div>
           </div>
         </DialogContent>
