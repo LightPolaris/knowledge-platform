@@ -233,6 +233,18 @@ const mockDocumentData: Record<number, any> = {
     size: "2.1 MB",
     type: "PDF"
   },
+  114: {
+    id: 114,
+    name: "故障排除手册.pdf",
+    originalPdfUrl: "https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf",
+    parsedMarkdown: `# 故障排除手册\n\n## 概述\n本手册用于指导常见设备故障的排查与处理。\n\n## 常见故障\n1. 无法启动\n2. 温度异常\n3. 压力波动\n\n## 处理步骤\n- 按照安全规范断电停机\n- 根据症状定位部件\n- 记录处理结果与时间\n\n## 注意事项\n- 操作前确认安全\n- 按规程逐项排查\n- 及时反馈问题`,
+    status: "已解析未审核",
+    uploadedBy: "系统",
+    uploadDate: "2024-01-17",
+    category: "技术文档 > 锅炉技术",
+    size: "2.8 MB",
+    type: "PDF"
+  },
   27: {
     id: 27,
     name: "技术交流会议记录.docx",
@@ -310,12 +322,25 @@ export default function DocumentReviewPage() {
       setDocument(docData)
       setMarkdownContent(docData.parsedMarkdown)
     } else {
+      // 未找到则使用占位文档，避免跳转
+      const placeholder = {
+        id: Number(documentId),
+        name: `文档 ${documentId}`,
+        originalPdfUrl: "https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf",
+        parsedMarkdown: `# 文档 ${documentId}\n\n（占位内容）请在此处编辑解析后的文本...`,
+        status: "已解析未审核",
+        uploadedBy: "--",
+        uploadDate: new Date().toISOString().slice(0, 10),
+        category: "--",
+        size: "--",
+        type: "PDF",
+      }
+      setDocument(placeholder)
+      setMarkdownContent(placeholder.parsedMarkdown)
       toast({
-        title: "文档不存在",
-        description: "未找到指定的文档",
-        variant: "destructive"
+        title: "已加载占位文档",
+        description: "该ID暂无模拟数据，已载入占位内容以便继续编辑。",
       })
-      router.push("/documents")
     }
   }, [documentId, router, toast])
 
@@ -529,7 +554,7 @@ export default function DocumentReviewPage() {
                       </div>
                     ) : (
                       <iframe
-                        src={`${document.originalPdfUrl}#toolbar=1&navpanes=1&scrollbar=1`}
+                        src={`${document.originalPdfUrl}#toolbar=0&navpanes=0&scrollbar=0`}
                         className="w-full h-full border-0 rounded-lg"
                         title="PDF文档预览"
                         onError={() => setPdfError(true)}
