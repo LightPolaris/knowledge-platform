@@ -1676,8 +1676,12 @@ function AllDocumentsContent() {
         })
         break
       case "review":
-        // 跳转到审核页面
-        router.push(`/documents/review/${docId}`)
+        // 根据状态跳转到不同审核页
+        if (doc.status === "已导入未审核") {
+          router.push(`/knowledge-editor/${docId}`)
+        } else {
+          router.push(`/documents/review/${docId}`)
+        }
         break
       case "import":
         toast({
